@@ -8,7 +8,7 @@ const slides = [
     title: "ZERO TO ONE",
     description:
       "Zero to One is a groundbreaking guide for entrepreneurs and innovators seeking to create unique, game-changing businesses.",
-    image: "/src/images/zero-to-one.png",
+    image: "/src/images/book1.jpg",
     bg: "/src/images/slider-bg.jpg",
   },
 ];
