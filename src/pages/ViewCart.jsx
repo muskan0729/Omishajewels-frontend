@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useGet } from "../hooks/useGet"; // adjust path
 import { Link } from "react-router-dom";
+import Cartprocess from "../components/Cartprocess";
 
 
 const ViewCart = () => {
+  
   // Dummy Data for UI Testing
   const dummyCart = [
     {
@@ -53,6 +55,8 @@ const ViewCart = () => {
   }
 
   return (
+    <>
+    <Cartprocess/>
     <div className="w-full bg-white py-12">
       <div className="max-w-7xl mx-auto px-4 md:px-8">
         {/* Main Grid */}
@@ -171,6 +175,7 @@ const ViewCart = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

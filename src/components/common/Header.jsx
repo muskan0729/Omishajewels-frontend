@@ -4,8 +4,10 @@ import logo from "../../images/logo.png";
 import { useState } from "react";
 import SearchOverlay from "./SearchOverlay";
 import CartDrawer from "../cart/CartDrawer";
+import Login from "../Login";
 
-const Header = () => {
+
+const Header = ({ setLoginOpen }) => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
 
@@ -64,12 +66,17 @@ const Header = () => {
             </button>
 
             {/* USER */}
-            <button
-              className="hover:text-[#B8964E] transition cursor-pointer"
+             
+          <button
+             
+            className="hover:text-[#B8964E] transition cursor-pointer"
               aria-label="User"
-            >
+            
+            onClick={() => setLoginOpen(true)}
+          >
               <FiUser />
             </button>
+          
 
             {/* WISHLIST */}
             <Link

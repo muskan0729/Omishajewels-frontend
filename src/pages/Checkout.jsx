@@ -1,5 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import Cartprocess from "../components/Cartprocess";
+
 
 
 const Checkout = () => {
@@ -40,6 +42,8 @@ const Checkout = () => {
   const subtotal = orderItems.reduce((sum, item) => sum + item.total, 0);
 
   return (
+    <>
+    <Cartprocess/>
     <div className="w-full bg-white py-12">
       <div className="max-w-7xl mx-auto px-4 md:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
@@ -258,6 +262,7 @@ const Checkout = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 
