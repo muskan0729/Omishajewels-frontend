@@ -1,66 +1,53 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import pageImage from "../assets/images/books-page-title.jpg";
 
-const Cartprocess = ({ step = "cart" }) => {
+const Cartprocess = () => {
+  const location = useLocation();
+
   const steps = [
-    { key: "cart", label: "Shopping Cart", path: "/cart" },
+    { key: "cart", label: "Shopping Cart", path: "/view-cart" },
     { key: "checkout", label: "Checkout", path: "/checkout" },
-    { key: "complete", label: "Order Complete" },
+    { key: "complete", label: "Order Complete", path: "/order" },
   ];
-
-  const isActive = (key) => key === step;
-
-  const isCompleted = (key) =>
-    steps.findIndex((s) => s.key === key) <
-    steps.findIndex((s) => s.key === step);
 
   return (
     <div className="relative w-full h-56 md:h-64 overflow-hidden">
-      
-      {/* Background Image */}
+      {/* Background image */}
       <img
         src={pageImage}
         alt="Page title"
         className="absolute inset-0 w-full h-full object-cover"
       />
 
-      {/* Overlay */}
+      {/* Dark overlay */}
       <div className="absolute inset-0 bg-black/50"></div>
 
       {/* Steps */}
       <div className="relative z-10 flex items-center justify-center h-full">
-        <ul className="flex items-center gap-6 text-xl md:text-2xl font-semibold tracking-wide text-white">
-          {steps.map((item, index) => (
-            <li key={item.key} className="flex items-center gap-6">
-              {item.path && !isActive(item.key) ? (
+        <ul className="flex items-center gap-6 text-xl md:text-2xl font-semibold tracking-wide">
+          {steps.map((item, index) => {
+            const isActive = location.pathname === item.path;
+
+            return (
+              <li key={item.key} className="flex items-center gap-6">
                 <Link
                   to={item.path}
-                  className={`transition-colors ${
-                    isCompleted(item.key)
-                      ? "text-[#B8964E] hover:underline"
-                      : "text-gray-300"
+                  className={`transition-colors duration-200 ${
+                    isActive
+                      ? "text-[#B8964E]"
+                      : "text-white hover:text-[#B8964E]/80"
                   }`}
                 >
                   {item.label}
                 </Link>
-              ) : (
-                <span
-                  className={
-                    isActive(item.key)
-                      ? "text-[#B8964E]"
-                      : "text-gray-300"
-                  }
-                >
-                  {item.label}
-                </span>
-              )}
 
-              {index < steps.length - 1 && (
-                <span className="text-gray-300 text-2xl">→</span>
-              )}
-            </li>
-          ))}
+                {index < steps.length - 1 && (
+                  <span className="text-white text-2xl">→</span>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </div>
     </div>

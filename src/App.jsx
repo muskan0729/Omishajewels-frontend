@@ -9,6 +9,8 @@ import Checkout from "./pages/Checkout";
 import OrderComplete from "./pages/OrderComplete";
 import Login from "./components/Login";
 import Cartprocess from "./components/Cartprocess";
+import Register from "./components/Register";
+
 
 function App() {
   const [loginOpen, setLoginOpen] = useState(false);
@@ -31,8 +33,6 @@ function App() {
           <Route path="/view-cart" element ={<ViewCart/> }/>
           <Route path="/checkout" element = {<Checkout />} />
            <Route path="/order" element = {<OrderComplete />} />
-         
-
           <Route path="/Cartprocess" element={<Cartprocess />} />
         </Routes>
       </main>
