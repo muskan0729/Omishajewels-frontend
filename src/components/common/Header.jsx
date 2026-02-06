@@ -5,6 +5,7 @@ import { useState } from "react";
 import SearchOverlay from "./SearchOverlay";
 import CartDrawer from "../cart/CartDrawer";
 
+
 const Header = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
@@ -63,22 +64,20 @@ const Header = () => {
               <FiSearch />
             </button>
 
-            {/* USER */}
-            <button
-              className="hover:text-[#B8964E] transition cursor-pointer"
-              aria-label="User"
-            >
-              <FiUser />
-            </button>
+            <Link
+    to="/my-account"
+    className="hover:text-[#B8964E] transition cursor-pointer"
+  >
+    <FiUser />
+  </Link>
 
             {/* WISHLIST */}
             <Link
-              to="/wishlist"
-              className="hover:text-[#B8964E] transition cursor-pointer"
-              aria-label="Wishlist"
-            >
-              <FiHeart />
-            </Link>
+  to="/my-account/wishlist"
+  className="hover:text-[#B8964E] transition cursor-pointer"
+>
+  <FiHeart />
+</Link>
 
             {/* CART (DRAWER OPEN) */}
             <button
