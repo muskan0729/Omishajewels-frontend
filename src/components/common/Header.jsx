@@ -50,6 +50,9 @@ const Header = () => {
           <button className="hover:text-[#B8964E] transition cursor-pointer">
             <FiUser />
           </button>
+          <button className="hover:text-[#B8964E] transition cursor-pointer">
+            <FiHeart />
+          </button>
 
           <Link
             to="/cart"
