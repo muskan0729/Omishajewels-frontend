@@ -6,6 +6,9 @@ import Footer from "./components/common/Footer";
 
 /* PUBLIC PAGES */
 import Home from "./pages/Home";
+import ViewCart from "./pages/ViewCart";
+import Checkout from "./pages/Checkout";
+import OrderComplete from "./pages/OrderComplete";
 import AboutUs from "./pages/AboutUs";
 import ContactUs from "./pages/ContactUs";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -39,6 +42,11 @@ function App() {
         <Routes>
           {/* PUBLIC ROUTES */}
           <Route path="/" element={<Home />} />
+          <Route path="/view-cart" element ={<ViewCart/> }/>
+          <Route path="/checkout" element = {<Checkout />} />
+           <Route path="/order" element = {<OrderComplete />} />
+         
+
           <Route path="/about" element={<AboutUs />} />
           <Route path="/contact" element={<ContactUs />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
