@@ -1,8 +1,10 @@
 import { Link, NavLink } from "react-router-dom";
 import { FiUser, FiSearch, FiHeart, FiShoppingCart } from "react-icons/fi";
 import logo from "../../images/logo.png";
+import Login from "../Login";
 
-const Header = () => {
+
+const Header = ({ setLoginOpen }) => {
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
@@ -47,9 +49,14 @@ const Header = () => {
           <button className="hover:text-[#B8964E] transition cursor-pointer">
             <FiSearch />
           </button>
-          <button className="hover:text-[#B8964E] transition cursor-pointer">
+           
+          <button
+            className="hover:text-[#B8964E] transition cursor-pointer"
+            onClick={() => setLoginOpen(true)}
+          >
             <FiUser />
           </button>
+          
           <button className="hover:text-[#B8964E] transition cursor-pointer">
             <FiHeart />
           </button>
