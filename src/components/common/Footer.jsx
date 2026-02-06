@@ -36,7 +36,7 @@ export default function Footer() {
         {/* COMPANY INFO */}
         <div>
           <img
-            src="/images/logo.png"
+            src="\src\images\logo.png"
             alt="Omisha Jewels"
             className="mb-4 w-24"
           />
