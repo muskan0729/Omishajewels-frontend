@@ -1,1 +1,93 @@
 @import "tailwindcss";
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.4s ease-out forwards;
+}
+@keyframes slideLeft {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slideLeft {
+  animation: slideLeft 0.35s ease-out forwards;
+}
+/* global.css or index.css */
+.wc-input {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 9999px;
+  padding: 12px 18px;
+  font-size: 14px;
+  background: #fff;
+  transition: border-color 0.2s ease;
+}
+
+.wc-input:focus {
+  outline: none;
+  border-color: #b8964e;
+}
+.account-input {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 9999px;
+  padding: 10px 16px;
+  font-size: 14px;
+  outline: none;
+}
+
+.account-input:focus {
+  border-color: #b98a54;
+}
+
+
+/* ================= ANIMATIONS OF HOME SLIDER ================= */
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ================= ANIMATIONS OF HOME MOTION SLIDER ================= */
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 35s linear infinite;
+}
+
