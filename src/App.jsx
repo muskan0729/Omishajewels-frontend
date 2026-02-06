@@ -35,6 +35,8 @@ import EditShippingAddress from "./pages/my-account/EditShippingAddress";
 import Login from "./components/Login";
 import Cartprocess from "./components/Cartprocess";
 import Register from "./components/Register";
+import ShopPage from "./components/shop/ShopPage";
+
 
 
 function App() {
@@ -59,7 +61,7 @@ function App() {
           <Route path="/view-cart" element ={<ViewCart/> }/>
           <Route path="/checkout" element = {<Checkout />} />
            <Route path="/order" element = {<OrderComplete />} />
-         
+         <Route path="/shop" element = {<ShopPage />} />
 
           <Route path="/about" element={<AboutUs />} />
           <Route path="/contact" element={<ContactUs />} />
