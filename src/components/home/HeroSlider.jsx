@@ -7,16 +7,16 @@ const slides = [
     tag: "WORLD BESTSELLERS",
     title: "ART OF WAR",
     description:
-      "Zero to One is a groundbreaking guide for entrepreneurs and innovators seeking to create unique, game-changing businesses.",
+      "The Art of War showing a warrior in black holding a sword, symbolizing strategy, discipline, and the art of conflict.",
     image: "/src/images/book1.jpg",
     bg: "/src/images/slider1.png",
   },
   {
     id: 2,
     tag: "EDITOR'S PICK",
-    title: "PSYCOH-CYBERNETICS",
+    title: "PSYCHO-CYBERNETICS",
     description:
-      "A proven framework for building good habits and breaking bad ones to achieve remarkable personal growth.",
+      "Psycho-Cybernetics highlighting personal growth, self-image improvement, and the power of the subconscious mind.",
     image: "/src/images/book2.jpg",
     bg: "/src/images/slider2.png",
   },
