@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 /* COMMON */
+import { useState } from "react";
+
 import Header from "./components/common/Header";
 import Footer from "./components/common/Footer";
 
@@ -30,12 +32,24 @@ import Addresses from "./pages/my-account/Addresses";
 import EditBillingAddress from "./pages/my-account/EditBillingAddress";
 import EditShippingAddress from "./pages/my-account/EditShippingAddress";
 
+import Login from "./components/Login";
+import Cartprocess from "./components/Cartprocess";
+import Register from "./components/Register";
+
 
 function App() {
+  const [loginOpen, setLoginOpen] = useState(false);
+
   return (
     <BrowserRouter>
       {/* HEADER */}
-      <Header />
+      <Header setLoginOpen={setLoginOpen} />
+
+      {/* LOGIN SIDEBAR (NOT A ROUTE) */}
+      <Login open={loginOpen} setOpen={setLoginOpen} />
+
+
+      
 
       {/* PAGE CONTENT */}
       <main className="min-h-screen bg-[#FEFCF9]">
@@ -77,8 +91,7 @@ function App() {
   <Route path="edit-address/billing" element={<EditBillingAddress />} />
   <Route path="edit-address/shipping" element={<EditShippingAddress />} />
 </Route>
-
-
+ <Route path="/Cartprocess" element={<Cartprocess />} />
         </Routes>
       </main>
 

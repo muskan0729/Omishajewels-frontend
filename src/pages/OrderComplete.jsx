@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import Cartprocess from "../components/Cartprocess";
 
 const OrderComplete = () => {
   // Dummy order details (for UI testing)
@@ -36,6 +37,8 @@ const OrderComplete = () => {
   ];
 
   return (
+    <>
+    <Cartprocess/>
     <div className="w-full bg-gray-50 py-16">
       <div className="max-w-5xl mx-auto px-4 md:px-8">
         {/* Success Box */}
@@ -184,6 +187,8 @@ const OrderComplete = () => {
         </p>
       </div>
     </div>
+    </>
+    
   );
 };
 
