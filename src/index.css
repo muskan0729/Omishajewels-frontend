@@ -50,3 +50,44 @@
 .account-input:focus {
   border-color: #b98a54;
 }
+
+
+/* ================= ANIMATIONS OF HOME SLIDER ================= */
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ================= ANIMATIONS OF HOME MOTION SLIDER ================= */
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 35s linear infinite;
+}
+
