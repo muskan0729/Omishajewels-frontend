@@ -14,6 +14,7 @@ export const addToCartManager = async (product, execute) => {
       // IndexedDB
       await addToCartDB(product);
       toast.success("Added to cart (Saved in browser)");
+      console.log(product);
     }
   } catch (err) {
     toast.error("Failed to add cart");
