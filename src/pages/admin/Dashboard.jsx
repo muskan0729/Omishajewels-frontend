@@ -1,233 +1,206 @@
-import { useGet } from "../../hooks/useGet";
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
+import {
+  BookOpen,
+  ShoppingCart,
+  IndianRupee,
+  Users,
+} from "lucide-react";
 
 export default function Dashboard() {
-  const { data: apiData, loading } = useGet("/admin/transactions");
-  
-  // Dummy data for development
-  const dummyTransactions = [
-    { id: 1, user: "Aarav Sharma", amount: "₹1,299", status: "completed", date: "2024-03-15" },
-    { id: 2, user: "Priya Patel", amount: "₹899", status: "pending", date: "2024-03-14" },
-    { id: 3, user: "Rohan Kumar", amount: "₹2,499", status: "completed", date: "2024-03-14" },
-    { id: 4, user: "Sneha Singh", amount: "₹599", status: "failed", date: "2024-03-13" },
-    { id: 5, user: "Vikram Joshi", amount: "₹1,799", status: "completed", date: "2024-03-12" },
-    { id: 6, user: "Ananya Reddy", amount: "₹1,099", status: "pending", date: "2024-03-12" },
-    { id: 7, user: "Karthik Nair", amount: "₹3,299", status: "completed", date: "2024-03-11" },
-  ];
-
-  // Use dummy data if API returns nothing or empty
-  const transactions = apiData && Array.isArray(apiData) && apiData.length > 0 
-    ? apiData 
-    : dummyTransactions;
-
-  // Dummy stats data
   const stats = {
-    totalEbooks: 156,
-    totalOrders: 487,
-    totalRevenue: "₹2,84,500",
-    activeUsers: 1243,
-    conversionRate: "3.2%",
-    avgOrderValue: "₹584"
+    totalEbooks: 15678,
+    totalOrders: 48765,
+    totalRevenue: 2845000,
+    activeUsers: 12435,
   };
 
+  const categories = [
+    { name: "Technology", value: 42 },
+    { name: "Business", value: 28 },
+    { name: "Self-Help", value: 18 },
+    { name: "Health", value: 12 },
+  ];
+
+  const orderStatus = [
+    { label: "Completed", count: 342, color: "bg-green-500" },
+    { label: "Pending", count: 98, color: "bg-amber-500" },
+    { label: "Failed", count: 47, color: "bg-red-500" },
+  ];
+
+  const transactions = [
+    { name: "Aarav Sharma", order: "#1001", date: "2024-03-15", amount: 1299, status: "completed" },
+    { name: "Priya Patel", order: "#2001", date: "2024-03-14", amount: 899, status: "pending" },
+    { name: "Rohan Kumar", order: "#3001", date: "2024-03-14", amount: 2499, status: "completed" },
+    { name: "Sneha Singh", order: "#4001", date: "2024-03-13", amount: 599, status: "failed" },
+  ];
+
+  const getAvatarColor = (name) => {
+    const colors = [
+      "bg-blue-100 text-blue-700",
+      "bg-emerald-100 text-emerald-700",
+      "bg-violet-100 text-violet-700",
+      "bg-amber-100 text-amber-700",
+      "bg-rose-100 text-rose-700",
+    ];
+    return colors[name.charCodeAt(0) % colors.length];
+  };
+
+  const cards = useMemo(
+    () => [
+      {
+        label: "Total Ebooks",
+        value: stats.totalEbooks.toLocaleString(),
+        icon: BookOpen,
+        iconBg: "bg-blue-100",
+        iconColor: "text-blue-600",
+      },
+      {
+        label: "Total Orders",
+        value: stats.totalOrders.toLocaleString(),
+        icon: ShoppingCart,
+        iconBg: "bg-green-100",
+        iconColor: "text-green-600",
+      },
+      {
+        label: "Total Revenue",
+        value: `₹${stats.totalRevenue.toLocaleString()}`,
+        icon: IndianRupee,
+        iconBg: "bg-purple-100",
+        iconColor: "text-purple-600",
+      },
+      {
+        label: "Active Users",
+        value: stats.activeUsers.toLocaleString(),
+        icon: Users,
+        iconBg: "bg-orange-100",
+        iconColor: "text-orange-600",
+      },
+    ],
+    [stats]
+  );
+
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-6">Dashboard Overview</h2>
-      
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
-        <div className="p-4 bg-white rounded-lg shadow border border-gray-100">
-          <div className="text-gray-500 text-sm font-medium">Total Ebooks</div>
-          <div className="text-2xl font-bold mt-2">{stats.totalEbooks}</div>
-          <div className="text-green-600 text-sm mt-1">↑ 12% from last month</div>
-        </div>
-        
-        <div className="p-4 bg-white rounded-lg shadow border border-gray-100">
-          <div className="text-gray-500 text-sm font-medium">Total Orders</div>
-          <div className="text-2xl font-bold mt-2">{stats.totalOrders}</div>
-          <div className="text-green-600 text-sm mt-1">↑ 8% from last month</div>
-        </div>
-        
-        <div className="p-4 bg-white rounded-lg shadow border border-gray-100">
-          <div className="text-gray-500 text-sm font-medium">Total Revenue</div>
-          <div className="text-2xl font-bold mt-2">{stats.totalRevenue}</div>
-          <div className="text-green-600 text-sm mt-1">↑ 15% from last month</div>
-        </div>
-        
-        <div className="p-4 bg-white rounded-lg shadow border border-gray-100">
-          <div className="text-gray-500 text-sm font-medium">Active Users</div>
-          <div className="text-2xl font-bold mt-2">{stats.activeUsers}</div>
-          <div className="text-green-600 text-sm mt-1">↑ 5% from last month</div>
-        </div>
-        
-        <div className="p-4 bg-white rounded-lg shadow border border-gray-100">
-          <div className="text-gray-500 text-sm font-medium">Conversion Rate</div>
-          <div className="text-2xl font-bold mt-2">{stats.conversionRate}</div>
-          <div className="text-green-600 text-sm mt-1">↑ 0.4% from last month</div>
-        </div>
-        
-        <div className="p-4 bg-white rounded-lg shadow border border-gray-100">
-          <div className="text-gray-500 text-sm font-medium">Avg Order Value</div>
-          <div className="text-2xl font-bold mt-2">{stats.avgOrderValue}</div>
-          <div className="text-green-600 text-sm mt-1">↑ 7% from last month</div>
-        </div>
+    <div className="p-4 sm:p-6 space-y-6 sm:space-y-10 animate-slideUp">
+      <div>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+        <p className="text-xs sm:text-sm text-gray-500 mt-1">Last updated: Today</p>
       </div>
-      
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Revenue Chart (Placeholder) */}
-        <div className="bg-white rounded-lg shadow p-6 border border-gray-100">
-          <h3 className="text-lg font-bold mb-4">Revenue Trends</h3>
-          <div className="h-64 flex items-center justify-center bg-gray-50 rounded">
-            <div className="text-center text-gray-500">
-              <div className="text-3xl mb-2">📈</div>
-              <p>Revenue chart will appear here</p>
-              <p className="text-sm">(Interactive chart integration)</p>
+
+      {/* Stats Cards - Enhanced Responsiveness */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        {cards.map((c) => (
+          <div
+            key={c.label}
+            className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+          >
+            <div className="flex justify-between items-start">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">{c.label}</p>
+                <p className="text-2xl sm:text-3xl font-bold font-tabular-nums text-gray-900 mt-2">
+                  {c.value}
+                </p>
+              </div>
+              <div className={`p-2 sm:p-3 rounded-xl ${c.iconBg} flex-shrink-0 ml-2 sm:ml-4`}>
+                <c.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${c.iconColor}`} />
+              </div>
             </div>
           </div>
-        </div>
-        
-        {/* Top Categories (Placeholder) */}
-        <div className="bg-white rounded-lg shadow p-6 border border-gray-100">
-          <h3 className="text-lg font-bold mb-4">Top Categories</h3>
-          <div className="space-y-4">
-            {["Fiction", "Technology", "Business", "Self-Help", "Health"].map((category, index) => (
-              <div key={category} className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className={`w-3 h-3 rounded-full mr-3 ${
-                    index === 0 ? "bg-blue-500" :
-                    index === 1 ? "bg-green-500" :
-                    index === 2 ? "bg-purple-500" :
-                    index === 3 ? "bg-yellow-500" :
-                    "bg-pink-500"
-                  }`}></div>
-                  <span>{category}</span>
+        ))}
+      </div>
+
+      {/* Middle Section - Enhanced Responsiveness */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+        {/* Top Categories */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 hover:shadow-xl transition-all duration-300">
+          <h3 className="font-semibold text-base sm:text-lg mb-4 sm:mb-5">Top Categories</h3>
+          <div className="space-y-4 sm:space-y-5">
+            {categories.map((cat, i) => {
+              const barColors = ["bg-blue-500", "bg-emerald-500", "bg-violet-500", "bg-amber-500"];
+              return (
+                <div key={cat.name}>
+                  <div className="flex justify-between text-xs sm:text-sm mb-2">
+                    <span className="font-medium text-gray-700 truncate">{cat.name}</span>
+                    <span className="text-gray-500">{cat.value}%</span>
+                  </div>
+                  <div className="h-2 sm:h-3 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className={`h-2 sm:h-3 rounded-full transition-all duration-700 ${barColors[i]}`}
+                      style={{ width: `${cat.value}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="font-medium">{Math.floor(Math.random() * 100) + 50} sales</div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Order Status */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 hover:shadow-xl transition-all duration-300">
+          <h3 className="font-semibold text-base sm:text-lg mb-4 sm:mb-5">Order Status Overview</h3>
+          <div className="space-y-4 sm:space-y-5">
+            {orderStatus.map((o) => (
+              <div key={o.label} className="flex items-center justify-between">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <span className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full ${o.color}`} />
+                  <span className="text-xs sm:text-sm font-medium text-gray-700 truncate">{o.label}</span>
+                </div>
+                <span className="font-semibold text-base sm:text-lg text-gray-900">{o.count}</span>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Recent Transactions */}
-      <div className="bg-white rounded-lg shadow overflow-hidden border border-gray-100">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-bold">Recent Transactions</h3>
-          <p className="text-gray-500 text-sm">Latest 7 transactions from your store</p>
+      {/* Recent Transactions - Mobile-Optimized */}
+      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300">
+        <div className="p-4 sm:p-6 border-b border-gray-200 flex justify-between items-center">
+          <h3 className="font-semibold text-base sm:text-lg">Recent Transactions</h3>
+          <button className="text-xs sm:text-sm font-medium text-blue-600 hover:underline">View All →</button>
         </div>
-        
+
         <div className="overflow-x-auto">
-          {loading ? (
-            <div className="p-8 text-center">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <p className="mt-2 text-gray-600">Loading transactions...</p>
-            </div>
-          ) : (
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Method</th>
+          <table className="w-full min-w-[600px] sm:min-w-[800px] text-xs sm:text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="p-3 sm:p-4 text-left font-semibold text-gray-700 hidden sm:table-cell">Customer</th>
+                <th className="p-3 sm:p-4 text-center font-semibold text-gray-700">Date</th>
+                <th className="p-3 sm:p-4 text-center font-semibold text-gray-700">Amount</th>
+                <th className="p-3 sm:p-4 text-center font-semibold text-gray-700 hidden sm:table-cell">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {transactions.map((t) => (
+                <tr key={t.order} className="hover:bg-gray-50 transition-colors">
+                  <td className="p-3 sm:p-4 flex items-center gap-2 sm:gap-3 w-full sm:min-w-[220px]">
+                    <div className={`avatar flex-shrink-0 ${getAvatarColor(t.name)}`}>
+                      {t.name[0]}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium text-gray-900 truncate">{t.name}</div>
+                      <div className="text-xs text-gray-500 truncate">{t.order}</div>
+                    </div>
+                  </td>
+                  <td className="p-3 sm:p-4 text-center text-gray-600 whitespace-nowrap">
+                    {new Date(t.date).toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </td>
+                  <td className="p-3 sm:p-4 text-center font-semibold text-gray-900 whitespace-nowrap">
+                    ₹{t.amount.toLocaleString()}
+                  </td>
+                  <td className="p-3 sm:p-4 text-center hidden sm:table-cell">
+                    <span
+                      className={`status ${t.status} inline-block px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs font-medium`}
+                    >
+                      {t.status.charAt(0).toUpperCase() + t.status.slice(1)}
+                    </span>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {transactions.map(tx => (
-                  <tr key={tx.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                            <span className="text-blue-600 font-bold">{tx.user.charAt(0)}</span>
-                          </div>
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{tx.user}</div>
-                          <div className="text-sm text-gray-500">Order #{tx.id}001</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {tx.date}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-bold text-gray-900">{tx.amount}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        tx.status === "completed" 
-                          ? "bg-green-100 text-green-800" 
-                          : tx.status === "pending" 
-                          ? "bg-yellow-100 text-yellow-800" 
-                          : "bg-red-100 text-red-800"
-                      }`}>
-                        {tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {["Credit Card", "UPI", "Net Banking", "Wallet"][tx.id % 4]}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-        
-        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-          <div className="flex justify-between items-center">
-            <div className="text-sm text-gray-500">
-              Showing {transactions.length} of {transactions.length} transactions
-            </div>
-            <button className="px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg">
-              View All Transactions →
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      {/* Quick Stats */}
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-4 rounded-lg border border-blue-100">
-          <div className="flex items-center">
-            <div className="p-3 bg-blue-100 rounded-lg mr-4">
-              <span className="text-blue-600 text-2xl">📚</span>
-            </div>
-            <div>
-              <div className="text-gray-600 text-sm">Most Popular Ebook</div>
-              <div className="font-bold text-lg">React Mastery Guide</div>
-              <div className="text-blue-600 font-medium">42 sales this week</div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-100">
-          <div className="flex items-center">
-            <div className="p-3 bg-green-100 rounded-lg mr-4">
-              <span className="text-green-600 text-2xl">⭐</span>
-            </div>
-            <div>
-              <div className="text-gray-600 text-sm">Customer Satisfaction</div>
-              <div className="font-bold text-lg">4.8/5.0</div>
-              <div className="text-green-600 font-medium">Based on 234 reviews</div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border border-purple-100">
-          <div className="flex items-center">
-            <div className="p-3 bg-purple-100 rounded-lg mr-4">
-              <span className="text-purple-600 text-2xl">⚡</span>
-            </div>
-            <div>
-              <div className="text-gray-600 text-sm">Pending Actions</div>
-              <div className="font-bold text-lg">3 items</div>
-              <div className="text-purple-600 font-medium">2 refunds, 1 support ticket</div>
-            </div>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
