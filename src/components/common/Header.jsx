@@ -80,12 +80,11 @@ const Header = ({ setLoginOpen }) => {
 
             {/* WISHLIST */}
             <Link
-              to="/wishlist"
-              className="hover:text-[#B8964E] transition cursor-pointer"
-              aria-label="Wishlist"
-            >
-              <FiHeart />
-            </Link>
+  to="/my-account/wishlist"
+  className="hover:text-[#B8964E] transition cursor-pointer"
+>
+  <FiHeart />
+</Link>
 
             {/* CART (DRAWER OPEN) */}
             <button

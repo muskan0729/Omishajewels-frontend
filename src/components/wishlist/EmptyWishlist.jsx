@@ -3,30 +3,21 @@ import { FiHeart } from "react-icons/fi";
 
 const EmptyWishlist = () => {
   return (
-    <div className="bg-white rounded-2xl shadow-xl py-20 px-6 flex flex-col items-center text-center">
-      <FiHeart className="text-[120px] text-gray-200 mb-6" />
+    <div className="flex flex-col items-center justify-center py-24 text-center">
+      <FiHeart className="text-gray-300 text-7xl mb-6" />
 
-      <h2 className="text-3xl font-medium mb-4">
+      <h3 className="text-2xl font-semibold mb-2">
         Wishlist is empty.
-      </h2>
+      </h3>
 
-      <p className="text-gray-600 max-w-md mb-8">
+      <p className="text-gray-500 mb-8 max-w-md">
         You don’t have any products in the wishlist yet.
-        <br />
         You will find a lot of interesting products on our “Shop” page.
       </p>
 
       <Link
         to="/shop"
-        className="
-          bg-[#B98B5E]
-          hover:bg-[#a7794f]
-          text-white
-          px-10 py-4
-          rounded-full
-          font-semibold
-          transition
-        "
+        className="bg-[#B8964E] text-white px-8 py-3 rounded-full hover:opacity-90 transition"
       >
         RETURN TO SHOP
       </Link>
