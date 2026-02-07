@@ -34,19 +34,34 @@ import Addresses from "./pages/my-account/Addresses";
 import EditBillingAddress from "./pages/my-account/EditBillingAddress";
 import EditShippingAddress from "./pages/my-account/EditShippingAddress";
 
-// import Login from "./components/Login";
 import Cartprocess from "./components/Cartprocess";
-// import Register from "./components/Register";
+import ShopPage from "./components/shop/ShopPage";
+
+
+import AdminLayout from "./components/common/AdminLayout";
+import Dashboard from "./pages/admin/Dashboard";
+import Categories from "./pages/admin/Categories";
+import Ebooks from "./pages/admin/Ebooks";
+import Images from "./pages/admin/Images";
 import AuthSidebar from "./components/auth/AuthSidebar";
 
 
 
+
 function App() {
-   const [authOpen, setAuthOpen] = useState(false);
+     const [authOpen, setAuthOpen] = useState(false);
   const [authView, setAuthView] = useState("login");
+
   return (
     <BrowserRouter>
-      <Header
+      <Routes>
+        {/* PUBLIC ROUTES */}
+        <Route 
+          path="/*" 
+          element={
+            <>
+
+       <Header
         openLogin={() => {
           setAuthView("login");
           setAuthOpen(true);
@@ -61,13 +76,20 @@ function App() {
         setView={setAuthView}
       />
 
-      {/* PAGE CONTENT */}
-      <main className="min-h-screen bg-[#FEFCF9]">
-        <Routes>
-          {/* PUBLIC ROUTES */}
-          <Route path="/" element={<Home />} />
-          <Route path="/view-cart" element ={<ViewCart/> }/>
-          <Route path="/checkout" element = {<Checkout />} />
+      {/* AUTH SIDEBAR (GLOBAL, NOT A ROUTE) */}
+      <AuthSidebar
+        open={authOpen}
+        setOpen={setAuthOpen}
+        view={authView}
+        setView={setAuthView}
+      />
+
+              <main className="min-h-screen bg-[#FEFCF9]">
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/view-cart" element={<ViewCart />} />
+                  {/* ... all your public routes */}
+                  <Route path="/checkout" element = {<Checkout />} />
            <Route path="/order" element = {<OrderComplete />} />
          <Route path="/shop" element = {<ShopPage />} />
 
