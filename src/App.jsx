@@ -70,7 +70,7 @@ function App() {
           <Route path="/terms" element={<TermsConditions />} />
           <Route path="/refund-policy" element={<RefundCancellation />} />
           <Route path="/return-policy" element={<ReturnPolicy />} />
-          <Route path="/wishlist" element={<WishlistPage />} />
+          {/* <Route path="/wishlist" element={<WishlistPage />} /> */}
 
           {/* MY ACCOUNT ROUTES */}
         <Route path="/my-account" element={<MyAccountLayout />}>
