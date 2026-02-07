@@ -13,7 +13,7 @@ const instagramImages = [
 
 const SectionEight = () => {
   return (
-    <section className="bg-[#FEFCF9] pt-0 py-28">
+    <section className="bg-[#FEFCF9] py-0">
       <div className="max-w-6xl mx-auto px-6">
         {/* MAIN WRAPPER */}
         <div className="relative rounded-[28px] bg-white shadow-[0_20px_60px_rgba(0,0,0,0.18)] overflow-hidden p-6">

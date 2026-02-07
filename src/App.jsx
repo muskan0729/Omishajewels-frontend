@@ -38,6 +38,9 @@ import AdminLayout from "./components/common/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import Categories from "./pages/admin/Categories";
 import Ebooks from "./pages/admin/Ebooks";
+import Allorders from "./pages/admin/Allorders";
+// import Users from "./pages/admin/Users";
+// import Images from "./pages/admin/Images";
 import Images from "./pages/admin/Images";
 
 function App() {
@@ -104,19 +107,30 @@ function App() {
             <Route path="edit-address/shipping" element={<EditShippingAddress />} />
           </Route>
 
-          {/* ADMIN */}
-          <Route path="/admin/*" element={<AdminLayout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="categories" element={<Categories />} />
-            <Route path="ebooks" element={<Ebooks />} />
-            <Route path="images/:ebookId" element={<Images />} />
-          </Route>
+<Route path="/my-account" element={<MyAccountLayout />}>
+  <Route index element={<DashboardMyaccont />} />
 
-        </Routes>
-      </main>
+  <Route path="edit-address" element={<Addresses />} />
+  <Route path="edit-address/billing" element={<EditBillingAddress />} />
+  <Route path="edit-address/shipping" element={<EditShippingAddress />} />
+</Route>
+ <Route path="/Cartprocess" element={<Cartprocess />} />
+      
+                </Routes>
+              </main>
+              <Footer />
+            </>
+          } 
+        />
 
-      <Footer />
-
+        {/* ADMIN ROUTES - SEPARATE LAYOUT */}
+        <Route path="/admin/*" element={<AdminLayout />}>
+          <Route index element={<Dashboard />} />
+          <Route path="categories" element={<Categories />} />
+          <Route path="ebooks" element={<Ebooks />} />
+          <Route path="orders" element={<Allorders />} />
+        </Route>
+      </Routes>
     </BrowserRouter>
   );
 }
