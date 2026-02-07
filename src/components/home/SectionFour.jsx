@@ -92,7 +92,7 @@ const SectionFour = () => {
                 </Link>
 
                 <Link
-                  to="/books"
+                  to="/shop"
                   className="
                     px-8 py-3
                     rounded-full
