@@ -1,3 +1,5 @@
+
+
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 /* COMMON */
@@ -18,11 +20,11 @@ import ShippingPolicy from "./pages/ShippingPolicy";
 import TermsConditions from "./pages/TermsConditions";
 import RefundCancellation from "./pages/RefundCancellation";
 import ReturnPolicy from "./pages/ReturnPolicy";
-import WishlistPage from "./pages/Wishlist";
+import WishlistPage from "./pages/my-account/Wishlist";
 
 /* MY ACCOUNT */
 import MyAccountLayout from "./pages/my-account/MyAccountLayout";
-import Dashboard from "./pages/my-account/Dashboard";
+import DashboardMyaccont from "./pages/my-account/Dashboard";
 import Orders from "./pages/my-account/Orders";
 import Downloads from "./pages/my-account/Downloads";
 import AccountDetails from "./pages/my-account/AccountDetails";
@@ -67,7 +69,7 @@ function App() {
           <Route path="/view-cart" element ={<ViewCart/> }/>
           <Route path="/checkout" element = {<Checkout />} />
            <Route path="/order" element = {<OrderComplete />} />
-         
+         <Route path="/shop" element = {<ShopPage />} />
 
           <Route path="/about" element={<AboutUs />} />
           <Route path="/contact" element={<ContactUs />} />
@@ -80,7 +82,7 @@ function App() {
 
           {/* MY ACCOUNT ROUTES */}
         <Route path="/my-account" element={<MyAccountLayout />}>
-  <Route index element={<Dashboard />} />
+  <Route index element={<DashboardMyaccont />} />
   <Route path="orders" element={<Orders />} />
   <Route path="downloads" element={<Downloads />} />
   <Route path="addresses" element={<Addresses />} />
@@ -93,18 +95,29 @@ function App() {
 </Route>
 
 <Route path="/my-account" element={<MyAccountLayout />}>
-  <Route index element={<Dashboard />} />
+  <Route index element={<DashboardMyaccont />} />
 
   <Route path="edit-address" element={<Addresses />} />
   <Route path="edit-address/billing" element={<EditBillingAddress />} />
   <Route path="edit-address/shipping" element={<EditShippingAddress />} />
 </Route>
  <Route path="/Cartprocess" element={<Cartprocess />} />
-        </Routes>
-      </main>
+      
+                </Routes>
+              </main>
+              <Footer />
+            </>
+          } 
+        />
 
-      {/* FOOTER */}
-      <Footer />
+        {/* ADMIN ROUTES - SEPARATE LAYOUT */}
+        <Route path="/admin/*" element={<AdminLayout />}>
+          <Route index element={<Dashboard />} />
+          <Route path="categories" element={<Categories />} />
+          <Route path="ebooks" element={<Ebooks />} />
+          <Route path="images/:ebookId" element={<Images />} />
+        </Route>
+      </Routes>
     </BrowserRouter>
   );
 }

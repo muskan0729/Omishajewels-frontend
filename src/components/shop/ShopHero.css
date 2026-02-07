@@ -1,0 +1,85 @@
+.shopHero {
+  position: relative;
+  width: 100%;
+}
+
+.shopHero__img {
+  width: 100%;
+  height: 360px;
+  object-fit: cover;
+  display: block;
+}
+
+.shopHero__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shopHero__inner {
+  width: min(1200px, 92%);
+  text-align: center;
+}
+
+.shopHero__title {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 64px;
+  color: #fff;
+  font-weight: 500;
+  margin: 0 0 18px;
+}
+
+.shopHero__cats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 22px 34px;
+}
+
+/* category button */
+.shopHero__cat {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+}
+
+.shopHero__catName {
+  display: inline-block;
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.65);
+  padding-bottom: 3px;
+}
+
+.shopHero__catCount {
+  display: block;
+  margin-top: 6px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 12px;
+}
+
+/* active */
+.shopHero__cat.isActive .shopHero__catName {
+  border-bottom-color: #f07a22;
+}
+.shopHero__cat.isActive .shopHero__catCount {
+  color: #fff;
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .shopHero__img {
+    height: 300px;
+  }
+  .shopHero__title {
+    font-size: 44px;
+  }
+}
