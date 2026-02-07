@@ -41,7 +41,7 @@ import Ebooks from "./pages/admin/Ebooks";
 import Allorders from "./pages/admin/Allorders";
 // import Users from "./pages/admin/Users";
 // import Images from "./pages/admin/Images";
-import Images from "./pages/admin/Images";
+// import Images from "./pages/admin/Images";
 
 function App() {
   const [authOpen, setAuthOpen] = useState(false);
@@ -87,16 +87,16 @@ function App() {
           {/* MY ACCOUNT */}
           {/* <Route path="/my-account" element={<MyAccountLayout openLogin={openLogin} />}> */}
           <Route
-  path="/my-account"
-  element={
-    <MyAccountLayout
-      openLogin={() => {
-        setAuthView("login");
-        setAuthOpen(true);
-      }}
-    />
-  }
->
+                path="/my-account"
+                element={
+                  <MyAccountLayout
+                    openLogin={() => {
+                      setAuthView("login");
+                      setAuthOpen(true);
+                    }}
+                  />
+                }
+              >
             <Route index element={<DashboardMyAccount />} />
             <Route path="orders" element={<Orders />} />
             <Route path="downloads" element={<Downloads />} />
@@ -107,30 +107,28 @@ function App() {
             <Route path="edit-address/shipping" element={<EditShippingAddress />} />
           </Route>
 
-<Route path="/my-account" element={<MyAccountLayout />}>
-  <Route index element={<DashboardMyaccont />} />
+          {/* ADMIN */}
+          <Route path="/admin/*" element={<AdminLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="categories" element={<Categories />} />
+            <Route path="ebooks" element={<Ebooks />} />
+            {/* <Route path="images/:ebookId" element={<Images />} /> */}
+             <Route path="orders" element={<Allorders />} />
+          </Route>
 
-  <Route path="edit-address" element={<Addresses />} />
-  <Route path="edit-address/billing" element={<EditBillingAddress />} />
-  <Route path="edit-address/shipping" element={<EditShippingAddress />} />
-</Route>
- <Route path="/Cartprocess" element={<Cartprocess />} />
-      
-                </Routes>
-              </main>
-              <Footer />
-            </>
-          } 
-        />
+        </Routes>
+      </main>
+
+      <Footer />
 
         {/* ADMIN ROUTES - SEPARATE LAYOUT */}
-        <Route path="/admin/*" element={<AdminLayout />}>
+        {/* <Route path="/admin/*" element={<AdminLayout />}>
           <Route index element={<Dashboard />} />
           <Route path="categories" element={<Categories />} />
           <Route path="ebooks" element={<Ebooks />} />
           <Route path="orders" element={<Allorders />} />
         </Route>
-      </Routes>
+      </Routes> */}
     </BrowserRouter>
   );
 }
