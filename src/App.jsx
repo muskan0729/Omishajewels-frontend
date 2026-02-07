@@ -42,7 +42,10 @@ import AdminLayout from "./components/common/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import Categories from "./pages/admin/Categories";
 import Ebooks from "./pages/admin/Ebooks";
-import Images from "./pages/admin/Images";
+import Allorders from "./pages/admin/Allorders";
+// import Users from "./pages/admin/Users";
+// import Images from "./pages/admin/Images";
+// import Images from "./pages/admin/Images";
 import AuthSidebar from "./components/auth/AuthSidebar";
 
 
@@ -137,7 +140,7 @@ function App() {
           <Route index element={<Dashboard />} />
           <Route path="categories" element={<Categories />} />
           <Route path="ebooks" element={<Ebooks />} />
-          <Route path="images/:ebookId" element={<Images />} />
+          <Route path="orders" element={<Allorders />} />
         </Route>
       </Routes>
     </BrowserRouter>
