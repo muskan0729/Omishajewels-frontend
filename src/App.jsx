@@ -18,7 +18,7 @@ import ShippingPolicy from "./pages/ShippingPolicy";
 import TermsConditions from "./pages/TermsConditions";
 import RefundCancellation from "./pages/RefundCancellation";
 import ReturnPolicy from "./pages/ReturnPolicy";
-import WishlistPage from "./pages/Wishlist";
+// import WishlistPage from "./pages/Wishlist";
 
 /* MY ACCOUNT */
 import MyAccountLayout from "./pages/my-account/MyAccountLayout";
