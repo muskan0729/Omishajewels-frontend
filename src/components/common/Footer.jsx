@@ -1,84 +1,154 @@
 import { useEffect, useState } from "react";
+import { NavLink } from "react-router-dom";
+import { MapPin, Phone, Mail } from "lucide-react";
 
 export default function Footer() {
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
-    // 🔁 Replace with your real API later
     fetch("/api/footer-products")
       .then((res) => res.json())
       .then((data) => setProducts(data))
       .catch(() => {
-        // fallback demo data
         setProducts([
           {
             id: 1,
-            name: "OLLYNAG Twisted Series Set of 4 Books",
+            name: "ReWork: Change the Way You Work Forever",
             image: "/images/book1.jpg",
-            oldPrice: "₹14,670.00",
-            price: "₹9,900.00",
+            oldPrice: "₹7,000.00",
+            price: "₹5,900.00",
           },
           {
             id: 2,
-            name: "Internet Marketing: Integrating Online and Offline Strategies",
+            name: "The Power of Your Subconscious Mind",
             image: "/images/book2.jpg",
-            oldPrice: "₹8,999.00",
-            price: "₹5,500.00",
+            oldPrice: "₹7,000.00",
+            price: "₹3,400.00",
           },
         ]);
       });
   }, []);
 
+  /* ACTIVE LINK STYLE */
+  const activeLink =
+    "font-semibold text-base text-black";
+  const normalLink =
+    "text-sm text-gray-600 hover:text-black";
+
   return (
-    <footer className="bg-white text-gray-700 border-t mt-16">
+    <footer className="bg-white border-t mt-16">
       <div className="max-w-7xl mx-auto px-6 py-14 grid grid-cols-1 md:grid-cols-4 gap-10">
 
         {/* COMPANY INFO */}
         <div>
+          {/* LOGO (INCREASED SIZE) */}
           <img
-            src="/images/logo.png"
+            src="\src\images\logo.png"
             alt="Omisha Jewels"
-            className="mb-4 w-24"
+            className="w-32 mb-4"
           />
-          <h4 className="font-semibold mb-3">
+
+          <h4 className="font-semibold mb-4">
             OMISHA JEWELS OPC PVT LTD
           </h4>
 
-          <p className="text-sm leading-6">
-            27 PRESTIGE TOWER INDIRA COMPLEX<br />
-            NAVLAKHA, INDORE<br />
-            Madhya Pradesh, India
-          </p>
+          {/* ADDRESS */}
+          <div className="flex gap-3 text-sm text-gray-600 mb-3">
+            <MapPin size={18} className="mt-1" />
+            <p>
+              27 PRESTIGE TOWER INDIRA COMPLEX<br />
+              NAVLAKHA, INDORE<br />
+              Madhya Pradesh, India
+            </p>
+          </div>
 
-          <p className="mt-3 text-sm">
-            Phone: +91 9300098007
-          </p>
+          {/* PHONE */}
+          <div className="flex items-center gap-3 text-sm text-gray-600 mb-2">
+            <Phone size={16} />
+            <span>+91 9300098007</span>
+          </div>
 
-          <p className="text-sm">
-            omishajewels.opc@gmail.com
-          </p>
+          {/* EMAIL */}
+          <div className="flex items-center gap-3 text-sm text-gray-600">
+            <Mail size={16} />
+            <span>omishajewels.opc@gmail.com</span>
+          </div>
         </div>
 
         {/* COMPANY INFO LINKS */}
         <div>
           <h4 className="font-semibold mb-4">COMPANY INFO</h4>
-          <ul className="space-y-2 text-sm">
-            <li><a href="/" className="hover:underline">Home</a></li>
-            <li><a href="/shop" className="hover:underline">Shop</a></li>
-            <li><a href="/about" className="hover:underline">About us</a></li>
-            <li><a href="/contact" className="hover:underline">Contact us</a></li>
+          <ul className="space-y-2">
+            <li>
+              <NavLink to="/" className={({ isActive }) =>
+                isActive ? activeLink : normalLink
+              }>
+                Home
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/shop" className={({ isActive }) =>
+                isActive ? activeLink : normalLink
+              }>
+                Shop
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/about" className={({ isActive }) =>
+                isActive ? activeLink : normalLink
+              }>
+                About us
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/contact" className={({ isActive }) =>
+                isActive ? activeLink : normalLink
+              }>
+                Contact us
+              </NavLink>
+            </li>
           </ul>
         </div>
 
         {/* USEFUL LINKS */}
         <div>
           <h4 className="font-semibold mb-4">USEFUL LINKS</h4>
-          <ul className="space-y-2 text-sm">
-            <li><a href="/privacy-policy" className="hover:underline">Privacy Policy</a></li>
-            <li><a href="/shipping-policy" className="hover:underline">Shipping Policy</a></li>
-            <li><a href="/terms" className="hover:underline">Terms & Conditions</a></li>
-            <li><a href="/refund-policy" className="hover:underline">Refund and Cancellation Policy</a></li>
-            <li><a href="/return-policy" className="hover:underline">Return Policy</a></li>
+          <ul className="space-y-2">
+            <li>
+              <NavLink to="/privacy-policy" className={({ isActive }) =>
+                isActive ? activeLink : normalLink
+              }>
+                Privacy Policy
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/shipping-policy" className={({ isActive }) =>
+                isActive ? activeLink : normalLink
+              }>
+                Shipping Policy
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/terms" className={({ isActive }) =>
+                isActive ? activeLink : normalLink
+              }>
+                Terms & Conditions
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/refund-policy" className={({ isActive }) =>
+                isActive ? activeLink : normalLink
+              }>
+                Refund and Cancellation Policy
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/return-policy" className={({ isActive }) =>
+                isActive ? activeLink : normalLink
+              }>
+                Return Policy
+              </NavLink>
+            </li>
           </ul>
         </div>
 
@@ -110,8 +180,8 @@ export default function Footer() {
               </div>
             ))}
           </div>
-
         </div>
+
       </div>
 
       {/* BOTTOM BAR */}
@@ -121,3 +191,4 @@ export default function Footer() {
     </footer>
   );
 }
+
