@@ -91,7 +91,7 @@ const HeroSlider = () => {
 
           <div className="mt-10 flex gap-4">
             <Link
-                to="/books"
+                to="/shop"
                 className="px-8 py-3 bg-[#B8964E] text-white text-sm tracking-wide rounded-full transition-all duration-300 hover:bg-[#a68442] hover:-translate-y-0.2 hover:shadow-[0_3px_3px_rgba(184,150,78,0.35)]"
             >
                 SHOP NOW
