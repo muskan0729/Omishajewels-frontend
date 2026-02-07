@@ -1,4 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Toaster } from "sonner";
+
+
+/* COMMON */
 import { useState } from "react";
 
 /* COMMON */
@@ -53,6 +57,9 @@ function App() {
   };
 
   return (
+    <>
+     <Toaster position="bottom-left" richColors closeButton />
+   
     <BrowserRouter>
 
       {/* HEADER */}
@@ -130,6 +137,7 @@ function App() {
         </Route>
       </Routes> */}
     </BrowserRouter>
+      </>
   );
 }
 

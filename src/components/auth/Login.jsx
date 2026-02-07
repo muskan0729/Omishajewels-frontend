@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import { usePost } from "../../hooks/usePost";
+import { syncGuestData } from "../../utils/syncGuestData";
 
 const Login = ({ switchToRegister, onSuccess }) => {
   const { execute, loading, error } = usePost("login");
+    const { execute: cartSyncExecute } = usePost("cart/sync");
+  const { execute: wishlistSyncExecute } = usePost("wishlist/sync");
 
   // 🔐 Auth state
   const [isLoggedIn, setIsLoggedIn] = useState(
@@ -39,13 +42,14 @@ const Login = ({ switchToRegister, onSuccess }) => {
         console.log(res.user);
         localStorage.setItem("user", JSON.stringify(res.user));
         setUser(res.user);
+        
       }
-
+     await syncGuestData(cartSyncExecute, wishlistSyncExecute);
       setIsLoggedIn(true);
       onSuccess?.(res);
 
     } catch (err) {
-      console.error("Login failed");
+      console.error("Login failed",err);
     }
   };
 
