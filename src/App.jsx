@@ -32,24 +32,32 @@ import Addresses from "./pages/my-account/Addresses";
 import EditBillingAddress from "./pages/my-account/EditBillingAddress";
 import EditShippingAddress from "./pages/my-account/EditShippingAddress";
 
-import Login from "./components/Login";
+// import Login from "./components/Login";
 import Cartprocess from "./components/Cartprocess";
-import Register from "./components/Register";
+// import Register from "./components/Register";
+import AuthSidebar from "./components/auth/AuthSidebar";
+
 
 
 function App() {
-  const [loginOpen, setLoginOpen] = useState(false);
-
+   const [authOpen, setAuthOpen] = useState(false);
+  const [authView, setAuthView] = useState("login");
   return (
     <BrowserRouter>
-      {/* HEADER */}
-      <Header setLoginOpen={setLoginOpen} />
+      <Header
+        openLogin={() => {
+          setAuthView("login");
+          setAuthOpen(true);
+        }}
+      />
 
-      {/* LOGIN SIDEBAR (NOT A ROUTE) */}
-      <Login open={loginOpen} setOpen={setLoginOpen} />
-
-
-      
+      {/* AUTH SIDEBAR (GLOBAL, NOT A ROUTE) */}
+      <AuthSidebar
+        open={authOpen}
+        setOpen={setAuthOpen}
+        view={authView}
+        setView={setAuthView}
+      />
 
       {/* PAGE CONTENT */}
       <main className="min-h-screen bg-[#FEFCF9]">
