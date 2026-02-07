@@ -3,7 +3,7 @@ import axios from "axios";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
-export function usePut(endpoint) {
+export function useDelete(endpoint) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
