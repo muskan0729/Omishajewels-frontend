@@ -67,7 +67,7 @@ const SectionSix = () => {
                 </Link>
 
                 <Link
-                  to="/books"
+                  to="/shop"
                   className="
                     px-7 py-3
                     rounded-full
