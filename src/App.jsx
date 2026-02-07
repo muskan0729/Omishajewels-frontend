@@ -1,6 +1,8 @@
 
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Toaster } from "sonner";
+
 
 /* COMMON */
 import { useState } from "react";
@@ -53,6 +55,9 @@ function App() {
   const [authView, setAuthView] = useState("login");
 
   return (
+    <>
+     <Toaster position="bottom-left" richColors closeButton />
+   
     <BrowserRouter>
       <Routes>
         {/* PUBLIC ROUTES */}
@@ -141,6 +146,7 @@ function App() {
         </Route>
       </Routes>
     </BrowserRouter>
+      </>
   );
 }
 
