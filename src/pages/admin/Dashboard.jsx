@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { Link } from "react-router-dom";
 import {
   BookOpen,
   ShoppingCart,
@@ -10,7 +11,7 @@ export default function Dashboard() {
   const stats = {
     totalEbooks: 15678,
     totalOrders: 48765,
-    totalRevenue: 2845000,
+    totalRevenue: 28450766720,
     activeUsers: 12435,
   };
 
@@ -43,6 +44,23 @@ export default function Dashboard() {
       "bg-rose-100 text-rose-700",
     ];
     return colors[name.charCodeAt(0) % colors.length];
+  };
+
+  // Helper to get responsive font size class based on value length
+  const getValueFontClass = (value) => {
+    // Strip non-numeric characters (e.g., ₹, commas) for accurate digit count
+    const cleanValue = value.toString().replace(/[^\d]/g, '');
+    const length = cleanValue.length;
+    if (length > 5) return "text-lg sm:text-xl"; // Reduce for >5 digits
+    if (length > 3) return "text-xl sm:text-2xl";
+    return "text-2xl sm:text-3xl";
+  };
+
+  // Helper for transaction amount font size based on digit count
+  const getAmountFontClass = (amount) => {
+    const length = amount.toString().length;
+    if (length > 5) return "text-xs"; // Reduce for >5 digits
+    return "text-sm sm:text-base";
   };
 
   const cards = useMemo(
@@ -86,17 +104,19 @@ export default function Dashboard() {
         <p className="text-xs sm:text-sm text-gray-500 mt-1">Last updated: Today</p>
       </div>
 
-      {/* Stats Cards - Enhanced Responsiveness */}
+      {/* Stats Cards - Enhanced Responsiveness with Dynamic Font Scaling and One-Line Display */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {cards.map((c) => (
           <div
             key={c.label}
-            className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+            className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden"
           >
             <div className="flex justify-between items-start">
               <div className="flex-1 min-w-0">
                 <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">{c.label}</p>
-                <p className="text-2xl sm:text-3xl font-bold font-tabular-nums text-gray-900 mt-2">
+                <p 
+                  className={`font-bold font-tabular-nums text-gray-900 mt-2 whitespace-nowrap overflow-hidden text-ellipsis leading-tight ${getValueFontClass(c.value)}`}
+                >
                   {c.value}
                 </p>
               </div>
@@ -144,18 +164,25 @@ export default function Dashboard() {
                   <span className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full ${o.color}`} />
                   <span className="text-xs sm:text-sm font-medium text-gray-700 truncate">{o.label}</span>
                 </div>
-                <span className="font-semibold text-base sm:text-lg text-gray-900">{o.count}</span>
+                <span className={`font-semibold text-gray-900 ${o.count.toString().length > 4 ? 'text-sm sm:text-base' : 'text-base sm:text-lg'}`}>
+                  {o.count.toLocaleString()}
+                </span>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Recent Transactions - Mobile-Optimized */}
+      {/* Recent Transactions - Mobile-Optimized with Amount Scaling and One-Line Display */}
       <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300">
         <div className="p-4 sm:p-6 border-b border-gray-200 flex justify-between items-center">
           <h3 className="font-semibold text-base sm:text-lg">Recent Transactions</h3>
-          <button className="text-xs sm:text-sm font-medium text-blue-600 hover:underline">View All →</button>
+          <Link 
+            to="/admin/transactions" 
+            className="text-xs sm:text-sm font-medium text-blue-600 hover:underline flex items-center gap-1"
+          >
+            View All <span>→</span>
+          </Link>
         </div>
 
         <div className="overflow-x-auto">
@@ -172,7 +199,7 @@ export default function Dashboard() {
               {transactions.map((t) => (
                 <tr key={t.order} className="hover:bg-gray-50 transition-colors">
                   <td className="p-3 sm:p-4 flex items-center gap-2 sm:gap-3 w-full sm:min-w-[220px]">
-                    <div className={`avatar flex-shrink-0 ${getAvatarColor(t.name)}`}>
+                    <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium flex-shrink-0 ${getAvatarColor(t.name)}`}>
                       {t.name[0]}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -187,8 +214,10 @@ export default function Dashboard() {
                       year: "numeric",
                     })}
                   </td>
-                  <td className="p-3 sm:p-4 text-center font-semibold text-gray-900 whitespace-nowrap">
-                    ₹{t.amount.toLocaleString()}
+                  <td className="p-3 sm:p-4 text-center whitespace-nowrap">
+                    <span className={`font-semibold text-gray-900 ${getAmountFontClass(t.amount)}`}>
+                      ₹{t.amount.toLocaleString()}
+                    </span>
                   </td>
                   <td className="p-3 sm:p-4 text-center hidden sm:table-cell">
                     <span
