@@ -1,8 +1,19 @@
 import { FiX } from "react-icons/fi";
 import EmptyCart from "./EmptyCart";
+import { useGet } from "../../hooks/useGet";
+import { Link } from "react-router-dom";
+
 
 const CartDrawer = ({ open, onClose }) => {
-  const cartItems = []; // EMPTY FOR NOW
+
+
+  // 🔹 API call
+  const { data, loading, error } = useGet(open ? "cart" : null);
+
+  const cartItems = data?.items || [];
+  // console.log("carts",cartItems);
+  const subtotal = data?.subtotal || 0;
+// console.log("subtotal",subtotal);
   const isEmpty = cartItems.length === 0;
 
   if (!open) return null;
@@ -20,9 +31,7 @@ const CartDrawer = ({ open, onClose }) => {
 
         {/* HEADER */}
         <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h3 className="text-sm font-semibold">
-            SHOPPING CART
-          </h3>
+          <h3 className="text-sm font-semibold">SHOPPING CART</h3>
 
           <button
             onClick={onClose}
@@ -34,26 +43,58 @@ const CartDrawer = ({ open, onClose }) => {
 
         {/* CONTENT */}
         <div className="flex-1 overflow-y-auto">
-          {isEmpty ? (
-            <EmptyCart />
-          ) : (
+
+          {loading && (
+            <p className="p-6 text-sm text-gray-500">Loading cart...</p>
+          )}
+
+          {error && (
+            <p className="p-6 text-sm text-red-500">
+              Failed to load cart
+            </p>
+          )}
+
+          {!loading && isEmpty && <EmptyCart />}
+
+          {!loading && !isEmpty && (
             <div className="p-6 space-y-4">
-              {/* Cart items will go here */}
+              {cartItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex justify-between items-start border-b pb-4"
+                >
+                  <div>
+                    <p className="text-sm font-medium">{item.name}</p>
+                    <p className="text-xs text-gray-500">
+                      Qty: {item.quantity}
+                    </p>
+                  </div>
+
+                  <p className="text-sm font-semibold">
+                    ₹{item.price}
+                  </p>
+                </div>
+              ))}
             </div>
           )}
         </div>
 
-        {/* FOOTER (ONLY IF ITEMS EXIST) */}
-        {!isEmpty && (
+        {/* FOOTER */}
+        {!isEmpty && !loading && (
           <div className="border-t p-6 space-y-4">
             <div className="flex justify-between font-semibold">
               <span>SUBTOTAL:</span>
-              <span>₹10,500.00</span>
+              <span>₹{subtotal}</span>
             </div>
 
-            <button className="w-full bg-black text-white py-3 rounded text-sm font-semibold">
+            <Link
+              to="/view-cart"
+              onClick={onClose}
+              className="block w-full text-center bg-black text-white py-3 rounded text-sm font-semibold"
+            >
               VIEW CART
-            </button>
+            </Link>
+
 
             <button className="w-full bg-[#B98B5E] text-white py-3 rounded text-sm font-semibold">
               CHECKOUT
