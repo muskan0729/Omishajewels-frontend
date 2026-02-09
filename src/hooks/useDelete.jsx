@@ -3,27 +3,35 @@ import axios from "axios";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
-export function useDelete(endpoint) {
+
+export function useDelete() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const executeDelete = async (body) => {
+  const executeDelete = async (endpoint, body = {}) => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await axios.delete(`${BASE_URL}${endpoint}`, body, {
-         
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      const token = localStorage.getItem("token");
+
+      const response = await axios.delete(
+        `${BASE_URL}${endpoint}`,
+        {
+          data: body,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       setData(response.data);
       return response.data;
     } catch (err) {
       setError(err.response?.data || "Something went wrong");
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -31,3 +39,4 @@ export function useDelete(endpoint) {
 
   return { data, loading, error, executeDelete };
 }
+
