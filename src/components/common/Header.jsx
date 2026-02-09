@@ -1,4 +1,5 @@
-import { Link, NavLink } from "react-router-dom";
+// import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { FiUser, FiSearch, FiHeart, FiShoppingCart } from "react-icons/fi";
 import logo from "../../images/logo.png";
 import { useState } from "react";
@@ -10,6 +11,19 @@ import CartDrawer from "../cart/CartDrawer";
 const Header = ({ openLogin }) => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
+
+  const navigate = useNavigate();
+  const isLoggedIn = !!localStorage.getItem("token");
+
+  const handleWishlistClick = () => {
+    if (!isLoggedIn) {
+      // just redirect OR show message — no login popup
+      navigate("/my-account");
+      return;
+    }
+    navigate("/my-account/wishlist");
+  };
+  
 
   return (
     <>
@@ -79,12 +93,14 @@ const Header = ({ openLogin }) => {
           
 
             {/* WISHLIST */}
-            <Link
-  to="/my-account/wishlist"
+            <button
+  onClick={handleWishlistClick}
   className="hover:text-[#B8964E] transition cursor-pointer"
+  aria-label="Wishlist"
 >
   <FiHeart />
-</Link>
+</button>
+
 
             {/* CART (DRAWER OPEN) */}
             <button
