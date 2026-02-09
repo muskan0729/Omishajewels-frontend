@@ -4,8 +4,15 @@ import { getWishlistDB, clearWishlistDB } from "../indexeddb/wishlistDB";
 
 export const syncGuestData = async (cartExecute, wishlistExecute) => {
   const token = localStorage.getItem("token");
-    const user_id = localStorage.getItem("user_id");
-  if (!token || !user_id) return;
+  if (!token) return;
+
+  // Get user_id from localStorage (most common pattern)
+  const userId = localStorage.getItem("user_id");
+
+  if (!userId) {
+    console.warn("No user_id found in localStorage → skipping wishlist sync");
+    // You can still sync cart if you want
+  }
 
   try {
     const cartItems = await getCartDB();
@@ -27,7 +34,8 @@ export const syncGuestData = async (cartExecute, wishlistExecute) => {
       for (let item of wishlistItems) {
         await wishlistExecute({
           product_id: item.id,
-          user_id: user_id,
+          user_id: userId,
+          
         });
       }
       await clearWishlistDB();

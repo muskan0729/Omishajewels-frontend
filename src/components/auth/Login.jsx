@@ -37,11 +37,23 @@ const Login = ({ switchToRegister, onSuccess }) => {
       // Save token
       localStorage.setItem("token", res.access_token);
 
+      if (res.user_id) {
+      localStorage.setItem("user_id", res.user_id);        // ← key line
+    }
+
+    localStorage.setItem("user", JSON.stringify({
+      id: res.user_id,
+      name: res.name || "User",
+      // email: form.email  // if you want to store it
+    }));
+      
+
       // Save user
       if (res.user) {
         console.log(res.user);
         localStorage.setItem("user", JSON.stringify(res.user));
         setUser(res.user);
+       
         
       }
      await syncGuestData(cartSyncExecute, wishlistSyncExecute);

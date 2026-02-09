@@ -111,7 +111,7 @@ function App() {
                       <Route path="edit-address/shipping" element={<EditShippingAddress />} />
                     </Route>
 
-<Route path="/product/:slug" element={<ProductDetails />} />
+<Route path="/products/:id" element={<ProductDetails />} />
                     <Route path="/cartprocess" element={<Cartprocess />} />
                   </Routes>
                 </main>

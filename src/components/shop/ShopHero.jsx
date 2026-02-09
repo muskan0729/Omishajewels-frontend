@@ -1,16 +1,46 @@
+import { useGet } from "../../hooks/useGet";
 import heroImg from "../../images/herosectionshop.png";
+
 
 const toLabel = (key) => String(key || "Shop").replace(/-/g, " ").toUpperCase();
 
 export default function ShopHero({
-  categories = [],
+  // categories = [],
   activeCategory = "all",
   onChangeCategory,
   pageTitle,
 
 }) {
-  const title = pageTitle || (activeCategory === "all");
+  // const title = pageTitle || (activeCategory === "all");
+  
+  const {data, loading,error} = useGet("categories");
+// console.log("categorydata", data);
 
+  // const categories = Array.isArray(data) ? data : data?.data || data?.categories || [];
+const categories = Array.isArray(data)
+  ? data
+  : Array.isArray(data?.data)
+  ? data.data
+  : [];
+  console.log("data category",categories);
+
+
+  // Find the category object that matches the active ID
+const activeCatObject = categories.find(
+  cat => String(cat.id) === String(activeCategory)
+);
+
+// Use proper name or fallback
+const title =
+  pageTitle ||
+  (activeCategory === "all" ? "Shop" :
+    activeCatObject?.name
+      ? toLabel(activeCatObject.name)
+      : "Category");
+
+
+
+  // console.log("category", categories);
   return (
     
     <section className="hero">
@@ -29,13 +59,13 @@ export default function ShopHero({
           <div className="hero__cats">
             {categories.map((c) => (
               <button
-                key={c.key}
+                key={c.id}
                 type="button"
-                className={`hero__cat ${activeCategory === c.key ? "isActive" : ""}`}
-                onClick={() => onChangeCategory?.(c.key)}
+                className={`hero__cat ${activeCategory === c.id ? "isActive" : ""}`}
+                onClick={() => onChangeCategory?.(c.id)}
               >
-                <span className="hero__catName">{toLabel(c.key)}</span>
-                <span className="hero__catCount">{c.count} Products</span>
+                <span className="hero__catName">{toLabel(c.name)}</span>
+                <span className="hero__catCount">{c.ebooks_count} Products</span>
               </button>
             ))}
           </div>
