@@ -4,7 +4,8 @@ import { getWishlistDB, clearWishlistDB } from "../indexeddb/wishlistDB";
 
 export const syncGuestData = async (cartExecute, wishlistExecute) => {
   const token = localStorage.getItem("token");
-  if (!token) return;
+    const user_id = localStorage.getItem("user_id");
+  if (!token || !user_id) return;
 
   try {
     const cartItems = await getCartDB();
@@ -15,7 +16,7 @@ export const syncGuestData = async (cartExecute, wishlistExecute) => {
       for (let item of cartItems) {
         await cartExecute({
           product_id: item.id,
-          qty: item.quantity || 1,
+          quantity: item.quantity || 1,
         });
       }
       await clearCartDB();
@@ -26,6 +27,7 @@ export const syncGuestData = async (cartExecute, wishlistExecute) => {
       for (let item of wishlistItems) {
         await wishlistExecute({
           product_id: item.id,
+          user_id: user_id,
         });
       }
       await clearWishlistDB();

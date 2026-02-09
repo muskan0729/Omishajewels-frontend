@@ -4,8 +4,8 @@ import { syncGuestData } from "../../utils/syncGuestData";
 
 const Login = ({ switchToRegister, onSuccess }) => {
   const { execute, loading, error } = usePost("login");
-    const { execute: cartSyncExecute } = usePost("cart/sync");
-  const { execute: wishlistSyncExecute } = usePost("wishlist/sync");
+    const { execute: cartSyncExecute } = usePost("cart/add");
+  const { execute: wishlistSyncExecute } = usePost("wishlist");
 
   // 🔐 Auth state
   const [isLoggedIn, setIsLoggedIn] = useState(
