@@ -1,39 +1,18 @@
-import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { MapPin, Phone, Mail } from "lucide-react";
+import { useGet } from "../../hooks/useGet";
 
 export default function Footer() {
-  const [products, setProducts] = useState([]);
+  // Fetch products using custom hook
+  const { data, loading, error } = useGet("products");
 
-  useEffect(() => {
-    fetch("/api/footer-products")
-      .then((res) => res.json())
-      .then((data) => setProducts(data))
-      .catch(() => {
-        setProducts([
-          {
-            id: 1,
-            name: "ReWork: Change the Way You Work Forever",
-            image: "/images/book1.jpg",
-            oldPrice: "₹7,000.00",
-            price: "₹5,900.00",
-          },
-          {
-            id: 2,
-            name: "The Power of Your Subconscious Mind",
-            image: "/images/book2.jpg",
-            oldPrice: "₹7,000.00",
-            price: "₹3,400.00",
-          },
-        ]);
-      });
-  }, []);
+  // API response shape:
+  // { success: true, data: { current_page: 1, data: [...] } }
+  const products = data?.data?.data?.slice(0, 3) || [];
 
   /* ACTIVE LINK STYLE */
-  const activeLink =
-    "font-semibold text-base text-black";
-  const normalLink =
-    "text-sm text-gray-600 hover:text-black";
+  const activeLink = "font-semibold text-base text-black";
+  const normalLink = "text-sm text-gray-600 hover:text-black";
 
   return (
     <footer className="bg-white border-t mt-16">
@@ -41,9 +20,8 @@ export default function Footer() {
 
         {/* COMPANY INFO */}
         <div>
-          {/* LOGO (INCREASED SIZE) */}
           <img
-            src="\src\images\logo.png"
+            src="/src/images/logo.png"
             alt="Omisha Jewels"
             className="w-32 mb-4"
           />
@@ -52,7 +30,6 @@ export default function Footer() {
             OMISHA JEWELS OPC PVT LTD
           </h4>
 
-          {/* ADDRESS */}
           <div className="flex gap-3 text-sm text-gray-600 mb-3">
             <MapPin size={18} className="mt-1" />
             <p>
@@ -62,13 +39,11 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* PHONE */}
           <div className="flex items-center gap-3 text-sm text-gray-600 mb-2">
             <Phone size={16} />
             <span>+91 9300098007</span>
           </div>
 
-          {/* EMAIL */}
           <div className="flex items-center gap-3 text-sm text-gray-600">
             <Mail size={16} />
             <span>omishajewels.opc@gmail.com</span>
@@ -79,34 +54,23 @@ export default function Footer() {
         <div>
           <h4 className="font-semibold mb-4">COMPANY INFO</h4>
           <ul className="space-y-2">
-            <li>
-              <NavLink to="/" className={({ isActive }) =>
-                isActive ? activeLink : normalLink
-              }>
-                Home
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/shop" className={({ isActive }) =>
-                isActive ? activeLink : normalLink
-              }>
-                Shop
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/about" className={({ isActive }) =>
-                isActive ? activeLink : normalLink
-              }>
-                About us
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/contact" className={({ isActive }) =>
-                isActive ? activeLink : normalLink
-              }>
-                Contact us
-              </NavLink>
-            </li>
+            {[
+              { to: "/", label: "Home" },
+              { to: "/shop", label: "Shop" },
+              { to: "/about", label: "About us" },
+              { to: "/contact", label: "Contact us" },
+            ].map((link) => (
+              <li key={link.to}>
+                <NavLink
+                  to={link.to}
+                  className={({ isActive }) =>
+                    isActive ? activeLink : normalLink
+                  }
+                >
+                  {link.label}
+                </NavLink>
+              </li>
+            ))}
           </ul>
         </div>
 
@@ -114,70 +78,66 @@ export default function Footer() {
         <div>
           <h4 className="font-semibold mb-4">USEFUL LINKS</h4>
           <ul className="space-y-2">
-            <li>
-              <NavLink to="/privacy-policy" className={({ isActive }) =>
-                isActive ? activeLink : normalLink
-              }>
-                Privacy Policy
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/shipping-policy" className={({ isActive }) =>
-                isActive ? activeLink : normalLink
-              }>
-                Shipping Policy
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/terms" className={({ isActive }) =>
-                isActive ? activeLink : normalLink
-              }>
-                Terms & Conditions
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/refund-policy" className={({ isActive }) =>
-                isActive ? activeLink : normalLink
-              }>
-                Refund and Cancellation Policy
-              </NavLink>
-            </li>
-            <li>
-              <NavLink to="/return-policy" className={({ isActive }) =>
-                isActive ? activeLink : normalLink
-              }>
-                Return Policy
-              </NavLink>
-            </li>
+            {[
+              { to: "/privacy-policy", label: "Privacy Policy" },
+              { to: "/shipping-policy", label: "Shipping Policy" },
+              { to: "/terms", label: "Terms & Conditions" },
+              { to: "/refund-policy", label: "Refund and Cancellation Policy" },
+              { to: "/return-policy", label: "Return Policy" },
+            ].map((link) => (
+              <li key={link.to}>
+                <NavLink
+                  to={link.to}
+                  className={({ isActive }) =>
+                    isActive ? activeLink : normalLink
+                  }
+                >
+                  {link.label}
+                </NavLink>
+              </li>
+            ))}
           </ul>
         </div>
 
-        {/* PRODUCTS (DYNAMIC ONLY) */}
+        {/* PRODUCTS */}
         <div>
           <h4 className="font-semibold mb-4">PRODUCTS</h4>
 
+          {loading && (
+            <p className="text-sm text-gray-400">Loading...</p>
+          )}
+
+          {!loading && products.length === 0 && (
+            <p className="text-sm text-gray-400">
+              No products found
+            </p>
+          )}
+
           <div className="space-y-5">
             {products.map((product) => (
-              <div key={product.id} className="flex gap-3">
+              <NavLink
+                key={product.id}
+                to={`/product/${product.slug}`}
+                className="flex gap-3 hover:opacity-80"
+              >
                 <img
                   src={product.image}
-                  alt={product.name}
+                  alt={product.title}
                   className="w-14 h-20 object-cover border"
                 />
+
                 <div>
-                  <p className="text-sm leading-5">
-                    {product.name}
+                  {/* BOOK NAME */}
+                  <p className="text-sm font-medium leading-5 line-clamp-2">
+                    {product.title}
                   </p>
-                  <p className="text-sm mt-1">
-                    <span className="line-through text-gray-400 mr-2">
-                      {product.oldPrice}
-                    </span>
-                    <span className="text-orange-600 font-semibold">
-                      {product.price}
-                    </span>
+
+                  {/* PRICE */}
+                  <p className="text-sm mt-1 text-orange-600 font-semibold">
+                    ₹{product.price}
                   </p>
                 </div>
-              </div>
+              </NavLink>
             ))}
           </div>
         </div>
@@ -191,4 +151,3 @@ export default function Footer() {
     </footer>
   );
 }
-
