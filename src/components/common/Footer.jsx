@@ -5,6 +5,7 @@ import { useGet } from "../../hooks/useGet";
 export default function Footer() {
   // Fetch products using custom hook
   const { data, loading, error } = useGet("products");
+    const IMG_URL = import.meta.env.VITE_IMG_URL;
 
   // API response shape:
   // { success: true, data: { current_page: 1, data: [...] } }
@@ -13,6 +14,8 @@ export default function Footer() {
   /* ACTIVE LINK STYLE */
   const activeLink = "font-semibold text-base text-black";
   const normalLink = "text-sm text-gray-600 hover:text-black";
+
+
 
   return (
     <footer className="bg-white border-t mt-16">
@@ -114,14 +117,17 @@ export default function Footer() {
           )}
 
           <div className="space-y-5">
-            {products.map((product) => (
+            {products.map((product) => {
+                  const imageName = product.image?.split("/").pop(); // move inside map
+               const imageSrc = imageName ? `${IMG_URL}${imageName}` : "/no-image.png";
+               return(
               <NavLink
                 key={product.id}
                 to={`/product/${product.slug}`}
                 className="flex gap-3 hover:opacity-80"
               >
                 <img
-                  src={product.image}
+                   src={imageSrc}  
                   alt={product.title}
                   className="w-14 h-20 object-cover border"
                 />
@@ -138,7 +144,8 @@ export default function Footer() {
                   </p>
                 </div>
               </NavLink>
-            ))}
+               )
+})}
           </div>
         </div>
 

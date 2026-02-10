@@ -29,7 +29,7 @@ const Home = () => {
       <SectionSix />
 
       {/* SECTION 7 */}
-      <SectionSeven />
+      {/* <SectionSeven /> */}
 
       {/* SECTION 7 */}
       <SectionEight />
