@@ -9,6 +9,7 @@ const ViewCart = () => {
  const { executeDelete } = useDelete();
 const [removingId, setRemovingId] = useState(null);
 
+    const IMG_URL = import.meta.env.VITE_IMG_URL;
 
   const [cartItems, setCartItems] = useState([]);
 
@@ -22,6 +23,7 @@ const [removingId, setRemovingId] = useState(null);
         oldPrice: Number(item.ebook.price),
         newPrice: Number(item.price),
         qty: Number(item.quantity),
+        image: item.ebook.image,  
       }));
 
       setCartItems(formattedItems);
@@ -30,25 +32,6 @@ const [removingId, setRemovingId] = useState(null);
     }
   }, [data]);
 
-  // 🔹 Increase quantity
-  // const increaseQty = (id) => {
-  //   setCartItems((prev) =>
-  //     prev.map((item) =>
-  //       item.id === id ? { ...item, qty: item.qty + 1 } : item
-  //     )
-  //   );
-  // };
-
-  // 🔹 Decrease quantity
-  // const decreaseQty = (id) => {
-  //   setCartItems((prev) =>
-  //     prev.map((item) =>
-  //       item.id === id && item.qty > 1
-  //         ? { ...item, qty: item.qty - 1 }
-  //         : item
-  //     )
-  //   );
-  // };
 
   // 🔹 Remove single item
 const removeItem = async (itemId) => {
@@ -113,11 +96,16 @@ const removeItem = async (itemId) => {
               ) : (
                 cartItems.map((item) => {
                   const itemTotal = item.newPrice * item.qty;
-
+                 const imageName = item.image?.split("/").pop();
                   return (
                     <div key={item.id} className="border-b pb-8 mb-8">
                       <div className="flex justify-between gap-6">
-
+                       <div >
+                        <img 
+                        src={`${IMG_URL}${imageName}`}
+                        style={{width:"130px",height:"auto"}}
+                         />
+                        </div>
                         {/* Product Info */}
                         <div className="w-[70%]">
                           <h4 className="font-medium text-sm md:text-base">
@@ -137,27 +125,7 @@ const removeItem = async (itemId) => {
                             {item.description}
                           </p>
 
-                          {/* Quantity */}
-                          {/* <div className="flex items-center mt-6 border w-fit rounded overflow-hidden">
-                            <button
-                              onClick={() => decreaseQty(item.id)}
-                              disabled={item.qty === 1}
-                              className="px-4 py-2 text-lg disabled:opacity-40"
-                            >
-                              −
-                            </button>
-
-                            <span className="px-6 py-2 border-l border-r font-semibold">
-                              {item.qty}
-                            </span>
-
-                            <button
-                              onClick={() => increaseQty(item.id)}
-                              className="px-4 py-2 text-lg"
-                            >
-                              +
-                            </button>
-                          </div> */}
+          
 
                           <button
                             onClick={() => removeItem(item.id)}

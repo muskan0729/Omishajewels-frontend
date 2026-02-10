@@ -5,6 +5,10 @@ export default function SearchOverlay({ open, onClose }) {
   const [query, setQuery] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
+
+      const IMG_URL = import.meta.env.VITE_IMG_URL;
+  
+
   // debounce search (300ms)
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -36,6 +40,8 @@ useEffect(() => {
   if (!open) return null;
 
   const products = data?.data?.data || [];
+
+    const imageName = products.image?.split("/").pop();
 
   return (
     <div className="fixed inset-0 z-[999] bg-white animate-slideUp">
@@ -109,7 +115,7 @@ useEffect(() => {
                 title={product.title}
                 price={product.price}
                 oldPrice={product.old_price}
-                image={product.image}
+                 src={`${IMG_URL}${imageName}`}  
               />
             ))}
           </div>
