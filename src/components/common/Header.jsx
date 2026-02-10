@@ -12,8 +12,11 @@ import { useGet } from "../../hooks/useGet";
 
 const Header = ({ openLogin }) => {
   const { data, loading, error } = useGet(open ? "wishlist" : null);
-
   const total_wishlist_count = data?.total_count || 0;
+
+ const {data: cartData,loading: cartLoading,error: cartError,} = useGet(open ? "cart" : null);
+
+const subtotal = cartData?.subtotal || 0;
   
 
   const [searchOpen, setSearchOpen] = useState(false);
@@ -124,8 +127,13 @@ const Header = ({ openLogin }) => {
               aria-label="Cart"
             >
               <FiShoppingCart />
-              <span className="text-sm font-medium">₹0.00</span>
+
+              {/* SUBTOTAL */}
+              <span className="text-sm font-medium">
+                ₹{subtotal}
+              </span>
             </button>
+
           </div>
 
         </div>
