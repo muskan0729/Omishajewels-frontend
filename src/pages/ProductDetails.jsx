@@ -5,47 +5,42 @@ import {
   FaInstagram,
   FaHeart,
   FaBalanceScale,
+  FaPinterest,
+  FaLinkedin,
 } from "react-icons/fa";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useGet } from "../hooks/useGet";
+import { addToCartManager, addToWishlistManager } from "../utils/cartManager";
+import { usePost } from "../hooks/usePost";
+import { toast } from "sonner";
+
 
 export default function ProductDetails() {
   const [qty, setQty] = useState(1);
   const [tab, setTab] = useState("description");
   const { id } = useParams();
+  const { execute: cartExecute } = usePost("cart/add");
+  const { execute: wishlistExecute } = usePost("wishlist");
+
+  const userId = localStorage.getItem("user_id");
 
   /* ================= PRODUCT API ================= */
+  const { data, isLoading, error } = useGet(id ? `products/${id}` : null);
+
+
   const {
-    data,
-    isLoading,
-    error,
-  } = useGet(id ? `products/${id}` : null);
+    data: relatedData,
+    isLoading: relatedLoading,
+    error: relatedError,
+  } = useGet(id ? `products/${id}/related` : null);
 
-  /* ================= RELATED PRODUCTS API ================= */
-  // const {
-  //   data: relatedData,
-  //   isLoading: relatedLoading,
-  //   error: relatedError,
-  // } = useGet(id ? `products/${id}/related` : null);
-
-const {
-  data: relatedData,
-  isLoading: relatedLoading,
-  error: relatedError,
-} = useGet(id ? `products/${id}/related` : null);
-
-const relatedProducts = relatedData?.data || [];
-
-
-
+  const relatedProducts = relatedData?.data || [];
 
   /* ================= EXTRACT DATA ================= */
   const product = data?.data || null;
 
-
-
-console.log("relatedData:", relatedData);
-console.log("relatedProducts:", relatedProducts);
+  console.log("relatedData:", relatedData);
+  console.log("relatedProducts:", relatedProducts);
 
   /* ================= DEBUG ================= */
   useEffect(() => {
@@ -77,6 +72,16 @@ console.log("relatedProducts:", relatedProducts);
     return <div className="p-10 text-center">Product not found</div>;
   }
 
+  const productData = {
+    id: product.id,  
+    product_id: product.id,
+    title: product.title,
+    price: product.price,
+    quantity: qty,
+  };
+    const IMG_URL = import.meta.env.VITE_IMG_URL;
+    const imageName = product.image?.split("/").pop();
+    
   /* ================= UI ================= */
   return (
     <div className="bg-white">
@@ -91,17 +96,16 @@ console.log("relatedProducts:", relatedProducts);
         {/* IMAGE */}
         <div className="relative">
           <img
-            src={product.image}
+            src={`${IMG_URL}${imageName}`}  
             alt={product.title}
             className="w-full rounded-md"
+            style={{width:"auto", height:"500px",paddingLeft:"100px"}}
           />
         </div>
 
         {/* DETAILS */}
         <div>
-          <h1 className="text-3xl font-serif mb-4">
-            {product.title}
-          </h1>
+          <h1 className="text-3xl font-serif mb-4">{product.title}</h1>
 
           <div className="flex items-center gap-4 mb-6">
             {product.oldPrice && (
@@ -120,23 +124,11 @@ console.log("relatedProducts:", relatedProducts);
 
           {/* QTY */}
           <div className="flex items-center gap-4 mb-6">
-            <div className="flex border rounded-full overflow-hidden">
-              <button
-                onClick={() => setQty(Math.max(1, qty - 1))}
-                className="px-4 py-2"
-              >
-                -
-              </button>
-              <span className="px-6 py-2">{qty}</span>
-              <button
-                onClick={() => setQty(qty + 1)}
-                className="px-4 py-2"
-              >
-                +
-              </button>
-            </div>
 
-            <button className="bg-[#C39A5B] text-white px-8 py-3 rounded-full">
+            <button
+              className="bg-[#C39A5B] text-white px-8 py-3 rounded-full"
+              onClick={() => addToCartManager(productData, cartExecute)}
+            >
               ADD TO CART
             </button>
           </div>
@@ -146,7 +138,19 @@ console.log("relatedProducts:", relatedProducts);
             <button className="flex items-center gap-2">
               <FaBalanceScale /> Compare
             </button>
-            <button className="flex items-center gap-2">
+            <button
+              className="flex items-center gap-2"
+              onClick={() => {
+                if (!userId) {
+                  toast.error("Please login to add to wishlist");
+                  return;
+                }
+                addToWishlistManager(
+                  { ...productData, user_id: userId },
+                  wishlistExecute,
+                );
+              }}
+            >
               <FaHeart /> Add to wishlist
             </button>
           </div>
@@ -159,54 +163,33 @@ console.log("relatedProducts:", relatedProducts);
 
             <div className="flex items-center gap-4 mt-3">
               <strong>Share:</strong>
-              <FaFacebookF />
-              <FaTwitter />
-              <FaInstagram />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ================= TABS ================= */}
-      <div className="border-t">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex justify-center gap-12 border-b text-sm">
-            {["description", "reviews", "shipping"].map((t) => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={`py-4 uppercase tracking-wide ${
-                  tab === t
-                    ? "border-b-2 border-[#C39A5B] text-black"
-                    : "text-gray-400"
-                }`}
+              <a
+                href="https://www.facebook.com/sharer/sharer.php?u=https://omishajewels.com/index.php/product/a-a-little-history-of-economics-little-history-of-economics-little-histories/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className=" hover:text-blue-800"
               >
-                {t === "reviews"
-                  ? "Reviews (0)"
-                  : t.replace("-", " & ")}
-              </button>
-            ))}
-          </div>
-
-          <div className="py-12 flex justify-center">
-            <div className="max-w-3xl w-full text-gray-700">
-              {tab === "description" && (
-                <p className="leading-relaxed text-center">
-                  {product.description}
-                </p>
-              )}
-
-              {tab === "reviews" && (
-                <p className="text-center text-gray-500">
-                  No reviews yet.
-                </p>
-              )}
-
-              {tab === "shipping" && (
-                <p className="text-center text-gray-500">
-                  Fast & secure delivery.
-                </p>
-              )}
+                <FaFacebookF /> </a>
+                <a
+    href="https://x.com/share?url=https://omishajewels.com/index.php/product/a-a-little-history-of-economics-little-history-of-economics-little-histories/"
+    target="_blank"
+    rel="noopener noreferrer"
+    className=" hover:text-blue-800"
+  ><FaTwitter /></a>
+                  <a
+    href="https://www.pinterest.com/pin/create/button/?url=https://omishajewels.com/index.php/product/a-a-little-history-of-economics-little-history-of-economics-little-histories/&media=https://omishajewels.com/wp-content/uploads/2025/11/712NMyLHxmL._SY466_.jpg&description=A+A+Little+History+of+Economics+Little+History+of+Economics+%28Little+Histories%29"
+    target="_blank"
+    rel="noopener noreferrer"
+    className=" hover:text-blue-800"
+  >
+   <FaPinterest /></a>
+                   <a
+    href="https://www.linkedin.com/uas/login?session_redirect=https%3A%2F%2Fwww.linkedin.com%2FshareArticle%3Fmini%3Dtrue%26url%3Dhttps%3A%2F%2Fomishajewels.com%2Findex.php%2Fproduct%2Fa-a-little-history-of-economics-little-history-of-economics-little-histories%2F"
+    target="_blank"
+    rel="noopener noreferrer"
+    className=" hover:text-blue-800"
+  >
+   <FaLinkedin /></a>
             </div>
           </div>
         </div>
@@ -214,52 +197,56 @@ console.log("relatedProducts:", relatedProducts);
 
       {/* ================= RELATED PRODUCTS ================= */}
       <div className="max-w-7xl mx-auto px-6 py-16">
-        <h2 className="text-xl font-serif mb-10">
-          Related Products
-        </h2>
+        <h2 className="text-xl font-serif mb-10">Related Products</h2>
 
         {relatedLoading && (
           <p className="text-gray-500">Loading related products...</p>
         )}
 
         {relatedError && (
-          <p className="text-red-500">
-            Failed to load related products
-          </p>
+          <p className="text-red-500">Failed to load related products</p>
         )}
 
         {relatedProducts.length > 0 && (
-  <div className="max-w-7xl mx-auto px-6 py-16">
-    <h2 className="text-xl font-serif mb-10">
+          <div className="max-w-7xl mx-auto px-6 py-16">
+            {/* <h2 className="text-xl font-serif mb-10">
       Related Products
-    </h2>
+    </h2> */}
 
-    <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-10">
-      {relatedProducts.map((p) => (
-        <div key={p.id} className="group cursor-pointer">
-          <div className="relative overflow-hidden rounded-md">
-            <img
-              src={p.image}
-              alt={p.title}
-              className="group-hover:scale-105 transition"
-            />
+            <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-10">
+  {relatedProducts.map((p) => {
+  const relatedImageName = p.image?.split("/").pop();
+  const relatedImageSrc = relatedImageName
+    ? `${IMG_URL}${relatedImageName}`
+    : "/images/placeholder.png";
+
+  return (
+    // <div key={p.id} className="group cursor-pointer">
+    <Link to={`/products/${p.id}`} key={p.id} className="group cursor-pointer block">
+
+      <div className="relative overflow-hidden rounded-md">
+        <img
+          src={relatedImageSrc}
+          alt={p.title}
+          className="group-hover:scale-105 transition"
+        />
+      </div>
+
+      <div className="mt-4 text-center">
+        <h3 className="text-sm font-medium">{p.title}</h3>
+        <p className="text-xs text-gray-500 mb-1">{p.category}</p>
+        <p className="text-sm text-[#C39A5B] font-medium">
+          ₹{Number(p.price).toLocaleString()}
+        </p>
+      </div>
+    {/* </div> */}
+    </Link>
+  );
+})}
+
+            </div>
           </div>
-
-          <div className="mt-4 text-center">
-            <h3 className="text-sm font-medium">{p.title}</h3>
-            <p className="text-xs text-gray-500 mb-1">
-              {p.category}
-            </p>
-            <p className="text-sm text-[#C39A5B] font-medium">
-              ₹{Number(p.price).toLocaleString()}
-            </p>
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-)}
-
+        )}
       </div>
     </div>
   );

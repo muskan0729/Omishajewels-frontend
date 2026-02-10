@@ -13,7 +13,7 @@ export const addToCartManager = async (product, execute) => {
     } else {
       // IndexedDB
       await addToCartDB(product);
-      toast.success("Added to cart (Saved in browser)");
+      toast.success("Added to cart ");
       console.log(product);
     }
   } catch (err) {
@@ -33,7 +33,7 @@ export const addToWishlistManager = async (product, execute) => {
     } else {
       // IndexedDB
       await addToWishlistDB(product);
-      toast.success("Added to wishlist (Saved in browser)");
+      toast.success("Added to wishlist ");
     }
   } catch (err) {
     toast.error("Failed to add wishlist");
