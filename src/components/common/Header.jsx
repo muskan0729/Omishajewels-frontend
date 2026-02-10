@@ -5,10 +5,20 @@ import logo from "../../images/logo.png";
 import { useState } from "react";
 import SearchOverlay from "./SearchOverlay";
 import CartDrawer from "../cart/CartDrawer";
+import { useGet } from "../../hooks/useGet";
+
 // import Login from "../Login";
 
 
 const Header = ({ openLogin }) => {
+  const { data, loading, error } = useGet(open ? "wishlist" : null);
+  const total_wishlist_count = data?.total_count || 0;
+
+ const {data: cartData,loading: cartLoading,error: cartError,} = useGet(open ? "cart" : null);
+
+const subtotal = cartData?.subtotal || 0;
+  
+
   const [searchOpen, setSearchOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
 
@@ -94,12 +104,20 @@ const Header = ({ openLogin }) => {
 
             {/* WISHLIST */}
             <button
-  onClick={handleWishlistClick}
-  className="hover:text-[#B8964E] transition cursor-pointer"
-  aria-label="Wishlist"
->
-  <FiHeart />
-</button>
+              onClick={handleWishlistClick}
+              className="relative hover:text-[#B8964E] transition cursor-pointer"
+              aria-label="Wishlist"
+            >
+              <FiHeart size={22} />
+
+              {total_wishlist_count > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] 
+                                font-semibold rounded-full h-4 w-4 flex items-center justify-center">
+                  {total_wishlist_count}
+                </span>
+              )}
+            </button>
+
 
 
             {/* CART (DRAWER OPEN) */}
@@ -109,8 +127,13 @@ const Header = ({ openLogin }) => {
               aria-label="Cart"
             >
               <FiShoppingCart />
-              <span className="text-sm font-medium">₹0.00</span>
+
+              {/* SUBTOTAL */}
+              <span className="text-sm font-medium">
+                ₹{subtotal}
+              </span>
             </button>
+
           </div>
 
         </div>
