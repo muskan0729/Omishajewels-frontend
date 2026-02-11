@@ -22,7 +22,7 @@ const categories = Array.isArray(data)
   : Array.isArray(data?.data)
   ? data.data
   : [];
-  console.log("data category",categories);
+  // console.log("data category",categories);
 
 
   // Find the category object that matches the active ID

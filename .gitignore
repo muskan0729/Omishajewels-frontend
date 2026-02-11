@@ -7,10 +7,33 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
+# Dependencies
+node_modules/
+
+# Build outputs
 dist
 dist-ssr
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Local files
 *.local
+
+# Images folder (ignore if you don't want to upload images)
+images/
+public/images/
+src/assets/images/
+
+# Or ignore all images types (optional)
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.svg
+*.webp
 
 # Editor directories and files
 .vscode/*
