@@ -3,17 +3,19 @@ import EmptyCart from "./EmptyCart";
 import { useGet } from "../../hooks/useGet";
 import { Link } from "react-router-dom";
 
+const CartDrawer = ({ open, onClose , openLogin }) => {
 
-const CartDrawer = ({ open, onClose }) => {
+  // 🔹 Login check
+  const isLoggedIn = !!localStorage.getItem("token");
+  
 
-
-  // 🔹 API call
-  const { data, loading, error } = useGet(open ? "cart" : null);
+  // 🔹 Call API ONLY if logged in
+  const { data, loading, error } = useGet(
+    open && isLoggedIn ? "cart" : null
+  );
 
   const cartItems = data?.items || [];
-  // console.log("carts",cartItems);
   const subtotal = data?.subtotal || 0;
-// console.log("subtotal",subtotal);
   const isEmpty = cartItems.length === 0;
 
   if (!open) return null;
@@ -35,28 +37,57 @@ const CartDrawer = ({ open, onClose }) => {
 
           <button
             onClick={onClose}
-            className="text-sm font-medium hover:opacity-60"
+            className="text-sm font-medium hover:opacity-60 flex items-center gap-1"
           >
-            ✕ CLOSE
+            <FiX size={14} /> CLOSE
           </button>
         </div>
 
         {/* CONTENT */}
         <div className="flex-1 overflow-y-auto">
 
-          {loading && (
-            <p className="p-6 text-sm text-gray-500">Loading cart...</p>
+          {/* NOT LOGGED IN */}
+          {!isLoggedIn && (
+            <div className="p-6 text-center space-y-4">
+              <p className="text-sm text-gray-600">
+                Please login to view your cart
+              </p>
+
+              <button
+    onClick={() => {
+    onClose();
+    setTimeout(() => {
+      openLogin();
+    }, 0);
+  }}
+  className="inline-block bg-[#123099] text-white px-6 py-3 rounded text-sm font-semibold"
+>
+  LOGIN TO VIEW CART
+</button>
+
+
+
+            </div>
           )}
 
-          {error && (
+          {/* LOGGED IN STATES */}
+          {isLoggedIn && loading && (
+            <p className="p-6 text-sm text-gray-500">
+              Loading cart...
+            </p>
+          )}
+
+          {isLoggedIn && error && (
             <p className="p-6 text-sm text-red-500">
               Failed to load cart
             </p>
           )}
 
-          {!loading && isEmpty && <EmptyCart />}
+          {isLoggedIn && !loading && isEmpty && (
+            <EmptyCart />
+          )}
 
-          {!loading && !isEmpty && (
+          {isLoggedIn && !loading && !isEmpty && (
             <div className="p-6 space-y-4">
               {cartItems.map((item) => (
                 <div
@@ -80,8 +111,9 @@ const CartDrawer = ({ open, onClose }) => {
         </div>
 
         {/* FOOTER */}
-        {!isEmpty && !loading && (
+        {isLoggedIn && !isEmpty && !loading && (
           <div className="border-t p-6 space-y-4">
+
             <div className="flex justify-between font-semibold">
               <span>SUBTOTAL:</span>
               <span>₹{subtotal}</span>
@@ -90,13 +122,14 @@ const CartDrawer = ({ open, onClose }) => {
             <Link
               to="/view-cart"
               onClick={onClose}
-              className="block w-full text-center bg-black text-white py-3 rounded text-sm font-semibold"
+              className="block w-full text-center bg-black text-white py-3 rounded text-sm font-semibold hover:opacity-90"
             >
               VIEW CART
             </Link>
 
-
-            <button className="w-full bg-[#B98B5E] text-white py-3 rounded text-sm font-semibold">
+            <button
+              className="w-full bg-[#B98B5E] text-white py-3 rounded text-sm font-semibold hover:opacity-90"
+            >
               CHECKOUT
             </button>
           </div>
