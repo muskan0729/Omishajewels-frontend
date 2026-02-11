@@ -81,7 +81,7 @@ const userId = localStorage.getItem("user_id");
             className="grid grid-cols-1 md:grid-cols-5 gap-4 items-start md:items-center border-b pb-6 text-sm"
           >
             {/* ORDER */}
-            <div className="font-medium">{order.id}</div>
+            <div className="font-medium">{order.order_no}</div>
 
             {/* DATE */}
             <div>{formatDate(order.created_at)}</div>
