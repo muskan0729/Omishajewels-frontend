@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { usePost } from "../../hooks/usePost";
 import { syncGuestData } from "../../utils/syncGuestData";
+import { toast } from "sonner";
 
 const Login = ({ switchToRegister, onSuccess }) => {
   const { execute, loading, error } = usePost("login");
@@ -50,18 +51,20 @@ const Login = ({ switchToRegister, onSuccess }) => {
 
       // Save user
       if (res.user) {
-        console.log(res.user);
+        // console.log(res.user);
         localStorage.setItem("user", JSON.stringify(res.user));
         setUser(res.user);
        
         
       }
      await syncGuestData(cartSyncExecute, wishlistSyncExecute);
+      toast.success("Login Successful 🎉");
       setIsLoggedIn(true);
       onSuccess?.(res);
 
     } catch (err) {
       console.error("Login failed",err);
+      toast.error("Invalid Email or Password ❌");
     }
   };
 
@@ -71,6 +74,8 @@ const Login = ({ switchToRegister, onSuccess }) => {
     localStorage.removeItem("user");
     setIsLoggedIn(false);
     setUser(null);
+
+     toast.info("Logged out successfully 👋");
   };
 
   return (

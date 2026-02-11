@@ -2,9 +2,15 @@ import EmptyWishlist from "../../components/wishlist/EmptyWishlist";
 import WishlistItem from "../../components/wishlist/WishlistItem";
 import { useGet } from "../../hooks/useGet";
 import { useDelete } from "../../hooks/useDelete";
+import Loader from "../../components/Loader";
+
 
 const MyAccountWishlist = () => {
+  const token = localStorage.getItem("token");
+
+
   const { data, loading, error, refetch } = useGet("wishlist");
+
 
   const { executeDelete } = useDelete();
 
@@ -21,11 +27,19 @@ const MyAccountWishlist = () => {
 
   const isEmpty = !loading && wishlist.length === 0;
 
+if (!token) {
+  return (
+    <div className="p-10 text-center">
+      <h2 className="text-lg font-semibold mb-2">Please Login</h2>
+      <p className="text-gray-500">Please login to view your wishlist.</p>
+    </div>
+  );
+}
+
   if (loading) {
     return (
-      <div className="p-10 text-center">
-        <p>Loading wishlist...</p>
-      </div>
+      <Loader />
+ 
     );
   }
 

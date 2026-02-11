@@ -1,16 +1,20 @@
 import { FiX } from "react-icons/fi";
 
-const IMAGE_BASE_URL =
-  "https://omishajewels.com/Backend/public";
+// const IMAGE_BASE_URL =
+//   "https://omishajewels.com/Backend/public";
 
 const WishlistItem = ({ product, onRemove }) => {
   if (!product) return null;
+  const IMG_URL = import.meta.env.VITE_IMG_URL;
+  const imageName = product.image?.split("/").pop();
+  // console.log("Full Image URL:", `${IMG_URL}/${imageName}`);
 
-  // ✅ correct image path
-  const imageUrl =
-    product?.images?.length > 0
-      ? `${IMAGE_BASE_URL}/${product.images[0].image_path}`
-      : "/images/placeholder.png";
+
+  // // ✅ correct image path
+  // const imageUrl =
+  //   product?.images?.length > 0
+  //     ? `${IMAGE_BASE_URL}/${product.images[0].image_path}`
+  //     : "/images/placeholder.png";
 
   return (
     <div className="relative bg-white border border-gray-200 rounded-2xl p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl group">
@@ -35,7 +39,8 @@ const WishlistItem = ({ product, onRemove }) => {
         )}
 
         <img
-          src={imageUrl}
+          // src={imageUrl}
+          src={`${IMG_URL}/${imageName}`}
           alt={product.title}
           className="h-40 object-contain transition-transform duration-300 group-hover:scale-110"
         />

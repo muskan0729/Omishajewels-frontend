@@ -24,7 +24,7 @@ export default function SearchOverlay({ open, onClose }) {
   // console.log("product" ,data);
 useEffect(() => {
   if (data) {
-    console.log("products response:", data);
+    // console.log("products response:", data);
   }
 }, [data]);
 

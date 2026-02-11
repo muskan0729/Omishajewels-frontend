@@ -49,6 +49,7 @@ import Ebooks from "./pages/admin/Ebooks";
 import Allorders from "./pages/admin/Allorders";
 import Users from "./pages/admin/Users";
 import Transactions from "./pages/admin/Transactions";
+import ScrollTop from "./components/ScrollTop";
 import CartDrawer from "./components/cart/CartDrawer";
 // import Images from "./pages/admin/Images";
 
@@ -62,6 +63,7 @@ function App() {
       <Toaster position="bottom-left" richColors closeButton />
 
       <BrowserRouter>
+    <ScrollTop />
         <Routes>
           {/* ================= PUBLIC + ACCOUNT LAYOUT ================= */}
           <Route
