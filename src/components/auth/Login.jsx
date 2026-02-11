@@ -74,8 +74,8 @@ const Login = ({ switchToRegister, onSuccess }) => {
     localStorage.removeItem("user");
     setIsLoggedIn(false);
     setUser(null);
-
      toast.info("Logged out successfully 👋");
+     window.location.href = "/";
   };
 
   return (
