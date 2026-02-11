@@ -86,13 +86,14 @@ function App() {
                 />
 
                 <CartDrawer
-  open={cartOpen}
-  onClose={() => setCartOpen(false)}
-  openLogin={() => {
-    setAuthView("login");
-    setAuthOpen(true);
-  }}
-/>
+                  open={cartOpen}
+                  onClose={() => setCartOpen(false)}
+                  openLogin={() => {
+                    setAuthView("login");
+                    setAuthOpen(true);
+                  }}
+                />
+                
 
 
 
@@ -116,7 +117,8 @@ function App() {
 
                     {/* MY ACCOUNT */}
                     <Route path="/my-account" element={<MyAccountLayout />}>
-                      <Route index element={<DashboardMyAccount />} />
+                      {/* <Route index element={<DashboardMyAccount />} /> */}
+                      <Route index element={<DashboardMyAccount openLogin={() => { setAuthView("login");setAuthOpen(true);}}/>}/>
                       <Route path="orders" element={<Orders />} />
                       <Route path="downloads" element={<Downloads />} />
                       <Route path="addresses" element={<Addresses />} />
