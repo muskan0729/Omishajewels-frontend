@@ -6,15 +6,16 @@ import { useState } from "react";
 import SearchOverlay from "./SearchOverlay";
 import CartDrawer from "../cart/CartDrawer";
 import { useGet } from "../../hooks/useGet";
+import useAutoFetch from "../../hooks/useAutoFetch";
 
 // import Login from "../Login";
 
 
 const Header = ({ openLogin }) => {
-  const { data, loading, error } = useGet(open ? "wishlist" : null);
+  const { data} = useAutoFetch("wishlist",2000);
   const total_wishlist_count = data?.total_count || 0;
 
- const {data: cartData,loading: cartLoading,error: cartError,} = useGet(open ? "cart" : null);
+ const {data: cartData} = useAutoFetch("cart",2000);
 
 const subtotal = cartData?.subtotal || 0;
   

@@ -22,14 +22,14 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-6 py-14 grid grid-cols-1 md:grid-cols-4 gap-10">
 
         {/* COMPANY INFO */}
-        <div>
+        <div className="">
           <img
             src="/src/images/logo.png"
             alt="Omisha Jewels"
-            className="w-32 mb-4"
+            className="w-25"
           />
 
-          <h4 className="font-semibold mb-4">
+          <h4 className="font-semibold mb-1">
             OMISHA JEWELS OPC PVT LTD
           </h4>
 
