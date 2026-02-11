@@ -25,6 +25,7 @@ import ShopPage from "./components/shop/ShopPage";
 import WishlistPage from "./pages/my-account/Wishlist";
 import ProductDetails from "./pages/ProductDetails";
 
+
 /* MY ACCOUNT */
 import MyAccountLayout from "./pages/my-account/MyAccountLayout";
 import DashboardMyAccount from "./pages/my-account/Dashboard";
@@ -49,9 +50,11 @@ import Allorders from "./pages/admin/Allorders";
 import Users from "./pages/admin/Users";
 import Transactions from "./pages/admin/Transactions";
 import ScrollTop from "./components/ScrollTop";
+import CartDrawer from "./components/cart/CartDrawer";
 // import Images from "./pages/admin/Images";
 
 function App() {
+  const [cartOpen, setCartOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [authView, setAuthView] = useState("login");
 
@@ -81,6 +84,17 @@ function App() {
                   view={authView}
                   setView={setAuthView}
                 />
+
+                <CartDrawer
+  open={cartOpen}
+  onClose={() => setCartOpen(false)}
+  openLogin={() => {
+    setAuthView("login");
+    setAuthOpen(true);
+  }}
+/>
+
+
 
                 <main className="min-h-screen bg-[#FEFCF9]">
                   <Routes>

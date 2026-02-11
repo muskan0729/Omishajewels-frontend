@@ -45,7 +45,7 @@ const subtotal = cartData?.subtotal || 0;
             <img
               src={logo}
               alt="Omisha Jewels"
-              className="h-16 w-auto object-contain"
+              className="h-28 w-auto object-contain"
             />
           </Link>
 
@@ -122,17 +122,17 @@ const subtotal = cartData?.subtotal || 0;
 
             {/* CART (DRAWER OPEN) */}
             <button
-              onClick={() => setCartOpen(true)}
-              className="flex items-center gap-1 hover:text-[#B8964E] transition cursor-pointer"
-              aria-label="Cart"
-            >
-              <FiShoppingCart />
+                onClick={() => setCartOpen(true)}
+                className="flex items-center gap-1 hover:text-[#B8964E] transition cursor-pointer"
+                aria-label="Cart"
+              >
+                <FiShoppingCart />
 
-              {/* SUBTOTAL */}
-              <span className="text-sm font-medium">
-                ₹{subtotal}
-              </span>
-            </button>
+                {/* SUBTOTAL */}
+                <span className="text-sm font-medium">
+                  ₹{subtotal}
+                </span>
+              </button>
 
           </div>
 
@@ -148,7 +148,9 @@ const subtotal = cartData?.subtotal || 0;
       {/* CART DRAWER */}
       <CartDrawer
         open={cartOpen}
-        onClose={() => setCartOpen(false)}
+        // onClose={() => setCartOpen(false)}
+          onClose={() => setCartOpen(false)}
+  openLogin={openLogin}
       />
     </>
   );
