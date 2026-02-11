@@ -64,7 +64,7 @@ const Register = ({ switchToLogin }) => {
 
     try {
       const res = await execute(formdata);
-      console.log("registered", res);
+      // console.log("registered", res);
       if (res?.access_token) {
         localStorage.setItem("token", res.access_token);
         localStorage.setItem("token_type", res.token_type); // optional
@@ -72,7 +72,8 @@ const Register = ({ switchToLogin }) => {
       toast.success("Registered successfully 🎉");
       switchToLogin();
     } catch (err) {
-      console.log("Backend error:", err);
+      // console.log("Backend error:", err);
+      toast.error("Error");
 
       // Laravel validation error format support
       if (err?.errors) {

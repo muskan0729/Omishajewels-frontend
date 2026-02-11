@@ -2,9 +2,12 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Cartprocess from "../components/Cartprocess";
 import { useGet } from "../hooks/useGet";
+  import Loader from "../components/Loader";
+
 
 const Checkout = () => {
   const { data, loading, error } = useGet("cart");
+  const IMG_URL = import.meta.env.VITE_IMG_URL;
 
   const [orderItems, setOrderItems] = useState([]);
   const [subtotal, setSubtotal] = useState(0);
@@ -20,9 +23,8 @@ const Checkout = () => {
         newPrice: Number(item.price),
         total: Number(item.price) * Number(item.quantity),
         desc: item.ebook.description,
-        img: "https://via.placeholder.com/60", // replace with real image later
+        img: item.ebook.image?.split("/").pop(), // replace with real image later
       }));
-
       setOrderItems(formattedItems);
       setSubtotal(Number(data.subtotal));
     } else {
@@ -34,9 +36,7 @@ const Checkout = () => {
   // 🔹 Loading state
   if (loading) {
     return (
-      <div className="text-center py-20 text-xl font-semibold">
-        Loading checkout...
-      </div>
+      <Loader />
     );
   }
 
@@ -48,6 +48,8 @@ const Checkout = () => {
       </div>
     );
   }
+
+
 
   return (
     <>
@@ -189,7 +191,7 @@ const Checkout = () => {
                     <div key={item.id} className="flex gap-4">
                       <div className="relative">
                         <img
-                          src={item.img}
+                          src={`${IMG_URL}/${item.img}`}
                           alt="product"
                           className="w-14 h-14 rounded border"
                         />

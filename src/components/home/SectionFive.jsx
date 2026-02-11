@@ -24,13 +24,14 @@ const SectionFive = () => {
   const categories = categoryRes || [];
 
   // ================== SET DEFAULT CATEGORY ==================
-  useEffect(() => {
-    if (categories.length > 0 && !activeCategoryId) {
-      setActiveCategoryId(categories[0].id);
-    }
-  }, [categories, activeCategoryId]);
+  const latestCategories = categories.slice(-5);
 
-const latestCategories = categories.slice(-5);
+  useEffect(() => {
+    if (latestCategories.length > 0 && !activeCategoryId) {
+      setActiveCategoryId(latestCategories[0].id);
+    }
+  }, [latestCategories, activeCategoryId]);
+
 
   // ================== GET PRODUCTS BY CATEGORY ==================
   const {
@@ -41,7 +42,7 @@ const latestCategories = categories.slice(-5);
     activeCategoryId ? `categories/${activeCategoryId}/products` : null
   );
 
-  console.log("product by cat",productRes);
+  // console.log("product by cat",productRes);
 
   const products = productRes?.data.data || [];
   const latestproducts = products.slice(-10);

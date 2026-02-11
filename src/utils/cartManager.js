@@ -14,11 +14,11 @@ export const addToCartManager = async (product, execute) => {
       // IndexedDB
       await addToCartDB(product);
       toast.success("Added to cart ");
-      console.log(product);
+      // console.log(product);
     }
   } catch (err) {
     toast.error("Failed to add cart");
-    console.log(err);
+    // console.log(err);
   }
 };
 
@@ -37,6 +37,6 @@ export const addToWishlistManager = async (product, execute) => {
     }
   } catch (err) {
     toast.error("Failed to add wishlist");
-    console.log(err);
+    // console.log(err);
   }
 };

@@ -44,6 +44,6 @@ export const syncGuestData = async (cartExecute, wishlistExecute) => {
     toast.success("Guest data synced successfully");
   } catch (err) {
     toast.error("Sync failed");
-    console.log("SYNC ERROR:", err?.response?.data || err);
+    // console.log("SYNC ERROR:", err?.response?.data || err);
   }
 };

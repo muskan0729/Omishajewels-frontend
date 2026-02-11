@@ -51,14 +51,15 @@ const imageName = book.image?.split("/").pop();
             z-20
           "
         >
-          <button className="w-9 h-9 bg-white shadow-md rounded-full flex items-center justify-center hover:bg-[#B8964E] hover:text-white transition">
+          {/* <button className="w-9 h-9 bg-white shadow-md rounded-full flex items-center justify-center hover:bg-[#B8964E] hover:text-white transition">
             <FaExchangeAlt size={14} />
-          </button>
+          </button> */}
 
           <button 
           className="w-9 h-9 bg-white shadow-md rounded-full flex items-center justify-center hover:bg-[#B8964E] hover:text-white transition"
           onClick={() => setShowQuickModal(true)}>
-            <FaSearch size={14} />
+            {/* <FaSearch size={14} /> */}
+            <b>+</b>
           </button>
 
           <button className="w-9 h-9 bg-white shadow-md rounded-full flex items-center justify-center hover:bg-[#B8964E] hover:text-white transition"

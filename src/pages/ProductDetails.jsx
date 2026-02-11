@@ -13,6 +13,8 @@ import { useGet } from "../hooks/useGet";
 import { addToCartManager, addToWishlistManager } from "../utils/cartManager";
 import { usePost } from "../hooks/usePost";
 import { toast } from "sonner";
+import Loader from "../components/Loader";
+
 
 
 export default function ProductDetails() {
@@ -39,26 +41,29 @@ export default function ProductDetails() {
   /* ================= EXTRACT DATA ================= */
   const product = data?.data || null;
 
-  console.log("relatedData:", relatedData);
-  console.log("relatedProducts:", relatedProducts);
+  // console.log("relatedData:", relatedData);
+  // console.log("relatedProducts:", relatedProducts);
 
   /* ================= DEBUG ================= */
   useEffect(() => {
     if (data) {
-      console.log("Product API response:", data);
+      // console.log("Product API response:", data);
     }
   }, [data]);
 
   useEffect(() => {
     if (relatedData) {
-      console.log("Related products API response:", relatedData);
+      // console.log("Related products API response:", relatedData);
     }
   }, [relatedData]);
 
   /* ================= GUARDS ================= */
-  if (isLoading) {
-    return <div className="p-10 text-center">Loading product...</div>;
-  }
+  // if (isLoading) {
+  //   return <div className="p-10 text-center">Loading product...</div>;
+  // }
+if (isLoading ||  !data) {
+  return <Loader />;
+}
 
   if (error) {
     return (

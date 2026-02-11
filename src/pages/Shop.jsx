@@ -4,7 +4,7 @@ import ShopFilters from "../components/shop/ShopPage";
 const Shop = () => {
   return (
     <div>
-      <ShopHero/>
+      {/* <ShopHero/> */}
       <ShopFilters />
     </div>
   );
