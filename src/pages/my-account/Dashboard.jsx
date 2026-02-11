@@ -50,13 +50,6 @@ export default function Dashboard({ openLogin }) {
 
   return (
     <>
-      <p className="mb-8 text-sm">
-        Hello <strong>admin</strong> (not admin?{" "}
-        <Link to="/my-account/logout" className="text-[#B8964E]">
-          Log out
-        </Link>
-        )
-      </p>
 
       <p className="mb-10 text-sm">
         From your account dashboard you can view your recent orders, view wishlist,
