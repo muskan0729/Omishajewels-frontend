@@ -5,7 +5,7 @@ const sections = [
     title: "Self-Publishing And Book Printing",
     description:
       "Publish your book in both eBook and paperback formats to reach a wider audience and gain more visibility.",
-    image: "/src/images/section1.jpg",
+    image: "/assets/images/section1.jpg",
   },
   {
     id: 2,
@@ -13,7 +13,7 @@ const sections = [
     title: "New, Rare And Out-of-Print Books",
     description:
       "Discover thousands of new authors in hundreds of categories including Fiction and Non-Fiction.",
-    image: "/src/images/section2.jpg",
+    image: "/assets/images/section2.jpg",
   },
   {
     id: 3,
@@ -21,7 +21,7 @@ const sections = [
     title: "Where Books And People Meet",
     description:
       "Millions of books and other items are listed for sale by trusted sellers from around the world.",
-    image: "/src/images/section3.jpg",
+    image: "/assets/images/section3.jpg",
   },
 ];
 

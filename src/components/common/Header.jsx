@@ -1,7 +1,7 @@
 // import { Link, NavLink } from "react-router-dom";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { FiUser, FiSearch, FiHeart, FiShoppingCart } from "react-icons/fi";
-import logo from "../../images/logo.png";
+// import logo from "../../../images/logo.jpeg";
 import { useState } from "react";
 import SearchOverlay from "./SearchOverlay";
 import CartDrawer from "../cart/CartDrawer";
@@ -44,9 +44,9 @@ const subtotal = cartData?.subtotal || 0;
           {/* LOGO */}
           <Link to="/" className="flex items-center">
             <img
-              src={logo}
+              src="/assets/images/logo.png"
               alt="Omisha Jewels"
-              className="h-28 w-auto object-contain"
+              className="h-25 w-auto object-contain"
             />
           </Link>
 

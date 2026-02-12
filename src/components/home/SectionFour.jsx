@@ -14,7 +14,7 @@ const SectionFour = () => {
         >
           {/* BACKGROUND IMAGE */}
           <img
-            src="/src/images/section4.png"
+            src="/assets/images/section4.png"
             alt="Books Background"
             className="absolute inset-0 w-full h-full object-cover"
           />
@@ -27,7 +27,7 @@ const SectionFour = () => {
             {/* LEFT IMAGE */}
             <div className="flex justify-center group">
               <img
-                src="/src/images/section41.png"
+                src="/assets/images/section41.png"
                 alt="Reading Moment"
                 className="
                 rounded-2xl

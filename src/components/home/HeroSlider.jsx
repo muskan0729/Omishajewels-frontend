@@ -8,8 +8,8 @@ const slides = [
     title: "ART OF WAR",
     description:
       "The Art of War showing a warrior in black holding a sword, symbolizing strategy, discipline, and the art of conflict.",
-    image: "/src/images/book1.jpg",
-    bg: "/src/images/slider1.png",
+    image: "/assets/images/book1.jpg",
+    bg: "/assets/images/slider1.png",
   },
   {
     id: 2,
@@ -17,8 +17,8 @@ const slides = [
     title: "PSYCHO-CYBERNETICS",
     description:
       "Psycho-Cybernetics highlighting personal growth, self-image improvement, and the power of the subconscious mind.",
-    image: "/src/images/book2.jpg",
-    bg: "/src/images/slider2.png",
+    image: "/assets/images/book2.jpg",
+    bg: "/assets/images/slider2.png",
   },
   {
     id: 3,
@@ -26,8 +26,8 @@ const slides = [
     title: "THE BOOK THIEF",
     description:
       "Timeless lessons on wealth, greed, and happiness explained through powerful real-life stories.",
-    image: "/src/images/book3.jpg",
-    bg: "/src/images/slider3.jpg",
+    image: "/assets/images/book3.jpg",
+    bg: "/assets/images/slider3.jpg",
   },
 ];
 

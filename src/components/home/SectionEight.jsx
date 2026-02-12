@@ -1,14 +1,14 @@
 const instagramImages = [
-  "/src/images/insta/insta1.jpg",
-  "/src/images/insta/insta2.jpg",
-  "/src/images/insta/insta3.jpg",
-  "/src/images/insta/insta4.jpg",
-  "/src/images/insta/insta5.jpg",
-  "/src/images/insta/insta6.jpg",
-  "/src/images/insta/insta7.jpg",
-  "/src/images/insta/insta8.jpg",
-  "/src/images/insta/insta9.jpg",
-  "/src/images/insta/insta10.jpg",
+  "/assets/images/insta/insta1.jpg",
+  "/assets/images/insta/insta2.jpg",
+  "/assets/images/insta/insta3.jpg",
+  "/assets/images/insta/insta4.jpg",
+  "/assets/images/insta/insta5.jpg",
+  "/assets/images/insta/insta6.jpg",
+  "/assets/images/insta/insta7.jpg",
+  "/assets/images/insta/insta8.jpg",
+  "/assets/images/insta/insta9.jpg",
+  "/assets/images/insta/insta10.jpg",
 ];
 
 const SectionEight = () => {
