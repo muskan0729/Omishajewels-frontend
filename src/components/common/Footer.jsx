@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+
 import { MapPin, Phone, Mail } from "lucide-react";
 import { useGet } from "../../hooks/useGet";
 
@@ -24,7 +25,7 @@ export default function Footer() {
         {/* COMPANY INFO */}
         <div className="">
           <img
-            src="/src/images/logo.png"
+            src="/assets/images/logo.png"
             alt="Omisha Jewels"
             className="w-25"
           />

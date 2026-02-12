@@ -5,7 +5,7 @@ const latestBooks = [
   {
     id: 101,
     title: "The Creative Mind",
-    image: "/src/images/book3.jpg",
+    image: "/assets/images/book3.jpg",
     category: "Business",
     price: 8200,
     oldPrice: 10500,
@@ -15,7 +15,7 @@ const latestBooks = [
   {
     id: 102,
     title: "History of Time",
-    image: "/src/images/book2.jpg",
+    image: "/assets/images/book2.jpg",
     category: "History",
     price: 9100,
     oldPrice: 12000,
@@ -25,7 +25,7 @@ const latestBooks = [
   {
     id: 103,
     title: "Fantasy Realm",
-    image: "/src/images/book3.jpg",
+    image: "/assets/images/book3.jpg",
     category: "Fantasy",
     price: 7600,
     oldPrice: 9800,
@@ -35,7 +35,7 @@ const latestBooks = [
   {
     id: 104,
     title: "Modern Biography",
-    image: "/src/images/book2.jpg",
+    image: "/assets/images/book2.jpg",
     category: "Biography",
     price: 8800,
     oldPrice: 11000,
