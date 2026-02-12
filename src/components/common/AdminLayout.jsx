@@ -4,13 +4,25 @@ import AdminHeader from "../admin/AdminHeader";
 
 export default function AdminLayout() {
   return (
-    <div className="flex min-h-screen bg-gray-100">
-      <AdminSidebar />
-      <div className="flex-1">
-        <AdminHeader />
-        <main className="p-6">
+    <div className="min-h-screen bg-gray-100">
+      
+      {/* SIDEBAR */}
+      <div className="fixed inset-y-0 left-0 w-64 z-30">
+        <AdminSidebar />
+      </div>
+
+      {/* MAIN AREA */}
+      <div className="ml-64 flex flex-col h-screen">
+        {/* HEADER */}
+        <div className="sticky top-0 z-20">
+          <AdminHeader />
+        </div>
+
+        {/* SCROLLABLE CONTENT */}
+        <main className="flex-1 overflow-y-auto p-6">
           <Outlet />
         </main>
+
       </div>
     </div>
   );

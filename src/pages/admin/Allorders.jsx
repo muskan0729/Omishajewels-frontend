@@ -164,20 +164,19 @@ export default function Orders() {
                       className="border-b border-[#E9E4DA] hover:bg-[#FAF9F7]"
                     >
                       <td className="px-6 py-5 font-medium text-[#2E2E2E]">
-                        #{order.id}
+                        +
                       </td>
 
                       <td className="px-6 py-5">
                         <p className="font-medium text-[#2E2E2E]">
                           {order.customer_name || "Guest"}
                         </p>
-                        <p className="text-xs text-[#6B6B6B]">
+                        {/* <p className="text-xs text-[#6B6B6B]">
                           {order.customer_email || "-"}
-                        </p>
+                        </p> */}
                       </td>
-
                       <td className="px-6 py-5 font-semibold text-[#2E2E2E]">
-                        ₹{order.total_amount}
+                        ₹{order.bill_amount}
                       </td>
 
                       <td className="px-6 py-5">

@@ -1,17 +1,31 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDelete } from "../../hooks/useDelete";
 import { useGet } from "../../hooks/useGet";
 import { usePost } from "../../hooks/usePost";
+import { usePut } from "../../hooks/usePut";
 
 export default function Ebooks() {
-  const { data, refetch } = useGet("/admin/ebooks");
-  const { execute: create, loading: creating } = usePost();
-  const { execute: remove, loading: deleting } = useDelete();
+  const { data: categorieData, error: categoryError } = useGet("/categories");
+  const { data, refetch, error: ebooksError } = useGet("/admin/ebooks");
+  const { execute: create, loading: creating, error: postError } = usePost("/admin/ebooks");
+  const { executeDelete: remove, loading: deleting, error: deleteError } = useDelete("/admin/ebooks");
+  const { executePut: update, loading: updating, error: putError } = usePut("/admin/ebooks");
 
-  // ✅ safety (blank page proof)
-  const ebooks = Array.isArray(data?.data) ? data.data : [];
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedEbook, setSelectedEbook] = useState(null);
+
+  const ebooks = Array.isArray(data?.data.data) ? data.data.data : [];
 
   const [form, setForm] = useState({
+    title: "",
+    description: "",
+    price: "",
+    ebook_file: null,
+    images: [],
+    categories: [],
+  });
+
+  const [updateForm, setUpdateForm] = useState({
     title: "",
     description: "",
     price: "",
@@ -25,42 +39,96 @@ export default function Ebooks() {
     imagesCount: 0,
   });
 
-  /* ===========================
-     HANDLERS (UNCHANGED LOGIC)
-  ============================ */
-
-  const handleCreate = async () => {
-    const fd = new FormData();
-    fd.append("title", form.title);
-    fd.append("description", form.description);
-    fd.append("price", form.price);
-
-    if (form.ebook_file) {
-      fd.append("ebook_file", form.ebook_file);
+  /* ================= PREFILL UPDATE FORM ================= */
+  useEffect(() => {
+    if (selectedEbook) {
+      setUpdateForm({
+        title: selectedEbook.title || "",
+        description: selectedEbook.description || "",
+        price: selectedEbook.price || "",
+        ebook_file: null,
+        images: [],
+        categories: selectedEbook.categories?.map((c) => c.id) || [],
+      });
     }
+  }, [selectedEbook]);
 
-    form.images.forEach((img) => fd.append("images[]", img));
-    form.categories.forEach((id) => fd.append("categories[]", id));
+  /* ================= CREATE ================= */
+  const handleCreate = async () => {
+    try {
+      const fd = new FormData();
+      fd.append("title", form.title);
+      fd.append("description", form.description);
+      fd.append("price", form.price);
 
-    await create(fd);
+      if (form.ebook_file) fd.append("ebook_file", form.ebook_file);
+      form.images.forEach((img) => fd.append("images[]", img));
+      form.categories.forEach((id) => fd.append("categories[]", id));
 
-    setForm({
-      title: "",
-      description: "",
-      price: "",
-      ebook_file: null,
-      images: [],
-      categories: [],
-    });
+      await create(fd);
 
-    setSelectedFiles({
-      pdfName: "No file chosen",
-      imagesCount: 0,
-    });
+      alert(`✅ Ebook "${form.title}" created successfully!`);
 
-    refetch();
+      setForm({
+        title: "",
+        description: "",
+        price: "",
+        ebook_file: null,
+        images: [],
+        categories: [],
+      });
+
+      setSelectedFiles({
+        pdfName: "No file chosen",
+        imagesCount: 0,
+      });
+
+      refetch();
+    } catch (err) {
+      console.error(err);
+      alert(`❌ Failed to create ebook: ${err.message || postError?.message || postError?.error || "Unknown error"}`);
+    }
   };
 
+  /* ================= UPDATE ================= */
+  const handleUpdate = async () => {
+    if (!selectedEbook) return;
+
+    try {
+      const fd = new FormData();
+      fd.append("title", updateForm.title);
+      fd.append("description", updateForm.description);
+      fd.append("price", updateForm.price);
+
+      if (updateForm.ebook_file) fd.append("ebook_file", updateForm.ebook_file);
+      updateForm.images.forEach((img) => fd.append("images[]", img));
+      updateForm.categories.forEach((id) => fd.append("categories[]", id));
+
+      await update({ id: selectedEbook.id, formData: fd });
+
+      alert(`✅ Ebook "${updateForm.title}" updated successfully!`);
+      setOpenModal(false);
+      refetch();
+    } catch (err) {
+      console.error(err);
+      alert(`❌ Failed to update ebook: ${err.message || putError?.message || "Unknown error"}`);
+    }
+  };
+
+  /* ================= DELETE ================= */
+  const handleDelete = async (ebook) => {
+    if (!window.confirm(`Delete "${ebook.title}"?`)) return;
+
+    try {
+      await remove(`${ebook.id}`, { onSuccess: refetch });
+      alert(`✅ Ebook "${ebook.title}" deleted successfully!`);
+    } catch (err) {
+      console.error(err);
+      alert(`❌ Failed to delete ebook: ${err.message || deleteError?.message || "Unknown error"}`);
+    }
+  };
+
+  /* ================= FILE HANDLERS ================= */
   const handlePdfChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -75,287 +143,190 @@ export default function Ebooks() {
     setSelectedFiles({ ...selectedFiles, imagesCount: files.length });
   };
 
-  /* ===========================
-     UI STARTS HERE
-  ============================ */
+  /* ================= ERROR ALERTS FOR FETCH ================= */
+  useEffect(() => {
+    if (categoryError) alert(`❌ Failed to load categories: ${categoryError.message}`);
+    if (ebooksError) alert(`❌ Failed to load ebooks: ${ebooksError.message}`);
+  }, [categoryError, ebooksError]);
 
+  /* ================= UI ================= */
   return (
     <div className="min-h-screen bg-[#F7F6F3]">
       <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10">
 
-        {/* ================= PAGE HEADER ================= */}
+        {/* HEADER */}
         <div className="mb-12 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div>
             <h1 className="text-3xl md:text-4xl font-semibold text-[#2E2E2E]">
               Ebooks Management
             </h1>
-            <p className="text-sm text-[#6B6B6B] mt-2 max-w-xl">
-              Add, manage and organize your digital ebook collection
-              from a single place.
-            </p>
-          </div>
-
-          <div className="bg-white border border-[#E9E4DA] rounded-2xl px-6 py-4 shadow-sm flex gap-8">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-[#6B6B6B]">
-                Total Ebooks
-              </p>
-              <p className="text-2xl font-semibold text-[#2E2E2E]">
-                {ebooks.length}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-wide text-[#6B6B6B]">
-                Collection Value
-              </p>
-              <p className="text-2xl font-semibold text-[#2E2E2E]">
-                ₹
-                {ebooks.reduce(
-                  (sum, e) => sum + Number(e.price || 0),
-                  0
-                )}
-              </p>
-            </div>
           </div>
         </div>
 
-        {/* ================= MAIN GRID ================= */}
-        {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-10"> */}
-          <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-10">
+        {/* CREATE FORM */}
+        <div className="bg-white border rounded-3xl p-8 shadow-sm mb-10">
+          <h2 className="text-xl font-semibold mb-8">Add New Ebook</h2>
+          <div className="space-y-5">
 
-          {/* ================= LEFT : CREATE FORM ================= */}
-          <div className="bg-white border border-[#E9E4DA] rounded-3xl p-8 shadow-sm">
+            <input
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              placeholder="Title"
+              className="w-full border p-3 rounded-xl"
+            />
 
-            <h2 className="text-xl font-semibold text-[#2E2E2E] mb-8">
-              Add New Ebook
-            </h2>
+            <textarea
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              placeholder="Description"
+              className="w-full border p-3 rounded-xl"
+            />
 
-            <div className="space-y-7">
+            <input
+              type="number"
+              value={form.price}
+              onChange={(e) => setForm({ ...form, price: e.target.value })}
+              placeholder="Price"
+              className="w-full border p-3 rounded-xl"
+            />
 
-              {/* TITLE */}
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Ebook Title <span className="text-red-500">*</span>
-                </label>
-                <input
-                  value={form.title}
-                  onChange={(e) =>
-                    setForm({ ...form, title: e.target.value })
-                  }
-                  placeholder="e.g. Mastering React"
-                  className="
-                    w-full px-5 py-3
-                    rounded-xl border border-[#E9E4DA]
-                    focus:ring-1 focus:ring-yellow-500
-                    focus:outline-none
-                  "
-                />
-              </div>
+            <input type="file" accept=".pdf" onChange={handlePdfChange} className="w-full" />
+            <input type="file" multiple accept="image/*" onChange={handleImagesChange} className="w-full" />
 
-              {/* DESCRIPTION */}
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Description <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  value={form.description}
-                  onChange={(e) =>
-                    setForm({ ...form, description: e.target.value })
-                  }
-                  placeholder="Detailed description of the ebook"
-                  className="
-                    w-full px-5 py-3
-                    rounded-xl border border-[#E9E4DA]
-                    min-h-[120px]
-                    focus:ring-1 focus:ring-yellow-500
-                    focus:outline-none
-                  "
-                />
-                <p className="text-xs text-[#6B6B6B] mt-2">
-                  {form.description.length}/500 characters
-                </p>
-              </div>
+            <select
+              value={form.categories[0] || ""}
+              onChange={(e) =>
+                setForm({ ...form, categories: e.target.value ? [Number(e.target.value)] : [] })
+              }
+              className="w-full border p-3 rounded-xl"
+            >
+              <option value="">Select category</option>
+              {categorieData?.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
 
-              {/* PRICE */}
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Price (₹) <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  value={form.price}
-                  onChange={(e) =>
-                    setForm({ ...form, price: e.target.value })
-                  }
-                  placeholder="0.00"
-                  className="
-                    w-full px-5 py-3
-                    rounded-xl border border-[#E9E4DA]
-                    focus:ring-1 focus:ring-yellow-500
-                    focus:outline-none
-                  "
-                />
-              </div>
+            <button
+              onClick={handleCreate}
+              disabled={creating}
+              className="w-full bg-blue-600 text-white py-3 rounded-full"
+            >
+              {creating ? "Saving..." : "Save Ebook"}
+            </button>
+          </div>
+        </div>
 
-              {/* PDF UPLOAD */}
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Ebook PDF <span className="text-red-500">*</span>
-                </label>
+        {/* LIST */}
+        <div className="bg-white border rounded-3xl shadow-sm p-6">
+          {ebooks.map((ebook) => (
+            <div
+              key={ebook.id}
+              onClick={() => {
+                setSelectedEbook(ebook);
+                setOpenModal(true);
+              }}
+              className="border rounded-xl p-4 mb-4 cursor-pointer hover:shadow"
+            >
+              <h3 className="font-semibold">{ebook.title}</h3>
+              <p className="text-sm text-gray-500">₹{ebook.price}</p>
 
-                <div className="border border-dashed border-[#E9E4DA] rounded-lg p-3">
-                  <input
-                    type="file"
-                    accept=".pdf"
-                    className="hidden"
-                    id="ebook_pdf"
-                    onChange={handlePdfChange}
-                  />
-
-                  <label
-                    htmlFor="ebook_pdf"
-                    className="
-                      inline-flex items-center gap-2
-                      bg-blue-600 text-white
-                      px-4 py-2 text-sm
-                      rounded-lg
-                      cursor-pointer hover:bg-blue-700 transition
-                    "
-                  >
-                    Upload PDF
-                  </label>
-
-                  <p className="text-xs text-[#6B6B6B] mt-2 truncate">
-                    {selectedFiles.pdfName}
-                  </p>
-                </div>
-              </div>
-
-              {/* IMAGES */}
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Cover Images
-                </label>
-
-                <div className="border border-dashed border-[#E9E4DA] rounded-lg p-3">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    className="hidden"
-                    id="ebook_images"
-                    onChange={handleImagesChange}
-                  />
-
-                  <label
-                    htmlFor="ebook_images"
-                    className="
-                      inline-flex items-center gap-2
-                      bg-green-600 text-white
-                      px-4 py-2 text-sm
-                      rounded-lg
-                      cursor-pointer hover:bg-green-700 transition
-                    "
-                  >
-                    Upload Images
-                  </label>
-
-                  <p className="text-xs text-[#6B6B6B] mt-2">
-                    {selectedFiles.imagesCount} image(s) selected
-                  </p>
-                </div>
-              </div>
-
-              {/* SUBMIT */}
               <button
-                onClick={handleCreate}
-                disabled={creating}
-                className="
-                  w-full py-3 rounded-full
-                  bg-blue-600 text-white
-                  text-sm font-medium tracking-wide
-                  hover:bg-blue-700 transition
-                  disabled:opacity-50
-                "
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete(ebook);
+                }}
+                className="text-red-500 text-sm mt-2"
               >
-                {creating ? "Saving Ebook..." : "Save Ebook"}
+                Delete
               </button>
             </div>
-          </div>
-
-          {/* ================= RIGHT : EBOOK LIST ================= */}
-          <div className="bg-white border border-[#E9E4DA] rounded-3xl shadow-sm overflow-hidden">
-
-            <div className="px-8 py-6 border-b border-[#E9E4DA] flex justify-between">
-              <h2 className="text-xl font-semibold text-[#2E2E2E]">
-                Existing Ebooks
-              </h2>
-              <button
-                onClick={refetch}
-                className="text-sm text-blue-600 hover:underline"
-              >
-                Refresh
-              </button>
-            </div>
-
-            <div className="p-8 space-y-4">
-
-              {ebooks.length === 0 ? (
-                <p className="text-center text-[#6B6B6B] py-16">
-                  No ebooks found
-                </p>
-              ) : (
-                ebooks.map((ebook) => (
-                  <div
-                    key={ebook.id}
-                    className="
-                      border border-[#E9E4DA]
-                      rounded-2xl p-5
-                      hover:shadow-md transition
-                      bg-[#FEFCF9]
-                      flex justify-between items-start gap-6
-                    "
-                  >
-                    <div>
-                      <h3 className="font-semibold text-[#2E2E2E]">
-                        {ebook.title}
-                      </h3>
-                      <p className="text-sm text-[#6B6B6B] mt-1 line-clamp-2">
-                        {ebook.description || "No description"}
-                      </p>
-                      <p className="text-sm font-semibold mt-2">
-                        ₹{ebook.price}
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={() => {
-                        if (
-                          window.confirm(
-                            `Delete "${ebook.title}"?`
-                          )
-                        ) {
-                          remove(`/admin/ebooks/${ebook.id}`, {
-                            onSuccess: refetch,
-                          });
-                        }
-                      }}
-                      disabled={deleting}
-                      className="
-                        text-sm text-red-500
-                        hover:underline
-                        disabled:opacity-50
-                      "
-                    >
-                      Delete
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+          ))}
         </div>
       </div>
+
+      {/* ================= MODAL ================= */}
+      {openModal && selectedEbook && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setOpenModal(false)}
+          />
+          <div className="relative bg-white rounded-xl shadow-xl p-6 w-full max-w-md z-10 max-h-[90vh] overflow-y-auto">
+
+            <h2 className="text-lg font-semibold mb-4">Update Ebook</h2>
+
+            <input
+              value={updateForm.title}
+              onChange={(e) => setUpdateForm({ ...updateForm, title: e.target.value })}
+              className="w-full border p-2 rounded mb-3"
+              placeholder="Title"
+            />
+
+            <textarea
+              value={updateForm.description}
+              onChange={(e) => setUpdateForm({ ...updateForm, description: e.target.value })}
+              className="w-full border p-2 rounded mb-3"
+              placeholder="Description"
+            />
+
+            <input
+              type="number"
+              value={updateForm.price}
+              onChange={(e) => setUpdateForm({ ...updateForm, price: e.target.value })}
+              className="w-full border p-2 rounded mb-3"
+              placeholder="Price"
+            />
+
+            <select
+              value={updateForm.categories[0] || ""}
+              onChange={(e) =>
+                setUpdateForm({ ...updateForm, categories: e.target.value ? [Number(e.target.value)] : [] })
+              }
+              className="w-full border p-2 rounded mb-3"
+            >
+              <option value="">Select category</option>
+              {categorieData?.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+
+            <input
+              type="file"
+              accept=".pdf"
+              onChange={(e) => setUpdateForm({ ...updateForm, ebook_file: e.target.files[0] })}
+              className="w-full mb-3"
+            />
+
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={(e) => setUpdateForm({ ...updateForm, images: Array.from(e.target.files) })}
+              className="w-full mb-4"
+            />
+
+            <button
+              onClick={handleUpdate}
+              disabled={updating}
+              className="w-full bg-green-500 text-white py-2 rounded mb-3"
+            >
+              {updating ? "Updating..." : "Update"}
+            </button>
+
+            <button
+              onClick={() => setOpenModal(false)}
+              className="w-full bg-red-500 text-white py-2 rounded"
+            >
+              Close
+            </button>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }

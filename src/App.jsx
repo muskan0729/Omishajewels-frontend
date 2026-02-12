@@ -48,6 +48,7 @@ import Ebooks from "./pages/admin/Ebooks";
 import Allorders from "./pages/admin/Allorders";
 import Users from "./pages/admin/Users";
 import Transactions from "./pages/admin/Transactions";
+import AdminRoute from "./pages/admin/AdminRoute";
 // import Images from "./pages/admin/Images";
 
 function App() {
@@ -111,7 +112,7 @@ function App() {
                       <Route path="edit-address/shipping" element={<EditShippingAddress />} />
                     </Route>
 
-<Route path="/product/:slug" element={<ProductDetails />} />
+                    <Route path="/product/:slug" element={<ProductDetails />} />
                     <Route path="/cartprocess" element={<Cartprocess />} />
                   </Routes>
                 </main>
@@ -122,6 +123,17 @@ function App() {
           />
 
           {/* ================= ADMIN ROUTES ================= */}
+          <Route element={<AdminRoute />}>
+            <Route path="/admin/*" element={<AdminLayout />}>
+              <Route index element={<Dashboard />} />
+              <Route path="categories" element={<Categories />} />
+              <Route path="ebooks" element={<Ebooks />} />
+              <Route path="orders" element={<Allorders />} />
+              <Route path="users" element={<Users />} />
+              <Route path="transactions" element={<Transactions />} />
+            </Route></Route>
+
+
           <Route path="/admin/*" element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="categories" element={<Categories />} />

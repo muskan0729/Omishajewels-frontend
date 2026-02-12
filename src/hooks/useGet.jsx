@@ -17,8 +17,8 @@ export function useGet(endpoint) {
     try {
       const response = await axios.get(`${BASE_URL}${endpoint}`, {
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",    
+          Authorization: `Bearer h7LVWhVhV6peADVYLlVnKAx1OroXxvDsvQ0uHb78c949a0e7`,
         },
       });
       //  console.log("fetch succeeded → setting data");
