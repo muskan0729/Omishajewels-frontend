@@ -1,86 +1,82 @@
-import { useState } from "react";
-import BookCard from "../books/BookCard.jsx";
+import { useEffect, useState } from "react";
+import LatestBookCard from "../books/LatestBookCard.jsx";
+import { useGet } from "../../hooks/useGet";
+import { toast } from "sonner";
+import { usePost } from "../../hooks/usePost.jsx";
+import { addToCartManager, addToWishlistManager } from "../../utils/cartManager.js";
 
-const CATEGORIES = ["BIOGRAPHY", "FANTASY", "HISTORY", "LAB TITLE"];
 
-/**
- * Later this `booksData` will come from API / Admin Panel
- */
-const booksData = {
-  BIOGRAPHY: [
-    {
-      id: 1,
-      title: "Assouline – New York Chic",
-      image: "/src/images/book1.jpg",
-      category: "Other",
-      price: 10500,
-      oldPrice: 15000,
-      discount: "-30%",
-      rating: 4.5,
-    },
-    {
-      id: 2,
-      title: "James Bond Style",
-      image: "/src/images/book2.jpg",
-      category: "Other",
-      price: 12000,
-      oldPrice: 18000,
-      discount: "-33%",
-      rating: 4,
-    },
-  ],
-
-  FANTASY: [
-    {
-      id: 4,
-      title: "Rework",
-      image: "/src/images/book1.jpg",
-      category: "Business",
-      price: 13000,
-      oldPrice: 15500,
-      discount: "-16%",
-      rating: 4.8,
-    },
-    {
-      id: 5,
-      title: "Life Stories",
-      image: "/src/images/book2.jpg",
-      category: "Biography",
-      price: 8000,
-      oldPrice: 10000,
-      discount: "-20%",
-      rating: 4,
-    },
-  ],
-
-  HISTORY: [
-    {
-      id: 3,
-      title: "Miami Beach",
-      image: "/src/images/book3.jpg",
-      category: "Other",
-      price: 9000,
-      oldPrice: 14000,
-      discount: "-36%",
-      rating: 4.2,
-    },
-  ],
-  "LAB TITLE": [
-    {
-      id: 6,
-      title: "The Journey",
-      image: "/src/images/book3.jpg",
-      category: "Biography",
-      price: 9500,
-      oldPrice: 12000,
-      discount: "-21%",
-      rating: 4.1,
-    },
-  ],
-};
 
 const SectionFive = () => {
-  const [activeCategory, setActiveCategory] = useState("BIOGRAPHY");
+  const [activeCategoryId, setActiveCategoryId] = useState(null);
+ const { execute: cartExecute } = usePost("cart/add");
+  const { execute: wishlistExecute } = usePost("wishlist");
+
+    const userId = localStorage.getItem("user_id");
+  // ================== GET CATEGORIES ==================
+  const {
+    data: categoryRes,
+    loading: loadingCategories,
+    error: categoryError,
+  } = useGet("categories");
+  // console.log("category data",categoryRes);
+
+  const categories = categoryRes || [];
+
+  // ================== SET DEFAULT CATEGORY ==================
+  const latestCategories = categories.slice(-5);
+
+  useEffect(() => {
+    if (latestCategories.length > 0 && !activeCategoryId) {
+      setActiveCategoryId(latestCategories[0].id);
+    }
+  }, [latestCategories, activeCategoryId]);
+
+
+  // ================== GET PRODUCTS BY CATEGORY ==================
+  const {
+    data: productRes,
+    loading: loadingProducts,
+    error: productError,
+  } = useGet(
+    activeCategoryId ? `categories/${activeCategoryId}/products` : null
+  );
+
+  // console.log("product by cat",productRes);
+
+  const products = productRes?.data.data || [];
+  const latestproducts = products.slice(-10);
+
+const handleAddToCart = async (product) => {
+  const productData = {
+    product_id: product.id,
+    title: product.title,
+    price: product.price,
+    quantity: 1,
+  };
+
+  addToCartManager(productData, cartExecute);
+  toast.success("Added to cart");
+};
+
+const handleAddToWishlist = async (product) => {
+  if (!userId) {
+    toast.error("Please login to add to wishlist");
+    return;
+  }
+
+  const productData = {
+    product_id: product.id,
+    title: product.title,
+    price: product.price,
+    quantity: 1,
+    user_id: userId,
+  };
+
+  addToWishlistManager(productData, wishlistExecute);
+  toast.success("Added to wishlist");
+};
+
 
   return (
     <section className="bg-white pt-0 py-28">
@@ -101,46 +97,65 @@ const SectionFive = () => {
           </p>
         </div>
 
-        {/* ================= TABS ================= */}
-        <div className="flex justify-center gap-10 mb-16 text-sm tracking-widest">
-          {CATEGORIES.map((category) => (
-            <button
-              key={category}
-              onClick={() => setActiveCategory(category)}
-              className={`
-                pb-2 transition cursor-pointer
-                ${
-                  activeCategory === category
-                    ? "text-[#B8964E] border-b-2 border-[#B8964E]"
-                    : "text-[#6B6B6B] hover:text-[#2E2E2E]"
-                }
-              `}
-            >
-              {category}
-            </button>
-          ))}
+        {/* ================= CATEGORY TABS ================= */}
+        <div className="flex justify-center gap-10 mb-16 text-sm tracking-widest flex-wrap">
+          {loadingCategories ? (
+            <p className="text-[#6B6B6B]">Loading categories...</p>
+          ) : categoryError ? (
+            <p className="text-red-500">Failed to load categories</p>
+          ) : (
+            latestCategories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategoryId(cat.id)}
+                className={`
+                  pb-2 transition cursor-pointer uppercase
+                  ${
+                    activeCategoryId === cat.id
+                      ? "text-[#B8964E] border-b-2 border-[#B8964E]"
+                      : "text-[#6B6B6B] hover:text-[#2E2E2E]"
+                  }
+                `}
+              >
+                {cat.name}
+              </button>
+            ))
+          )}
         </div>
 
-        {/* ================= BOOK GRID ================= */}
-        <div
-          className="
-            grid
-            grid-cols-1
-            sm:grid-cols-2
-            md:grid-cols-[repeat(3,minmax(0,320px))]
-            justify-center
-            gap-16
-          "
-        >
-          {booksData[activeCategory]?.slice(0, 6).map((book) => (
-            <BookCard key={book.id} book={book} />
-          ))}
-        </div>
+        {/* ================= PRODUCTS GRID ================= */}
+        {loadingProducts ? (
+          <p className="text-center text-[#6B6B6B]">Loading products...</p>
+        ) : productError ? (
+          <p className="text-center text-red-500">Failed to load products</p>
+        ) : (
+          <div
+            className="
+              grid
+              grid-cols-1
+              sm:grid-cols-2
+              md:grid-cols-[repeat(3,minmax(0,320px))]
+              justify-center
+              gap-16
+            "
+          >
+            {latestproducts?.slice(0, 15).map((product) => (
+              // <LatestBookCard key={product.id} book={product} />
+              <LatestBookCard
+  key={product.id}
+  book={product}
+  onAddToCart={handleAddToCart}
+  onAddToWishlist={handleAddToWishlist}
+/>
+
+            ))}
+          </div>
+        )}
 
         {/* ================= EMPTY STATE ================= */}
-        {booksData[activeCategory]?.length === 0 && (
+        {!loadingProducts && products.length === 0 && (
           <p className="text-center text-sm text-[#6B6B6B] mt-10">
-            No books available in this category.
+            No products available in this category.
           </p>
         )}
       </div>

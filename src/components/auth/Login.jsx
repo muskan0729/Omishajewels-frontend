@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { usePost } from "../../hooks/usePost";
 import { syncGuestData } from "../../utils/syncGuestData";
+import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 const Login = ({ switchToRegister, onSuccess }) => {
-  const { execute, loading } = usePost("/login");
-  const { execute: cartSyncExecute } = usePost("/cart/add");
-  const { execute: wishlistSyncExecute } = usePost("/wishlist");
+  const { execute, loading } = usePost("login");
+  const { execute: cartSyncExecute } = usePost("cart/add");
+  const { execute: wishlistSyncExecute } = usePost("wishlist");
   const navigate=useNavigate();
   const [errorMessage, setErrorMessage] = useState(null);
 
@@ -54,9 +55,8 @@ const Login = ({ switchToRegister, onSuccess }) => {
         localStorage.setItem("user", JSON.stringify(res.user));
         setUser(res.user);
       }
-
-      await syncGuestData(cartSyncExecute, wishlistSyncExecute);
-
+     await syncGuestData(cartSyncExecute, wishlistSyncExecute);
+      toast.success("Login Successful 🎉");
       setIsLoggedIn(true);
       onSuccess?.(res);
 
@@ -80,6 +80,8 @@ const Login = ({ switchToRegister, onSuccess }) => {
     localStorage.removeItem("role");
     setIsLoggedIn(false);
     setUser(null);
+     toast.info("Logged out successfully 👋");
+     window.location.href = "/";
   };
 
   return (

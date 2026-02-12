@@ -50,7 +50,7 @@ export default function AboutUs() {
         {/* IMAGE */}
         <div>
           <img
-            src="\src\images\about-store.jpg"
+            src="\assets\images\about-store.jpg"
             alt="About Omisha Jewels"
             className="rounded-lg shadow-md w-full"
           />
@@ -64,7 +64,7 @@ export default function AboutUs() {
           {/* IMAGE */}
           <div>
             <img
-              src="\src\images\ebooks.png"
+              src="\assets\images\ebooks.png"
               alt="Omisha Jewels eBooks"
               className="rounded-lg shadow-md w-full"
             />

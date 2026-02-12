@@ -1,14 +1,25 @@
 // import { Link, NavLink } from "react-router-dom";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { FiUser, FiSearch, FiHeart, FiShoppingCart } from "react-icons/fi";
-import logo from "../../images/logo.png";
+// import logo from "../../../images/logo.jpeg";
 import { useState } from "react";
 import SearchOverlay from "./SearchOverlay";
 import CartDrawer from "../cart/CartDrawer";
+import { useGet } from "../../hooks/useGet";
+import useAutoFetch from "../../hooks/useAutoFetch";
+
 // import Login from "../Login";
 
 
 const Header = ({ openLogin }) => {
+  const { data} = useAutoFetch("wishlist",2000);
+  const total_wishlist_count = data?.total_count || 0;
+
+ const {data: cartData} = useAutoFetch("cart",2000);
+
+const subtotal = cartData?.subtotal || 0;
+  
+
   const [searchOpen, setSearchOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
 
@@ -33,9 +44,9 @@ const Header = ({ openLogin }) => {
           {/* LOGO */}
           <Link to="/" className="flex items-center">
             <img
-              src={logo}
+              src="/assets/images/logo.png"
               alt="Omisha Jewels"
-              className="h-16 w-auto object-contain"
+              className="h-25 w-auto object-contain"
             />
           </Link>
 
@@ -94,23 +105,36 @@ const Header = ({ openLogin }) => {
 
             {/* WISHLIST */}
             <button
-  onClick={handleWishlistClick}
-  className="hover:text-[#B8964E] transition cursor-pointer"
-  aria-label="Wishlist"
->
-  <FiHeart />
-</button>
+              onClick={handleWishlistClick}
+              className="relative hover:text-[#B8964E] transition cursor-pointer"
+              aria-label="Wishlist"
+            >
+              <FiHeart size={22} />
+
+              {total_wishlist_count > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] 
+                                font-semibold rounded-full h-4 w-4 flex items-center justify-center">
+                  {total_wishlist_count}
+                </span>
+              )}
+            </button>
+
 
 
             {/* CART (DRAWER OPEN) */}
             <button
-              onClick={() => setCartOpen(true)}
-              className="flex items-center gap-1 hover:text-[#B8964E] transition cursor-pointer"
-              aria-label="Cart"
-            >
-              <FiShoppingCart />
-              <span className="text-sm font-medium">₹0.00</span>
-            </button>
+                onClick={() => setCartOpen(true)}
+                className="flex items-center gap-1 hover:text-[#B8964E] transition cursor-pointer"
+                aria-label="Cart"
+              >
+                <FiShoppingCart />
+
+                {/* SUBTOTAL */}
+                <span className="text-sm font-medium">
+                  ₹{subtotal}
+                </span>
+              </button>
+
           </div>
 
         </div>
@@ -125,7 +149,9 @@ const Header = ({ openLogin }) => {
       {/* CART DRAWER */}
       <CartDrawer
         open={cartOpen}
-        onClose={() => setCartOpen(false)}
+        // onClose={() => setCartOpen(false)}
+          onClose={() => setCartOpen(false)}
+  openLogin={openLogin}
       />
     </>
   );

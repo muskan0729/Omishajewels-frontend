@@ -10,7 +10,7 @@ import { useGet } from "../../hooks/useGet";
 
 export default function Dashboard() {
   // 👈 pass API response data as prop
-const {data:dashboardData}=useGet("/admin/summary");
+const {data:dashboardData}=useGet("admin/summary");
   const overview = dashboardData?.data?.overview || {};
   const recentOrders = dashboardData?.data?.recent_orders || [];
   const topSelling = dashboardData?.data?.top_selling_ebooks || [];
@@ -73,7 +73,7 @@ const {data:dashboardData}=useGet("/admin/summary");
   );
 
  return (
-  <div className="p-4 sm:p-6 lg:p-8 space-y-8 bg-gray-50 min-h-screen">
+  <div className="p-4 sm:p-6 lg:p-8 space-y-8 bg-gray-50 ">
     
     {/* Header */}
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">

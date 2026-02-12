@@ -4,7 +4,7 @@ import AdminHeader from "../admin/AdminHeader";
 
 export default function AdminLayout() {
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className=" bg-gray-100">
       
       {/* SIDEBAR */}
       <div className="fixed inset-y-0 left-0 w-64 z-30">
@@ -12,7 +12,7 @@ export default function AdminLayout() {
       </div>
 
       {/* MAIN AREA */}
-      <div className="ml-64 flex flex-col h-screen">
+      <div className="ml-64 flex flex-col ">
         {/* HEADER */}
         <div className="sticky top-0 z-20">
           <AdminHeader />

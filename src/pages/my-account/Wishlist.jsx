@@ -1,19 +1,57 @@
 import EmptyWishlist from "../../components/wishlist/EmptyWishlist";
 import WishlistItem from "../../components/wishlist/WishlistItem";
+import { useGet } from "../../hooks/useGet";
+import { useDelete } from "../../hooks/useDelete";
+import Loader from "../../components/Loader";
 
-const wishlistProducts = []; // empty for now
 
 const MyAccountWishlist = () => {
-  const isEmpty = wishlistProducts.length === 0;
+  const token = localStorage.getItem("token");
+
+
+  const { data, loading, error, refetch } = useGet("wishlist");
+
+
+  const { executeDelete } = useDelete();
+
+  const wishlist = data?.data || [];
+
+  const handleRemove = async (ebookId) => {
+    try {
+      await executeDelete(`wishlist/${ebookId}`);
+      refetch(); 
+    } catch (err) {
+      console.error("Delete failed", err);
+    }
+  };
+
+  const isEmpty = !loading && wishlist.length === 0;
+
+if (!token) {
+  return (
+    <div className="p-10 text-center">
+      <h2 className="text-lg font-semibold mb-2">Please Login</h2>
+      <p className="text-gray-500">Please login to view your wishlist.</p>
+    </div>
+  );
+}
+
+  if (loading) {
+    return (
+      <Loader />
+ 
+    );
+  }
+
+  if (error) {
+    return <div className="p-10 text-center text-red-500">{error}</div>;
+  }
 
   return (
     <div className="p-10">
-
       {/* PAGE TITLE */}
       <div className="border-b pb-4 mb-8">
-        <h2 className="text-lg font-semibold">
-          YOUR PRODUCTS WISHLIST
-        </h2>
+        <h2 className="text-lg font-semibold">YOUR PRODUCTS WISHLIST</h2>
       </div>
 
       {/* CONTENT */}
@@ -21,10 +59,12 @@ const MyAccountWishlist = () => {
         <EmptyWishlist />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10">
-          {wishlistProducts.map((product) => (
+          {wishlist.map((item) => (
             <WishlistItem
-              key={product.id}
-              product={product}
+              key={item.id}
+              product={item.ebook}
+              wishlistId={item.id}
+              onRemove={handleRemove}
             />
           ))}
         </div>

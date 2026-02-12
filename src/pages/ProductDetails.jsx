@@ -1,40 +1,93 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FaFacebookF,
   FaTwitter,
   FaInstagram,
   FaHeart,
   FaBalanceScale,
+  FaPinterest,
+  FaLinkedin,
 } from "react-icons/fa";
+import { Link, useParams } from "react-router-dom";
+import { useGet } from "../hooks/useGet";
+import { addToCartManager, addToWishlistManager } from "../utils/cartManager";
+import { usePost } from "../hooks/usePost";
+import { toast } from "sonner";
+import Loader from "../components/Loader";
 
-const product = {
-  title: "Zero to One",
-  author: "Peter Thiel",
-  category: "Business",
-  price: 14000,
-  oldPrice: 21000,
-  description:
-    "Zero to One by Peter Thiel is a powerful and eye-opening guide for entrepreneurs, creators, and thinkers who want to build the future rather than compete in the present.",
-  image:
-    "https://omishajewels.com/wp-content/uploads/2024/01/zero-to-one.jpg",
-};
 
-const relatedProducts = [
-  {
-    id: 1,
-    title: "Psycho-Cybernetics",
-    price: 9800,
-    oldPrice: 12000,
-    image:
-      "https://omishajewels.com/wp-content/uploads/2024/01/psycho-cybernetics.jpg",
-    category: "Business",
-  },
-];
 
 export default function ProductDetails() {
   const [qty, setQty] = useState(1);
   const [tab, setTab] = useState("description");
+  const { id } = useParams();
+  const { execute: cartExecute } = usePost("cart/add");
+  const { execute: wishlistExecute } = usePost("wishlist");
 
+  const userId = localStorage.getItem("user_id");
+
+  /* ================= PRODUCT API ================= */
+  const { data, isLoading, error } = useGet(id ? `products/${id}` : null);
+
+
+  const {
+    data: relatedData,
+    isLoading: relatedLoading,
+    error: relatedError,
+  } = useGet(id ? `products/${id}/related` : null);
+
+  const relatedProducts = relatedData?.data || [];
+
+  /* ================= EXTRACT DATA ================= */
+  const product = data?.data || null;
+
+  // console.log("relatedData:", relatedData);
+  // console.log("relatedProducts:", relatedProducts);
+
+  /* ================= DEBUG ================= */
+  useEffect(() => {
+    if (data) {
+      // console.log("Product API response:", data);
+    }
+  }, [data]);
+
+  useEffect(() => {
+    if (relatedData) {
+      // console.log("Related products API response:", relatedData);
+    }
+  }, [relatedData]);
+
+  /* ================= GUARDS ================= */
+  // if (isLoading) {
+  //   return <div className="p-10 text-center">Loading product...</div>;
+  // }
+if (isLoading ||  !data) {
+  return <Loader />;
+}
+
+  if (error) {
+    return (
+      <div className="p-10 text-center text-red-500">
+        Failed to load product
+      </div>
+    );
+  }
+
+  if (!product) {
+    return <div className="p-10 text-center">Product not found</div>;
+  }
+
+  const productData = {
+    id: product.id,  
+    product_id: product.id,
+    title: product.title,
+    price: product.price,
+    quantity: qty,
+  };
+    const IMG_URL = import.meta.env.VITE_IMG_URL;
+    const imageName = product.image?.split("/").pop();
+    
+  /* ================= UI ================= */
   return (
     <div className="bg-white">
       {/* ================= BREADCRUMB ================= */}
@@ -48,27 +101,25 @@ export default function ProductDetails() {
         {/* IMAGE */}
         <div className="relative">
           <img
-            src={product.image}
+            src={`${IMG_URL}${imageName}`}  
             alt={product.title}
             className="w-full rounded-md"
+            style={{width:"auto", height:"500px",paddingLeft:"100px"}}
           />
-          <span className="absolute top-4 right-4 bg-[#C39A5B] text-white text-xs px-3 py-1 rounded-full">
-            -33%
-          </span>
         </div>
 
         {/* DETAILS */}
         <div>
-          <h1 className="text-3xl font-serif mb-4">
-            {product.title}
-          </h1>
+          <h1 className="text-3xl font-serif mb-4">{product.title}</h1>
 
           <div className="flex items-center gap-4 mb-6">
-            <span className="line-through text-gray-400">
-              ₹{product.oldPrice.toLocaleString()}
-            </span>
+            {product.oldPrice && (
+              <span className="line-through text-gray-400">
+                ₹{Number(product.oldPrice).toLocaleString()}
+              </span>
+            )}
             <span className="text-2xl font-semibold text-[#C39A5B]">
-              ₹{product.price.toLocaleString()}
+              ₹{Number(product.price).toLocaleString()}
             </span>
           </div>
 
@@ -78,23 +129,11 @@ export default function ProductDetails() {
 
           {/* QTY */}
           <div className="flex items-center gap-4 mb-6">
-            <div className="flex border rounded-full overflow-hidden">
-              <button
-                onClick={() => setQty(Math.max(1, qty - 1))}
-                className="px-4 py-2"
-              >
-                -
-              </button>
-              <span className="px-6 py-2">{qty}</span>
-              <button
-                onClick={() => setQty(qty + 1)}
-                className="px-4 py-2"
-              >
-                +
-              </button>
-            </div>
 
-            <button className="bg-[#C39A5B] text-white px-8 py-3 rounded-full hover:opacity-90">
+            <button
+              className="bg-[#C39A5B] text-white px-8 py-3 rounded-full"
+              onClick={() => addToCartManager(productData, cartExecute)}
+            >
               ADD TO CART
             </button>
           </div>
@@ -104,7 +143,19 @@ export default function ProductDetails() {
             <button className="flex items-center gap-2">
               <FaBalanceScale /> Compare
             </button>
-            <button className="flex items-center gap-2">
+            <button
+              className="flex items-center gap-2"
+              onClick={() => {
+                if (!userId) {
+                  toast.error("Please login to add to wishlist");
+                  return;
+                }
+                addToWishlistManager(
+                  { ...productData, user_id: userId },
+                  wishlistExecute,
+                );
+              }}
+            >
               <FaHeart /> Add to wishlist
             </button>
           </div>
@@ -117,98 +168,33 @@ export default function ProductDetails() {
 
             <div className="flex items-center gap-4 mt-3">
               <strong>Share:</strong>
-              <FaFacebookF className="cursor-pointer hover:text-[#C39A5B]" />
-              <FaTwitter className="cursor-pointer hover:text-[#C39A5B]" />
-              <FaInstagram className="cursor-pointer hover:text-[#C39A5B]" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ================= TABS ================= */}
-      <div className="border-t">
-        <div className="max-w-7xl mx-auto px-6">
-          {/* TAB HEADERS */}
-          <div className="flex justify-center gap-12 border-b text-sm">
-            {["description", "reviews", "shipping"].map((t) => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={`py-4 uppercase tracking-wide ${
-                  tab === t
-                    ? "border-b-2 border-[#C39A5B] text-black"
-                    : "text-gray-400"
-                }`}
+              <a
+                href="https://www.facebook.com/sharer/sharer.php?u=https://omishajewels.com/index.php/product/a-a-little-history-of-economics-little-history-of-economics-little-histories/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className=" hover:text-blue-800"
               >
-                {t === "reviews"
-                  ? "Reviews (0)"
-                  : t.replace("-", " & ")}
-              </button>
-            ))}
-          </div>
-
-          {/* TAB CONTENT */}
-          <div className="py-12 flex justify-center">
-            <div className="max-w-3xl w-full text-gray-700">
-              {tab === "description" && (
-                <p className="leading-relaxed text-center">
-                  This book challenges traditional business ideas and
-                  teaches you how to create something truly new — to go
-                  from 0 to 1, not from 1 to many.
-                </p>
-              )}
-
-              {tab === "reviews" && (
-                <div className="grid md:grid-cols-2 gap-12">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">
-                      Reviews
-                    </h3>
-                    <p className="text-sm text-gray-500">
-                      There are no reviews yet.
-                    </p>
-                  </div>
-
-                  <div>
-                    <h3 className="font-semibold mb-4">
-                      Be the first to review “{product.title}”
-                    </h3>
-                    <textarea
-                      className="w-full border rounded-xl p-4 mb-4"
-                      rows={5}
-                      placeholder="Your review"
-                    />
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <input
-                        className="border rounded-full px-4 py-2"
-                        placeholder="Name"
-                      />
-                      <input
-                        className="border rounded-full px-4 py-2"
-                        placeholder="Email"
-                      />
-                    </div>
-                    <button className="bg-[#C39A5B] text-white px-6 py-2 rounded-full">
-                      SUBMIT
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {tab === "shipping" && (
-                <div className="grid md:grid-cols-2 gap-12 items-center">
-                  <img
-                    src="https://omishajewels.com/wp-content/uploads/2024/01/shipping.jpg"
-                    alt="Shipping"
-                    className="rounded-md"
-                  />
-                  <ul className="list-disc ml-6 space-y-2 text-sm">
-                    <li>Fast digital delivery</li>
-                    <li>Instant access after purchase</li>
-                    <li>Secure checkout</li>
-                  </ul>
-                </div>
-              )}
+                <FaFacebookF /> </a>
+                <a
+    href="https://x.com/share?url=https://omishajewels.com/index.php/product/a-a-little-history-of-economics-little-history-of-economics-little-histories/"
+    target="_blank"
+    rel="noopener noreferrer"
+    className=" hover:text-blue-800"
+  ><FaTwitter /></a>
+                  <a
+    href="https://www.pinterest.com/pin/create/button/?url=https://omishajewels.com/index.php/product/a-a-little-history-of-economics-little-history-of-economics-little-histories/&media=https://omishajewels.com/wp-content/uploads/2025/11/712NMyLHxmL._SY466_.jpg&description=A+A+Little+History+of+Economics+Little+History+of+Economics+%28Little+Histories%29"
+    target="_blank"
+    rel="noopener noreferrer"
+    className=" hover:text-blue-800"
+  >
+   <FaPinterest /></a>
+                   <a
+    href="https://www.linkedin.com/uas/login?session_redirect=https%3A%2F%2Fwww.linkedin.com%2FshareArticle%3Fmini%3Dtrue%26url%3Dhttps%3A%2F%2Fomishajewels.com%2Findex.php%2Fproduct%2Fa-a-little-history-of-economics-little-history-of-economics-little-histories%2F"
+    target="_blank"
+    rel="noopener noreferrer"
+    className=" hover:text-blue-800"
+  >
+   <FaLinkedin /></a>
             </div>
           </div>
         </div>
@@ -216,46 +202,56 @@ export default function ProductDetails() {
 
       {/* ================= RELATED PRODUCTS ================= */}
       <div className="max-w-7xl mx-auto px-6 py-16">
-        <h2 className="text-xl font-serif mb-10">
-          Related Products
-        </h2>
+        <h2 className="text-xl font-serif mb-10">Related Products</h2>
 
-        <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-10">
-          {relatedProducts.map((p) => (
-            <div
-              key={p.id}
-              className="group cursor-pointer"
-            >
-              <div className="relative overflow-hidden rounded-md">
-                <img
-                  src={p.image}
-                  alt={p.title}
-                  className="group-hover:scale-105 transition"
-                />
-                <span className="absolute top-3 left-3 bg-[#C39A5B] text-white text-xs px-2 py-1 rounded-full">
-                  -18%
-                </span>
-              </div>
+        {relatedLoading && (
+          <p className="text-gray-500">Loading related products...</p>
+        )}
 
-              <div className="mt-4 text-center">
-                <h3 className="text-sm font-medium">
-                  {p.title}
-                </h3>
-                <p className="text-xs text-gray-500 mb-1">
-                  {p.category}
-                </p>
-                <p className="text-sm">
-                  <span className="line-through text-gray-400 mr-2">
-                    ₹{p.oldPrice}
-                  </span>
-                  <span className="text-[#C39A5B] font-medium">
-                    ₹{p.price}
-                  </span>
-                </p>
-              </div>
+        {relatedError && (
+          <p className="text-red-500">Failed to load related products</p>
+        )}
+
+        {relatedProducts.length > 0 && (
+          <div className="max-w-7xl mx-auto px-6 py-16">
+            {/* <h2 className="text-xl font-serif mb-10">
+      Related Products
+    </h2> */}
+
+            <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-10">
+  {relatedProducts.map((p) => {
+  const relatedImageName = p.image?.split("/").pop();
+  const relatedImageSrc = relatedImageName
+    ? `${IMG_URL}${relatedImageName}`
+    : "/images/placeholder.png";
+
+  return (
+    // <div key={p.id} className="group cursor-pointer">
+    <Link to={`/products/${p.id}`} key={p.id} className="group cursor-pointer block">
+
+      <div className="relative overflow-hidden rounded-md">
+        <img
+          src={relatedImageSrc}
+          alt={p.title}
+          className="group-hover:scale-105 transition"
+        />
+      </div>
+
+      <div className="mt-4 text-center">
+        <h3 className="text-sm font-medium">{p.title}</h3>
+        <p className="text-xs text-gray-500 mb-1">{p.category}</p>
+        <p className="text-sm text-[#C39A5B] font-medium">
+          ₹{Number(p.price).toLocaleString()}
+        </p>
+      </div>
+    {/* </div> */}
+    </Link>
+  );
+})}
+
             </div>
-          ))}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -5,16 +5,35 @@ import { usePost } from "../../hooks/usePost";
 import { usePut } from "../../hooks/usePut";
 
 export default function Ebooks() {
-  const { data: categorieData, error: categoryError } = useGet("/categories");
-  const { data, refetch, error: ebooksError } = useGet("/admin/ebooks");
-  const { execute: create, loading: creating, error: postError } = usePost("/admin/ebooks");
-  const { executeDelete: remove, loading: deleting, error: deleteError } = useDelete("/admin/ebooks");
-  const { executePut: update, loading: updating, error: putError } = usePut("/admin/ebooks");
+  const { data: categorieData, error: categoryError } = useGet("categories");
+
+  // ✅ PAGE STATE
+  const [page, setPage] = useState(1);
+
+  // ✅ FETCH WITH PAGE
+  const {
+    data,
+    refetch,
+    error: ebooksError,
+  } = useGet(`admin/ebooks?page=${page}`);
+
+  const { execute: create, loading: creating, error: postError } =
+    usePost("admin/ebooks");
+  const { executeDelete: remove, loading: deleting, error: deleteError } =
+    useDelete("admin/ebooks");
+  const { executePut: update, loading: updating, error: putError } =
+    usePut("admin/ebooks");
 
   const [openModal, setOpenModal] = useState(false);
   const [selectedEbook, setSelectedEbook] = useState(null);
 
-  const ebooks = Array.isArray(data?.data.data) ? data.data.data : [];
+  // ✅ EBOOK LIST
+  const ebooks = Array.isArray(data?.data?.data)
+    ? data.data.data
+    : [];
+
+  // ✅ PAGINATION OBJECT
+  const pagination = data?.data;
 
   const [form, setForm] = useState({
     title: "",
@@ -86,7 +105,11 @@ export default function Ebooks() {
       refetch();
     } catch (err) {
       console.error(err);
-      alert(`❌ Failed to create ebook: ${err.message || postError?.message || postError?.error || "Unknown error"}`);
+      alert(
+        `❌ Failed to create ebook: ${
+          err.message || postError?.message || "Unknown error"
+        }`
+      );
     }
   };
 
@@ -100,9 +123,12 @@ export default function Ebooks() {
       fd.append("description", updateForm.description);
       fd.append("price", updateForm.price);
 
-      if (updateForm.ebook_file) fd.append("ebook_file", updateForm.ebook_file);
+      if (updateForm.ebook_file)
+        fd.append("ebook_file", updateForm.ebook_file);
       updateForm.images.forEach((img) => fd.append("images[]", img));
-      updateForm.categories.forEach((id) => fd.append("categories[]", id));
+      updateForm.categories.forEach((id) =>
+        fd.append("categories[]", id)
+      );
 
       await update({ id: selectedEbook.id, formData: fd });
 
@@ -111,7 +137,11 @@ export default function Ebooks() {
       refetch();
     } catch (err) {
       console.error(err);
-      alert(`❌ Failed to update ebook: ${err.message || putError?.message || "Unknown error"}`);
+      alert(
+        `❌ Failed to update ebook: ${
+          err.message || putError?.message || "Unknown error"
+        }`
+      );
     }
   };
 
@@ -124,7 +154,11 @@ export default function Ebooks() {
       alert(`✅ Ebook "${ebook.title}" deleted successfully!`);
     } catch (err) {
       console.error(err);
-      alert(`❌ Failed to delete ebook: ${err.message || deleteError?.message || "Unknown error"}`);
+      alert(
+        `❌ Failed to delete ebook: ${
+          err.message || deleteError?.message || "Unknown error"
+        }`
+      );
     }
   };
 
@@ -143,41 +177,44 @@ export default function Ebooks() {
     setSelectedFiles({ ...selectedFiles, imagesCount: files.length });
   };
 
-  /* ================= ERROR ALERTS FOR FETCH ================= */
+  /* ================= ERROR ALERTS ================= */
   useEffect(() => {
-    if (categoryError) alert(`❌ Failed to load categories: ${categoryError.message}`);
-    if (ebooksError) alert(`❌ Failed to load ebooks: ${ebooksError.message}`);
+    if (categoryError)
+      alert(`❌ Failed to load categories: ${categoryError.message}`);
+    if (ebooksError)
+      alert(`❌ Failed to load ebooks: ${ebooksError.message}`);
   }, [categoryError, ebooksError]);
 
-  /* ================= UI ================= */
   return (
     <div className="min-h-screen bg-[#F7F6F3]">
       <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10">
 
         {/* HEADER */}
         <div className="mb-12 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-semibold text-[#2E2E2E]">
-              Ebooks Management
-            </h1>
-          </div>
+          <h1 className="text-3xl md:text-4xl font-semibold text-[#2E2E2E]">
+            Ebooks Management
+          </h1>
         </div>
 
-        {/* CREATE FORM */}
+        {/* ================= CREATE FORM ================= */}
         <div className="bg-white border rounded-3xl p-8 shadow-sm mb-10">
           <h2 className="text-xl font-semibold mb-8">Add New Ebook</h2>
           <div className="space-y-5">
 
             <input
               value={form.title}
-              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, title: e.target.value })
+              }
               placeholder="Title"
               className="w-full border p-3 rounded-xl"
             />
 
             <textarea
               value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, description: e.target.value })
+              }
               placeholder="Description"
               className="w-full border p-3 rounded-xl"
             />
@@ -185,18 +222,37 @@ export default function Ebooks() {
             <input
               type="number"
               value={form.price}
-              onChange={(e) => setForm({ ...form, price: e.target.value })}
+              onChange={(e) =>
+                setForm({ ...form, price: e.target.value })
+              }
               placeholder="Price"
               className="w-full border p-3 rounded-xl"
             />
 
-            <input type="file" accept=".pdf" onChange={handlePdfChange} className="w-full" />
-            <input type="file" multiple accept="image/*" onChange={handleImagesChange} className="w-full" />
+            <input
+              type="file"
+              accept=".pdf"
+              onChange={handlePdfChange}
+              className="w-full"
+            />
+
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleImagesChange}
+              className="w-full"
+            />
 
             <select
               value={form.categories[0] || ""}
               onChange={(e) =>
-                setForm({ ...form, categories: e.target.value ? [Number(e.target.value)] : [] })
+                setForm({
+                  ...form,
+                  categories: e.target.value
+                    ? [Number(e.target.value)]
+                    : [],
+                })
               }
               className="w-full border p-3 rounded-xl"
             >
@@ -218,7 +274,7 @@ export default function Ebooks() {
           </div>
         </div>
 
-        {/* LIST */}
+        {/* ================= LIST ================= */}
         <div className="bg-white border rounded-3xl shadow-sm p-6">
           {ebooks.map((ebook) => (
             <div
@@ -230,7 +286,9 @@ export default function Ebooks() {
               className="border rounded-xl p-4 mb-4 cursor-pointer hover:shadow"
             >
               <h3 className="font-semibold">{ebook.title}</h3>
-              <p className="text-sm text-gray-500">₹{ebook.price}</p>
+              <p className="text-sm text-gray-500">
+                ₹{ebook.price}
+              </p>
 
               <button
                 onClick={(e) => {
@@ -244,6 +302,38 @@ export default function Ebooks() {
             </div>
           ))}
         </div>
+
+        {/* ================= PAGINATION ================= */}
+        {pagination && (
+          <div className="flex justify-center items-center gap-2 mt-6 flex-wrap">
+            {pagination.links.map((link, index) => (
+              <button
+                key={index}
+                disabled={!link.url}
+                onClick={() => {
+                  if (!link.url) return;
+                  const url = new URL(link.url);
+                  const pageParam =
+                    url.searchParams.get("page");
+                  setPage(Number(pageParam));
+                }}
+                className={`px-3 py-1 rounded border text-sm
+                  ${
+                    link.active
+                      ? "bg-blue-600 text-white"
+                      : "bg-white"
+                  }
+                  ${
+                    !link.url
+                      ? "opacity-50 cursor-not-allowed"
+                      : "hover:bg-gray-100"
+                  }`}
+                dangerouslySetInnerHTML={{ __html: link.label }}
+              />
+            ))}
+          </div>
+        )}
+
       </div>
 
       {/* ================= MODAL ================= */}
@@ -255,18 +345,30 @@ export default function Ebooks() {
           />
           <div className="relative bg-white rounded-xl shadow-xl p-6 w-full max-w-md z-10 max-h-[90vh] overflow-y-auto">
 
-            <h2 className="text-lg font-semibold mb-4">Update Ebook</h2>
+            <h2 className="text-lg font-semibold mb-4">
+              Update Ebook
+            </h2>
 
             <input
               value={updateForm.title}
-              onChange={(e) => setUpdateForm({ ...updateForm, title: e.target.value })}
+              onChange={(e) =>
+                setUpdateForm({
+                  ...updateForm,
+                  title: e.target.value,
+                })
+              }
               className="w-full border p-2 rounded mb-3"
               placeholder="Title"
             />
 
             <textarea
               value={updateForm.description}
-              onChange={(e) => setUpdateForm({ ...updateForm, description: e.target.value })}
+              onChange={(e) =>
+                setUpdateForm({
+                  ...updateForm,
+                  description: e.target.value,
+                })
+              }
               className="w-full border p-2 rounded mb-3"
               placeholder="Description"
             />
@@ -274,7 +376,12 @@ export default function Ebooks() {
             <input
               type="number"
               value={updateForm.price}
-              onChange={(e) => setUpdateForm({ ...updateForm, price: e.target.value })}
+              onChange={(e) =>
+                setUpdateForm({
+                  ...updateForm,
+                  price: e.target.value,
+                })
+              }
               className="w-full border p-2 rounded mb-3"
               placeholder="Price"
             />
@@ -282,7 +389,12 @@ export default function Ebooks() {
             <select
               value={updateForm.categories[0] || ""}
               onChange={(e) =>
-                setUpdateForm({ ...updateForm, categories: e.target.value ? [Number(e.target.value)] : [] })
+                setUpdateForm({
+                  ...updateForm,
+                  categories: e.target.value
+                    ? [Number(e.target.value)]
+                    : [],
+                })
               }
               className="w-full border p-2 rounded mb-3"
             >
@@ -297,7 +409,12 @@ export default function Ebooks() {
             <input
               type="file"
               accept=".pdf"
-              onChange={(e) => setUpdateForm({ ...updateForm, ebook_file: e.target.files[0] })}
+              onChange={(e) =>
+                setUpdateForm({
+                  ...updateForm,
+                  ebook_file: e.target.files[0],
+                })
+              }
               className="w-full mb-3"
             />
 
@@ -305,7 +422,12 @@ export default function Ebooks() {
               type="file"
               multiple
               accept="image/*"
-              onChange={(e) => setUpdateForm({ ...updateForm, images: Array.from(e.target.files) })}
+              onChange={(e) =>
+                setUpdateForm({
+                  ...updateForm,
+                  images: Array.from(e.target.files),
+                })
+              }
               className="w-full mb-4"
             />
 

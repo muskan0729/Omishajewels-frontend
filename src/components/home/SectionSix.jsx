@@ -14,7 +14,7 @@ const SectionSix = () => {
             {/* LEFT IMAGE (FIXED SIZE, IMAGE ADJUSTS) */}
             <div className="relative rounded-2xl overflow-hidden bg-[#F5F3EF] flex items-center justify-center">
               <img
-                src="/src/images/partner1.png"
+                src="/assets/images/partner1.png"
                 alt="Typewriter"
                 className="
                   w-full h-full
@@ -94,7 +94,7 @@ const SectionSix = () => {
 
               <div className="rounded-2xl overflow-hidden bg-[#F5F3EF] flex items-center justify-center">
                 <img
-                  src="/src/images/partner2.jpg"
+                  src="/assets/images/partner2.jpg"
                   alt="Nature"
                   className="
                     w-full h-full
@@ -109,7 +109,7 @@ const SectionSix = () => {
 
               <div className="rounded-2xl overflow-hidden bg-[#F5F3EF] flex items-center justify-center">
                 <img
-                  src="/src/images/partner3.jpg"
+                  src="/assets/images/partner3.jpg"
                   alt="Forest"
                   className="
                     w-full h-full

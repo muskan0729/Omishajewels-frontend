@@ -4,9 +4,9 @@ import { useGet } from "../../hooks/useGet";
 import { usePost } from "../../hooks/usePost";
 
 export default function Categories() {
-  const { data, refetch, loading } = useGet("/admin/categories");
-  const { execute: create, loading: creating } = usePost('/admin/categories');
-  const { executeDelete: remove, loading: deleting } = useDelete('/admin/categories');
+  const { data, refetch, loading } = useGet("admin/categories");
+  const { execute: create, loading: creating } = usePost('admin/categories');
+  const { executeDelete: remove, loading: deleting } = useDelete('admin/categories');
   const categories = Array.isArray(data) ? data : [];
   const [openModal, setOpenModal] = useState(false);
   const [name, setName] = useState("");
