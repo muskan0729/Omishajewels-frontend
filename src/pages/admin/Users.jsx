@@ -1,74 +1,149 @@
+import { useState } from "react";
 import { useGet } from "../../hooks/useGet";
 import { useDelete } from "../../hooks/useDelete";
+import { usePut } from "../../hooks/usePut";
 
 export default function Users() {
-  const { data, loading, refetch } = useGet("/admin/users");
-  const { execute: remove, loading: deleting } = useDelete();
+  // ✅ PAGE STATE
+  const [page, setPage] = useState(1);
 
-  // 🛡️ SAFETY
-  const users = Array.isArray(data) ? data : [];
+  // ✅ FETCH WITH PAGE
+  const {
+    data,
+    loading,
+    error: getError,
+    refetch,
+  } = useGet(`admin/users?page=${page}`);
 
+  const { executeDelete: remove, loading: deleting } = useDelete();
+  const { executePut: updateUser, loading: updating } =
+    usePut("admin/users");
+
+  const [openModal, setOpenModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [formData, setFormData] = useState({});
+
+  // ✅ USERS ARRAY (FIXED FOR YOUR RESPONSE)
+  const users = Array.isArray(data?.data) ? data.data : [];
+
+  // ✅ PAGINATION OBJECT
+  const pagination = data;
+
+  // ================= DELETE =================
   const handleDelete = async (user) => {
     if (
       window.confirm(
-        `Are you sure you want to delete user ${user.name || user.email}?`
+        `Are you sure you want to delete user ${
+          user.name || user.email
+        }?`
       )
     ) {
-      await remove(`/admin/users/${user.id}`, {
-        onSuccess: refetch,
-      });
+      try {
+        await remove(`/admin/users/${user.id}`, {
+          onSuccess: refetch,
+        });
+        alert(
+          `✅ User ${
+            user.name || user.email
+          } deleted successfully.`
+        );
+      } catch (err) {
+        alert(
+          `❌ Failed to delete user: ${
+            err?.message || "Unknown error"
+          }`
+        );
+      }
     }
   };
 
+  // ================= OPEN MODAL =================
+  const openUserModal = (user) => {
+    setSelectedUser(user);
+    setFormData({
+      name: user.name || "",
+      email: user.email || "",
+      role: user.role || "",
+      status: user.status || "",
+      created_at: user.created_at || "",
+    });
+    setOpenModal(true);
+  };
+
+  // ================= HANDLE INPUT =================
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // ================= UPDATE =================
+  const handleUpdate = async () => {
+    if (!selectedUser) return;
+
+    try {
+      await updateUser({
+        id: selectedUser.id,
+        data: formData,
+      });
+
+      alert(
+        `✅ User ${
+          formData.name || selectedUser.email
+        } updated successfully.`
+      );
+      setOpenModal(false);
+      refetch();
+    } catch (err) {
+      alert(
+        `❌ Failed to update user: ${
+          err?.message || "Unknown error"
+        }`
+      );
+    }
+  };
+
+  if (getError) {
+    alert(
+      `❌ Failed to load users: ${
+        getError.message || "Unknown error"
+      }`
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#F7F6F3]">
-      {/* ================= PAGE CONTAINER ================= */}
       <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10">
-        {/* ================= HEADER ================= */}
-        <div className="mb-12 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+
+        {/* HEADER */}
+        <div className="mb-12 flex justify-between items-center">
           <div>
-            <h1 className="text-3xl md:text-4xl font-semibold text-[#2E2E2E]">
+            <h1 className="text-3xl font-semibold">
               Users
             </h1>
-            <p className="text-sm text-[#6B6B6B] mt-2 max-w-xl">
-              Manage registered customers, view contact details and activity.
+            <p className="text-sm text-gray-500 mt-2">
+              Manage registered customers
             </p>
           </div>
 
-          {/* STATS */}
-          <div className="bg-white border border-[#E9E4DA] rounded-2xl px-6 py-4 flex gap-8 shadow-sm">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-[#6B6B6B]">
-                Total Users
-              </p>
-              <p className="text-2xl font-semibold text-[#2E2E2E]">
-                {users.length}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-wide text-[#6B6B6B]">
-                Active Users
-              </p>
-              <p className="text-2xl font-semibold text-[#2E2E2E]">
-                {users.filter((u) => u.is_active).length}
-              </p>
-            </div>
+          <div className="bg-white border rounded-2xl px-6 py-4 shadow-sm">
+            <p className="text-xs uppercase text-gray-500">
+              Total Users
+            </p>
+            <p className="text-2xl font-semibold">
+              {pagination?.total || 0}
+            </p>
           </div>
         </div>
 
-        {/* ================= USERS TABLE ================= */}
-        <div className="bg-white border border-[#E9E4DA] rounded-3xl shadow-sm overflow-hidden">
-          {/* TABLE HEADER */}
-          <div className="px-8 py-6 border-b border-[#E9E4DA] flex justify-between items-center">
-            <div>
-              <h2 className="text-xl font-semibold text-[#2E2E2E]">
-                All Users
-              </h2>
-              <p className="text-xs text-[#6B6B6B] mt-1">
-                Complete list of registered customers
-              </p>
-            </div>
-
+        {/* TABLE */}
+        <div className="bg-white border rounded-3xl shadow-sm overflow-hidden">
+          <div className="px-8 py-6 border-b flex justify-between">
+            <h2 className="text-xl font-semibold">
+              All Users
+            </h2>
             <button
               onClick={refetch}
               className="text-sm text-blue-600 hover:underline"
@@ -77,41 +152,26 @@ export default function Users() {
             </button>
           </div>
 
-          {/* TABLE CONTENT */}
           <div className="overflow-x-auto">
             {loading ? (
-              <div className="py-20 text-center text-sm text-[#6B6B6B]">
+              <div className="py-20 text-center text-sm text-gray-500">
                 Loading users...
               </div>
             ) : users.length === 0 ? (
-              <div className="py-20 text-center text-sm text-[#6B6B6B]">
+              <div className="py-20 text-center text-sm text-gray-500">
                 No users found
               </div>
             ) : (
               <table className="min-w-full text-sm">
-                <thead className="bg-[#FAF9F7] border-b border-[#E9E4DA]">
+                <thead className="bg-[#FAF9F7] border-b">
                   <tr>
-                    <th className="px-6 py-4 text-left font-medium text-[#6B6B6B]">
-                      User ID
-                    </th>
-                    <th className="px-6 py-4 text-left font-medium text-[#6B6B6B]">
-                      Name
-                    </th>
-                    <th className="px-6 py-4 text-left font-medium text-[#6B6B6B]">
-                      Email
-                    </th>
-                    <th className="px-6 py-4 text-left font-medium text-[#6B6B6B]">
-                      Phone
-                    </th>
-                    <th className="px-6 py-4 text-left font-medium text-[#6B6B6B]">
-                      Orders
-                    </th>
-                    <th className="px-6 py-4 text-left font-medium text-[#6B6B6B]">
-                      Joined
-                    </th>
-                    <th className="px-6 py-4 text-right font-medium text-[#6B6B6B]">
-                      Action
-                    </th>
+                    <th className="px-6 py-4 text-left">ID</th>
+                    <th className="px-6 py-4 text-left">Name</th>
+                    <th className="px-6 py-4 text-left">Email</th>
+                    <th className="px-6 py-4 text-left">Role</th>
+                    <th className="px-6 py-4 text-left">Status</th>
+                    <th className="px-6 py-4 text-left">Joined</th>
+                    <th className="px-6 py-4 text-right">Action</th>
                   </tr>
                 </thead>
 
@@ -119,37 +179,33 @@ export default function Users() {
                   {users.map((user) => (
                     <tr
                       key={user.id}
-                      className="border-b border-[#E9E4DA] hover:bg-[#FAF9F7]"
+                      className="border-b hover:bg-[#FAF9F7] cursor-pointer"
+                      onClick={() => openUserModal(user)}
                     >
-                      <td className="px-6 py-5 font-medium text-[#2E2E2E]">
-                        #{user.id}
-                      </td>
-
-                      <td className="px-6 py-5 font-medium text-[#2E2E2E]">
+                      <td className="px-6 py-5">#{user.id}</td>
+                      <td className="px-6 py-5">
                         {user.name || "—"}
                       </td>
-
-                      <td className="px-6 py-5 text-sm text-[#2E2E2E]">
+                      <td className="px-6 py-5">
                         {user.email}
                       </td>
-
-                      <td className="px-6 py-5 text-sm text-[#2E2E2E]">
-                        {user.phone || "-"}
+                      <td className="px-6 py-5">
+                        {user.role}
                       </td>
-
-                      <td className="px-6 py-5 text-sm font-medium text-[#2E2E2E]">
-                        {user.orders_count ?? 0}
+                      <td className="px-6 py-5">
+                        {user.status}
                       </td>
-
-                      <td className="px-6 py-5 text-xs text-[#6B6B6B]">
+                      <td className="px-6 py-5">
                         {user.created_at}
                       </td>
-
                       <td className="px-6 py-5 text-right">
                         <button
-                          onClick={() => handleDelete(user)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(user);
+                          }}
                           disabled={deleting}
-                          className="text-xs text-red-500 hover:underline disabled:opacity-50"
+                          className="text-xs text-red-500 hover:underline"
                         >
                           Delete
                         </button>
@@ -161,14 +217,36 @@ export default function Users() {
             )}
           </div>
 
-          {/* FOOTER */}
-          {users.length > 0 && (
-            <div className="px-8 py-4 border-t border-[#E9E4DA] bg-[#FAF9F7] text-sm text-[#6B6B6B]">
-              Showing{" "}
-              <span className="font-medium">
-                {users.length}
-              </span>{" "}
-              users
+          {/* ✅ PAGINATION */}
+          {pagination?.links && (
+            <div className="flex justify-center items-center gap-2 py-6 flex-wrap border-t">
+              {pagination.links.map((link, index) => (
+                <button
+                  key={index}
+                  disabled={!link.url}
+                  onClick={() => {
+                    if (!link.url) return;
+                    const url = new URL(link.url);
+                    const pageParam =
+                      url.searchParams.get("page");
+                    setPage(Number(pageParam));
+                  }}
+                  className={`px-3 py-1 rounded border text-sm
+                    ${
+                      link.active
+                        ? "bg-blue-600 text-white"
+                        : "bg-white"
+                    }
+                    ${
+                      !link.url
+                        ? "opacity-50 cursor-not-allowed"
+                        : "hover:bg-gray-100"
+                    }`}
+                  dangerouslySetInnerHTML={{
+                    __html: link.label,
+                  }}
+                />
+              ))}
             </div>
           )}
         </div>

@@ -3,7 +3,7 @@ import { useGet } from "../../hooks/useGet";
 import { useDelete } from "../../hooks/useDelete";
 
 export default function Orders() {
-  const { data, loading, refetch } = useGet("/admin/orders");
+  const { data, loading, refetch } = useGet("admin/orders");
   const { execute: remove, loading: deleting } = useDelete();
 
   // 🛡️ SAFETY: never allow blank page
@@ -29,7 +29,7 @@ export default function Orders() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F6F3]">
+    <div className=" bg-[#F7F6F3]">
       {/* ================= PAGE CONTAINER ================= */}
       <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10">
         {/* ================= HEADER ================= */}
@@ -164,20 +164,19 @@ export default function Orders() {
                       className="border-b border-[#E9E4DA] hover:bg-[#FAF9F7]"
                     >
                       <td className="px-6 py-5 font-medium text-[#2E2E2E]">
-                        #{order.id}
+                        +
                       </td>
 
                       <td className="px-6 py-5">
                         <p className="font-medium text-[#2E2E2E]">
                           {order.customer_name || "Guest"}
                         </p>
-                        <p className="text-xs text-[#6B6B6B]">
+                        {/* <p className="text-xs text-[#6B6B6B]">
                           {order.customer_email || "-"}
-                        </p>
+                        </p> */}
                       </td>
-
                       <td className="px-6 py-5 font-semibold text-[#2E2E2E]">
-                        ₹{order.total_amount}
+                        ₹{order.bill_amount}
                       </td>
 
                       <td className="px-6 py-5">

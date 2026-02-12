@@ -21,7 +21,7 @@ export default function AccountSidebar({ openLogin }) {
 
 
   return (
-    <aside className="w-64 border-r pr-6">
+    <aside className="w-64 border-r pr-6 static">
       <h2 className="text-lg font-semibold mb-6 tracking-wide">
         MY ACCOUNT
       </h2>

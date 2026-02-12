@@ -1,5 +1,5 @@
 import { useGet } from "../../hooks/useGet";
-import heroImg from "../../images/herosectionshop.png";
+import heroImg from "../../assets/images/herosectionshop.png";
 
 
 const toLabel = (key) => String(key || "Shop").replace(/-/g, " ").toUpperCase();

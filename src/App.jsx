@@ -51,6 +51,7 @@ import Users from "./pages/admin/Users";
 import Transactions from "./pages/admin/Transactions";
 import ScrollTop from "./components/ScrollTop";
 import CartDrawer from "./components/cart/CartDrawer";
+import AdminRoute from "./pages/admin/AdminRoute";
 // import Images from "./pages/admin/Images";
 
 function App() {
@@ -140,6 +141,17 @@ function App() {
           />
 
           {/* ================= ADMIN ROUTES ================= */}
+          <Route element={<AdminRoute />}>
+            <Route path="/admin/*" element={<AdminLayout />}>
+              <Route index element={<Dashboard />} />
+              <Route path="categories" element={<Categories />} />
+              <Route path="ebooks" element={<Ebooks />} />
+              <Route path="orders" element={<Allorders />} />
+              <Route path="users" element={<Users />} />
+              <Route path="transactions" element={<Transactions />} />
+            </Route></Route>
+
+
           <Route path="/admin/*" element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="categories" element={<Categories />} />

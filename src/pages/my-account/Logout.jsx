@@ -15,7 +15,7 @@ const AuthButton = ({ openLogin }) => {
       console.warn("Logout API failed, clearing token anyway");
     } finally {
       localStorage.removeItem("token");
-      localStorage.removeItem("user");
+      localStorage.removeItem("role");
       navigate("/");
     }
   };
