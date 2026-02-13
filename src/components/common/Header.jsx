@@ -6,18 +6,18 @@ import { useState } from "react";
 import SearchOverlay from "./SearchOverlay";
 import CartDrawer from "../cart/CartDrawer";
 import { useGet } from "../../hooks/useGet";
-import useAutoFetch from "../../hooks/useAutoFetch";
+// import useAutoFetch from "../../hooks/useAutoFetch";
 
 // import Login from "../Login";
 
 
 const Header = ({ openLogin }) => {
-  const { data} = useAutoFetch("wishlist",2000);
-  const total_wishlist_count = data?.total_count || 0;
+  // const { data} = useAutoFetch("wishlist",2000);
+  // const total_wishlist_count = data?.total_count || 0;
 
- const {data: cartData} = useAutoFetch("cart",2000);
+//  const {data: cartData} = useAutoFetch("cart",2000);
 
-const subtotal = cartData?.subtotal || 0;
+// const subtotal = cartData?.subtotal || 0;
   
 
   const [searchOpen, setSearchOpen] = useState(false);
@@ -111,10 +111,10 @@ const subtotal = cartData?.subtotal || 0;
             >
               <FiHeart size={22} />
 
-              {total_wishlist_count > 0 && (
+              {1 > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] 
                                 font-semibold rounded-full h-4 w-4 flex items-center justify-center">
-                  {total_wishlist_count}
+                  {/* {total_wishlist_count} */}
                 </span>
               )}
             </button>
@@ -131,7 +131,7 @@ const subtotal = cartData?.subtotal || 0;
 
                 {/* SUBTOTAL */}
                 <span className="text-sm font-medium">
-                  ₹{subtotal}
+                  {/* ₹{subtotal} */}
                 </span>
               </button>
 

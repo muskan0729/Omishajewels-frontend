@@ -24,6 +24,7 @@ export const addToCartManager = async (product, execute) => {
 
 export const addToWishlistManager = async (product, execute) => {
   const token = localStorage.getItem("token");
+console.log(product,token);
 
   try {
     if (token) {

@@ -31,48 +31,57 @@ const Login = ({ switchToRegister, onSuccess }) => {
   };
 
   /* ================= SUBMIT ================= */
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setErrorMessage(null);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setErrorMessage(null);
 
-    try {
-      const res = await execute(form);
-      console.log(res);
-      if (!res?.access_token) {
-        throw new Error("Invalid login response");
-      }
+  try {
+    const res = await execute(form);
+    console.log(res);
 
-      localStorage.setItem("token", res.access_token.split("|")[1]);
-      localStorage.setItem("role", res?.role);
-
-      if(res?.role=="admin")
-        navigate("/admin");
-      // localStorage.setItem("role", res?.role);
-      // localStorage.setItem("role", res?.role);
-      // console.log(res?.role.split("|")[1]);
-      
-      if (res.user) {
-        localStorage.setItem("user", JSON.stringify(res.user));
-        setUser(res.user);
-      }
-     await syncGuestData(cartSyncExecute, wishlistSyncExecute);
-      toast.success("Login Successful 🎉");
-      setIsLoggedIn(true);
-      onSuccess?.(res);
-
-    } catch (err) {
-      console.error("Login failed:", err);
-
-      // Smart error extraction
-      if (err?.response?.data?.message) {
-        setErrorMessage(err.response.data.message);
-      } else if (err?.message) {
-        setErrorMessage(err.message);
-      } else {
-        setErrorMessage("Something went wrong. Please try again.");
-      }
+    if (!res?.access_token) {
+      throw new Error("Invalid login response");
     }
-  };
+
+    // Save token
+    localStorage.setItem("token", res.access_token.split("|")[1]);
+    localStorage.setItem("role", res.role);
+
+    // Save user data
+    const userData = {
+      id: res.user_id,
+      name: res.name,
+      email: res.email,
+      role: res.role,
+    };
+    localStorage.setItem("user_id",(res.user_id));
+    setUser(userData);
+
+    // Navigate if admin
+    if (res.role === "admin") {
+      navigate("/admin");
+    }
+
+    // Sync guest data
+    await syncGuestData(cartSyncExecute, wishlistSyncExecute);
+
+    toast.success("Login Successful 🎉");
+    setIsLoggedIn(true);
+    onSuccess?.(res);
+
+  } catch (err) {
+    console.error("Login failed:", err);
+
+    if (err?.response?.data?.message) {
+      setErrorMessage(err.response.data.message);
+    } else if (err?.message) {
+      setErrorMessage(err.message);
+    } else {
+      setErrorMessage("Something went wrong. Please try again.");
+    }
+  }
+};
+
 
   /* ================= LOGOUT ================= */
   const handleLogout = () => {

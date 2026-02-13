@@ -11,7 +11,7 @@ const CartDrawer = ({ open, onClose , openLogin }) => {
 
   // 🔹 Call API ONLY if logged in
   const { data, loading, error } = useGet(
-    open && isLoggedIn ? "cart" : null
+   "cart" 
   );
 
   const cartItems = data?.items || [];

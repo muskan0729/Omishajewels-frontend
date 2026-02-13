@@ -10,12 +10,14 @@ const AuthButton = ({ openLogin }) => {
 
   const handleLogout = async () => {
     try {
-      await execute(); // token auto-sent
+      await execute(); // token auto-sent to backend
     } catch (err) {
       console.warn("Logout API failed, clearing token anyway");
     } finally {
+      // Clear all relevant localStorage items
       localStorage.removeItem("token");
       localStorage.removeItem("role");
+      localStorage.removeItem("user"); // <--- added
       navigate("/");
     }
   };

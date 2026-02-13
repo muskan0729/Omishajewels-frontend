@@ -64,7 +64,7 @@ function App() {
       <Toaster position="bottom-left" richColors closeButton />
 
       <BrowserRouter>
-    <ScrollTop />
+        <ScrollTop />
         <Routes>
           {/* ================= PUBLIC + ACCOUNT LAYOUT ================= */}
           <Route
@@ -94,10 +94,6 @@ function App() {
                     setAuthOpen(true);
                   }}
                 />
-                
-
-
-
                 <main className="min-h-screen bg-[#FEFCF9]">
                   <Routes>
                     {/* PUBLIC ROUTES */}
@@ -119,7 +115,7 @@ function App() {
                     {/* MY ACCOUNT */}
                     <Route path="/my-account" element={<MyAccountLayout />}>
                       {/* <Route index element={<DashboardMyAccount />} /> */}
-                      <Route index element={<DashboardMyAccount openLogin={() => { setAuthView("login");setAuthOpen(true);}}/>}/>
+                      <Route index element={<DashboardMyAccount openLogin={() => { setAuthView("login"); setAuthOpen(true); }} />} />
                       <Route path="orders" element={<Orders />} />
                       <Route path="downloads" element={<Downloads />} />
                       <Route path="addresses" element={<Addresses />} />
@@ -130,7 +126,7 @@ function App() {
                       <Route path="edit-address/shipping" element={<EditShippingAddress />} />
                     </Route>
 
-<Route path="/products/:id" element={<ProductDetails />} />
+                    <Route path="/products/:id" element={<ProductDetails />} />
                     <Route path="/cartprocess" element={<Cartprocess />} />
                   </Routes>
                 </main>
@@ -149,17 +145,7 @@ function App() {
               <Route path="orders" element={<Allorders />} />
               <Route path="users" element={<Users />} />
               <Route path="transactions" element={<Transactions />} />
-            </Route></Route>
-
-
-          <Route path="/admin/*" element={<AdminLayout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="categories" element={<Categories />} />
-            <Route path="ebooks" element={<Ebooks />} />
-            <Route path="orders" element={<Allorders />} />
-            <Route path="users" element={<Users />} />
-            <Route path="transactions" element={<Transactions />} />
-            {/* <Route path="images" element={<Images />} /> */}
+            </Route>
           </Route>
         </Routes>
       </BrowserRouter>
