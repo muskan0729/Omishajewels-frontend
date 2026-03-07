@@ -12,9 +12,9 @@ import { Link } from "react-router-dom";
 import QuickViewModal from "../QuickViewModal";
 import { FiGrid, FiLayout } from "react-icons/fi";
 import { BsGrid1X2Fill, BsGrid3X3GapFill } from "react-icons/bs";
+import { FiDownload } from "react-icons/fi";
 import Loader from "../Loader";
-
-// const API = "https://dummyjson.com/products?limit=100";
+import axios from "axios"; // Add axios import
 
 const toLabel = (key) =>
   String(key || "")
@@ -49,9 +49,12 @@ const priceRanges = [
 
 export default function ShopPage() {
   const IMG_URL = import.meta.env.VITE_IMG_URL;
+  const API_BASE_URL = import.meta.env.VITE_API_URL; // Add API base URL
 
   const [showQuickModal, setShowQuickModal] = useState(false);
   const [cartLoadingIds, setCartLoadingIds] = useState([]);
+  const [purchasedEbooks, setPurchasedEbooks] = useState({});
+  const [downloadingIds, setDownloadingIds] = useState([]);
 
   //api call
   const { execute: cartExecute } = usePost("cart/add");
@@ -60,6 +63,29 @@ export default function ShopPage() {
   const [wishlistIds, setWishlistIds] = useState([]);
 
   const userId = localStorage.getItem("user_id");
+  const token = localStorage.getItem("token");
+  const isLoggedIn = !!userId && !!token;
+
+  // ✅ Use useGet hook for purchased ebooks
+  const { data: purchasedData, loading: purchasedLoading } = useGet(
+    isLoggedIn ? `my-library` : null
+  );
+
+  // Process purchased ebooks data
+  useEffect(() => {
+    if (purchasedData?.success && purchasedData?.data) {
+      const purchasedMap = {};
+      purchasedData.data.active.forEach(item => {
+        purchasedMap[item.id] = {
+          hasAccess: true,
+          download_url: item.download_url,
+          expiry_date: item.access_expiry,
+          days_remaining: item.days_remaining
+        };
+      });
+      setPurchasedEbooks(purchasedMap);
+    }
+  }, [purchasedData]);
 
   // hero category
   const [activeCategory, setActiveCategory] = useState("all");
@@ -72,10 +98,9 @@ export default function ShopPage() {
 
   // top show + grid buttons
   const [showCount, setShowCount] = useState(9);
-  const [gridMode, setGridMode] = useState("grid3"); // grid2 | grid3 | grid4
+  const [gridMode, setGridMode] = useState("grid3");
 
   // data
-  // const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [products, setProducts] = useState([]);
 
@@ -88,8 +113,9 @@ export default function ShopPage() {
 
   const productsEndpoint =
     activeCategory === "all"
-      ? "products" // all products
+      ? "products"
       : `categories/${activeCategory}/products`;
+  
   const { data, loading, error: error_product } = useGet(productsEndpoint);
 
   useEffect(() => {
@@ -101,9 +127,8 @@ export default function ShopPage() {
       return;
     }
 
-    // Safely extract the products array — adjust nesting if needed
     const rawProducts =
-      data?.data?.data ?? // very common Laravel-style
+      data?.data?.data ??
       data?.data?.products ??
       data?.products ??
       data?.data ??
@@ -120,7 +145,6 @@ export default function ShopPage() {
       const k = p.categories || "other";
       map.set(k, (map.get(k) || 0) + 1);
     }
-    // keep stable order like your screenshot (by count desc)
     return Array.from(map.entries())
       .map(([key, count]) => ({ key, count }))
       .sort((a, b) => b.count - a.count);
@@ -142,7 +166,6 @@ export default function ShopPage() {
       return fp >= range.min && fp <= range.max;
     });
 
-    // Your existing sorting logic
     switch (sortBy) {
       case "popularity":
         out.sort((a, b) => (b.stock || 0) - (a.stock || 0));
@@ -171,7 +194,6 @@ export default function ShopPage() {
         out.sort((a, b) => (a.id || 0) - (b.id || 0));
         break;
     }
-    // }
 
     return out;
   }, [products, priceKey, sortBy]);
@@ -186,13 +208,13 @@ export default function ShopPage() {
   };
 
   const heroBack = () => {
-    // go back to "Shop" view
     setActiveCategory("all");
   };
+  
   const handleAddToCart = async (book, qty = 1) => {
     const productId = book.id;
 
-    if (cartLoadingIds.includes(productId)) return; // prevent double click
+    if (cartLoadingIds.includes(productId)) return;
     setCartLoadingIds((prev) => [...prev, productId]);
 
     const cartItem = {
@@ -204,14 +226,72 @@ export default function ShopPage() {
     };
 
     try {
-      // Assuming addToCartManager returns a Promise
       await addToCartManager(cartItem, cartExecute);
       toast.success("Added to cart");
     } catch (err) {
       toast.error("Failed to add to cart");
     } finally {
-      // Remove loader after API finishes
       setCartLoadingIds((prev) => prev.filter((id) => id !== productId));
+    }
+  };
+
+  // ✅ Secure download function - forces download instead of opening in new window
+  const handleDownload = async (book) => {
+    if (!isLoggedIn) {
+      toast.error("Please login to download");
+      return;
+    }
+    
+    const purchased = purchasedEbooks[book.id];
+    if (!purchased || !purchased.download_url) {
+      toast.error("Download not available");
+      return;
+    }
+
+    // Check if already downloading
+    if (downloadingIds.includes(book.id)) {
+      return;
+    }
+
+    setDownloadingIds(prev => [...prev, book.id]);
+
+    try {
+      // Use the API endpoint that handles authentication and forces download
+      const downloadEndpoint = `${API_BASE_URL}ebook/${book.id}/download`;
+      
+      // Make authenticated request with responseType blob to handle file download
+      const response = await axios.get(downloadEndpoint, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/pdf',
+        },
+        responseType: 'blob', // Important: get as blob
+      });
+
+      // Create a blob URL and trigger download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${book.title}.pdf`); // Set filename
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success("Download started");
+    } catch (err) {
+      console.error("Download failed:", err);
+      if (err.response?.status === 401) {
+        toast.error("Session expired. Please login again.");
+      } else if (err.response?.status === 403) {
+        toast.error("Your access has expired. Please purchase again.");
+      } else {
+        toast.error("Failed to download. Please try again.");
+      }
+    } finally {
+      setDownloadingIds(prev => prev.filter(id => id !== book.id));
     }
   };
 
@@ -226,14 +306,12 @@ export default function ShopPage() {
       <div className="page">
         {/* HERO */}
         <ShopHero
-          // categories={categories}
           activeCategory={activeCategory}
           onChangeCategory={setActiveCategory}
-          // pageTitle={activeCategory === "all" ? "SHOP" : toLabel(activeCategory)}
           onBack={heroBack}
         />
 
-        {/* breadcrumb row below hero (like screenshot) */}
+        {/* breadcrumb row */}
         <div className="crumbRow">
           <div className="wrap">
             <div className="crumbText">
@@ -247,7 +325,7 @@ export default function ShopPage() {
 
         {/* SHOP BODY */}
         <div className="wrap shopWrap">
-          {/* top row (Show: 9/12/18/24 + grid icons) */}
+          {/* top row */}
           <div className="topRow">
             <div className="topRow__left" />
 
@@ -272,8 +350,6 @@ export default function ShopPage() {
                   className={gridMode === "grid2" ? "active" : ""}
                   onClick={() => setGridMode("grid2")}
                 >
-                  {/* Example: 2-grid icon */}
-                  {/* <FiLayout style={{ fontSize: "1.2rem" }} /> */}
                   <BsGrid1X2Fill size={18} />
                 </button>
 
@@ -281,8 +357,6 @@ export default function ShopPage() {
                   className={gridMode === "grid3" ? "active" : ""}
                   onClick={() => setGridMode("grid3")}
                 >
-                  {/* Example: 3-grid icon */}
-                  {/* <FiGrid style={{ fontSize: "1.2rem" }} /> */}
                   <FiGrid size={18} />
                 </button>
 
@@ -290,8 +364,6 @@ export default function ShopPage() {
                   className={gridMode === "grid4" ? "active" : ""}
                   onClick={() => setGridMode("grid4")}
                 >
-                  {/* Example: 4-grid icon */}
-                  {/* <FiLayout style={{ fontSize: "1.2rem" }} /> */}
                   <BsGrid3X3GapFill size={18} />
                 </button>
               </div>
@@ -312,10 +384,7 @@ export default function ShopPage() {
                       : "/no-image.png";
                     return (
                       <div key={p.id} className="topratedItem">
-                        <img
-                          src={imageSrc} // src={p.ebook_file}
-                          alt={p.title}
-                        />
+                        <img src={imageSrc} alt={p.title} />
                         <div>
                           <div className="topratedName">{p.title}</div>
                           <div className="topratedMrp">{money(p.price)}</div>
@@ -389,8 +458,6 @@ export default function ShopPage() {
                       id: p.id,
                       name: p.title,
                       price: finalPrice(p.price, p.discountPercentage),
-                      // image: p.ebook_file,
-                      // image:""
                       quantity: 1,
                     };
 
@@ -400,83 +467,129 @@ export default function ShopPage() {
                     const imageSrc = imageName
                       ? `${IMG_URL}${imageName}`
                       : "/no-image.png";
+                    
+                    // Check if user has purchased this ebook
+                    const isPurchased = isLoggedIn ? purchasedEbooks[p.id] : null;
+                    const isDownloading = downloadingIds.includes(p.id);
+                    
                     return (
                       <div key={p.id} className="card">
                         <div className="media">
                           <Link to={`/products/${p.id}`}>
-                            <img
-                              src={imageSrc} //  src={p.ebook_file}
-                              alt={p.title}
-                            />
+                            <img src={imageSrc} alt={p.title} />
                           </Link>
-                          {hasDiscount ? (
+                          
+                          {hasDiscount && (
                             <div className="badge">
                               -{Math.round(p.discountPercentage)}%
                             </div>
-                          ) : null}
+                          )}
 
-                          <div className="iconsBox">
-                            <button
-                              title="Search"
-                              onClick={() => handleQuickView(p)}
-                            >
-                              +
-                            </button>
-                            <button
-                              title="Wishlist"
-                              onClick={() => {
-                                if (!userId) {
-                                  toast.error(
-                                    "Please login to add to wishlist",
-                                  );
-                                  return;
-                                }
+                          {/* Show expiry badge only for logged-in users with expiring access */}
+                          {isLoggedIn && isPurchased && isPurchased.days_remaining <= 3 && (
+                            <div className="badge expiry-badge">
+                              Expires in {isPurchased.days_remaining} days
+                            </div>
+                          )}
 
-                                if (wishlistIds.includes(p.id)) {
-                                  // remove from wishlist UI
-                                  setWishlistIds((prev) =>
-                                    prev.filter((id) => id !== p.id),
-                                  );
-                                  toast.success("Removed from wishlist");
-                                } else {
-                                  // add wishlist
-                                  addToWishlistManager(
-                                    { ...productData, user_id: userId },
-                                    wishlistExecute,
-                                  );
-
-                                  setWishlistIds((prev) => [...prev, p.id]);
-                                  toast.success("Added to wishlist");
-                                }
-                              }}
-                              className="text-xl"
-                            >
-                              {wishlistIds.includes(p.id) ? (
-                                <span className="text-black">♥</span>
-                              ) : (
-                                <span className="text-gray-800">♡</span>
+                          {/* Icons Box - Only show for non-purchased items */}
+                          {(!isPurchased || !isLoggedIn) && (
+                            <div className="iconsBox">
+                              <button
+                                title="Quick View"
+                                onClick={() => handleQuickView(p)}
+                              >
+                                +
+                              </button>
+                              
+                              {/* Wishlist button - only for logged-in users */}
+                              {isLoggedIn && (
+                                <button
+                                  title="Wishlist"
+                                  onClick={() => {
+                                    if (wishlistIds.includes(p.id)) {
+                                      setWishlistIds((prev) =>
+                                        prev.filter((id) => id !== p.id),
+                                      );
+                                      toast.success("Removed from wishlist");
+                                    } else {
+                                      addToWishlistManager(
+                                        { ...productData, user_id: userId },
+                                        wishlistExecute,
+                                      );
+                                      setWishlistIds((prev) => [...prev, p.id]);
+                                      toast.success("Added to wishlist");
+                                    }
+                                  }}
+                                  className="text-xl"
+                                >
+                                  {wishlistIds.includes(p.id) ? (
+                                    <span className="text-black">♥</span>
+                                  ) : (
+                                    <span className="text-gray-800">♡</span>
+                                  )}
+                                </button>
                               )}
+                            </div>
+                          )}
+
+                          {/* Conditional button based on login status and purchase */}
+                          {!isLoggedIn ? (
+                            // Guest users - show Add to Cart
+                            <button
+                              className="addCart"
+                              onClick={() => handleAddToCart(productData)}
+                              disabled={cartLoadingIds.includes(p.id)}
+                            >
+                              {cartLoadingIds.includes(p.id)
+                                ? "Adding…"
+                                : "ADD TO CART"}
                             </button>
-                          </div>
-
-                          {/* shows only on hover like your image */}
-                          <button
-                            className="addCart"
-                            onClick={() => handleAddToCart(productData)}
-                            disabled={cartLoadingIds.includes(p.id)}
-                          >
-                            {cartLoadingIds.includes(p.id)
-                              ? "Adding…"
-                              : "ADD TO CART"}
-                          </button>
-
-                          {/* <button className="addCart"
-                        onClick={() => addToCartManager(productData, cartExecute)}>ADD TO CART</button> */}
+                          ) : isPurchased ? (
+                            // Logged-in user with purchase - show Download button only
+                            <button
+                              className="download-btn-single"
+                              onClick={() => handleDownload(p)}
+                              disabled={isDownloading}
+                              style={{
+                                position: 'absolute',
+                                bottom: '10px',
+                                left: '10px',
+                                right: '10px',
+                                backgroundColor: isDownloading ? '#888' : '#4CAF50',
+                                color: 'white',
+                                border: 'none',
+                                padding: '10px',
+                                borderRadius: '4px',
+                                cursor: isDownloading ? 'not-allowed' : 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '8px',
+                                fontWeight: '500',
+                                zIndex: '5',
+                                opacity: isDownloading ? 0.7 : 1
+                              }}
+                            >
+                              <FiDownload size={18} /> 
+                              {isDownloading ? "Downloading..." : "Download PDF"}
+                            </button>
+                          ) : (
+                            // Logged-in user without purchase - show Add to Cart
+                            <button
+                              className="addCart"
+                              onClick={() => handleAddToCart(productData)}
+                              disabled={cartLoadingIds.includes(p.id)}
+                            >
+                              {cartLoadingIds.includes(p.id)
+                                ? "Adding…"
+                                : "ADD TO CART"}
+                            </button>
+                          )}
                         </div>
 
                         <div className="info">
                           <div className="pTitle">{p.title}</div>
-                          {/* category shown below product */}
                           <div className="pCat">{p.category}</div>
 
                           <div className="pPrice">
@@ -489,6 +602,16 @@ export default function ShopPage() {
                               <span className="sale">{money(p.price)}</span>
                             )}
                           </div>
+                          
+                          {/* Show expiry info only for logged-in users with purchase */}
+                          {isLoggedIn && isPurchased && isPurchased.expiry_date && (
+                            <div className="expiry-info">
+                              Access until: {new Date(isPurchased.expiry_date).toLocaleDateString()}
+                              {isPurchased.days_remaining <= 7 && (
+                                <span className="expiry-warning"> • {isPurchased.days_remaining} days left</span>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     );
@@ -508,6 +631,9 @@ export default function ShopPage() {
             setSelectedProduct(null);
           }}
           onAddToCart={handleAddToCart}
+          isPurchased={isLoggedIn ? purchasedEbooks[selectedProduct?.id] : null}
+          onDownload={() => handleDownload(selectedProduct)}
+          isLoggedIn={isLoggedIn}
         />
       )}
     </>

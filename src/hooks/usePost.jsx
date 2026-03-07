@@ -14,9 +14,9 @@ export function usePost(endpoint) {
 
     try {
       const headers = {
-        // Authorization: "Bearer " + localStorage.getItem("token"),
-        Authorization: "Bearer " + "h7LVWhVhV6peADVYLlVnKAx1OroXxvDsvQ0uHb78c949a0e7",
-        ...options.headers,
+        Authorization: "Bearer " + localStorage.getItem("token"),
+        // Authorization: "Bearer " + "h7LVWhVhV6peADVYLlVnKAx1OroXxvDsvQ0uHb78c949a0e7",
+        // ...options.headers,
       };
 
       // If body is FormData, do NOT set Content-Type manually

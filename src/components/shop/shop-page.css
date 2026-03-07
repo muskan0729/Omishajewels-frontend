@@ -506,3 +506,29 @@
   gap: 18px;
   margin-bottom: 16px; /* space between title and categories */
 }
+
+
+/* Download button for purchased items */
+.download-btn-single {
+  transition: all 0.3s ease;
+  font-size: 14px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.download-btn-single:hover {
+  background-color: #45a049 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* Expiry warning text */
+.expiry-warning {
+  color: #f97316;
+  font-weight: 500;
+  margin-left: 4px;
+}
+
+/* Hide icons for purchased items */
+.card .is-purchased .iconsBox {
+  display: none;
+}

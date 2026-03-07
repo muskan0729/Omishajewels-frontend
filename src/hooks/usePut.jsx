@@ -26,7 +26,7 @@ export function usePut(endpoint) {
       //   }
       // }
 
-      console.log(localStorage.getItem("token"));
+      //console.log(localStorage.getItem("token"));
 
       const response = await axios.put(
         `${BASE_URL}${endpoint}${id ? `/${id}` : ""}`,
@@ -34,8 +34,8 @@ export function usePut(endpoint) {
         {
           headers: {
             ...(isFormData ? {} : { "Content-Type": "application/json" }),
-            // Authorization: "Bearer " + localStorage.getItem("token"),
-            Authorization: "Bearer " + "OTSSkQhHvNuFGrn4edvYcakRnAlinpOmffGDT4SZ4adecefd",
+            Authorization: "Bearer " + localStorage.getItem("token"),
+            //Authorization: "Bearer " + "OTSSkQhHvNuFGrn4edvYcakRnAlinpOmffGDT4SZ4adecefd",
           },
         }
       );

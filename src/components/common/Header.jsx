@@ -1,24 +1,46 @@
-// import { Link, NavLink } from "react-router-dom";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { FiUser, FiSearch, FiHeart, FiShoppingCart } from "react-icons/fi";
-// import logo from "../../../images/logo.jpeg";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SearchOverlay from "./SearchOverlay";
 import CartDrawer from "../cart/CartDrawer";
-import { useGet } from "../../hooks/useGet";
+// import { useGet } from "../../hooks/useGet";
 import useAutoFetch from "../../hooks/useAutoFetch";
 
-// import Login from "../Login";
-
-
 const Header = ({ openLogin }) => {
-  const { data} = useAutoFetch("wishlist",2000);
-  const total_wishlist_count = data?.total_count || 0;
+  const { data: wishlistData } = useAutoFetch("wishlist", 2000);
+  const total_wishlist_count = wishlistData?.total_count || 0;
 
- const {data: cartData} = useAutoFetch("cart",2000);
+  const { data: cartData } = useAutoFetch("cart", 2000);
 
-const subtotal = cartData?.subtotal || 0;
-  
+  // Calculate cart count from items
+  const [cartCount, setCartCount] = useState(0);
+  const [cartSubtotal, setCartSubtotal] = useState(0);
+
+  // Update cart count and subtotal whenever cart data changes
+  useEffect(() => {
+    if (cartData?.items) {
+      // Calculate total quantity
+      const count = cartData.items.reduce(
+        (total, item) => total + parseInt(item.quantity ?? 1, 10),
+        0
+      );
+      //console.log(cartData);
+      //console.log(count);
+      setCartCount(count);
+
+      // Calculate subtotal from items (price * quantity)
+      const subtotal = cartData.items.reduce((total, item) => {
+        const price = parseFloat(item.price) || 0;
+        const quantity = item.quantity;
+        return total + (price * quantity);
+      }, 0);
+
+      setCartSubtotal(subtotal);
+    } else {
+      setCartCount(0);
+      setCartSubtotal(0);
+    }
+  }, [cartData]);
 
   const [searchOpen, setSearchOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
@@ -28,13 +50,16 @@ const subtotal = cartData?.subtotal || 0;
 
   const handleWishlistClick = () => {
     if (!isLoggedIn) {
-      // just redirect OR show message — no login popup
       navigate("/my-account");
       return;
     }
     navigate("/my-account/wishlist");
   };
-  
+
+  // Format price to always show 2 decimal places
+  const formatPrice = (price) => {
+    return Number(price).toFixed(2);
+  };
 
   return (
     <>
@@ -63,10 +88,9 @@ const subtotal = cartData?.subtotal || 0;
                 to={path}
                 className={({ isActive }) =>
                   `relative pb-1 transition-all
-                  ${
-                    isActive
-                      ? "text-[#B8964E] after:w-full"
-                      : "after:w-0 hover:after:w-full"
+                  ${isActive
+                    ? "text-[#B8964E] after:w-full"
+                    : "after:w-0 hover:after:w-full"
                   }
                   after:absolute after:left-0 after:-bottom-1
                   after:h-[1px] after:bg-[#B8964E]
@@ -91,17 +115,13 @@ const subtotal = cartData?.subtotal || 0;
             </button>
 
             {/* USER */}
-             
-          <button
-             
-            className="hover:text-[#B8964E] transition cursor-pointer"
+            <button
+              className="hover:text-[#B8964E] transition cursor-pointer"
               aria-label="User"
-            
-            onClick={openLogin}
-          >
+              onClick={openLogin}
+            >
               <FiUser />
             </button>
-          
 
             {/* WISHLIST */}
             <button
@@ -119,21 +139,29 @@ const subtotal = cartData?.subtotal || 0;
               )}
             </button>
 
-
-
-            {/* CART (DRAWER OPEN) */}
+            {/* CART (DRAWER OPEN) - WITH COUNT BADGE */}
             <button
-                onClick={() => setCartOpen(true)}
-                className="flex items-center gap-1 hover:text-[#B8964E] transition cursor-pointer"
-                aria-label="Cart"
-              >
-                <FiShoppingCart />
+              onClick={() => setCartOpen(true)}
+              className="flex items-center gap-1 hover:text-[#B8964E] transition cursor-pointer relative"
+              aria-label="Cart"
+            >
+              <div className="relative">
+                <FiShoppingCart size={22} />
 
-                {/* SUBTOTAL */}
-                <span className="text-sm font-medium">
-                  ₹{subtotal}
-                </span>
-              </button>
+                {/* CART COUNT BADGE */}
+                {cartCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-[10px] 
+                                  font-semibold rounded-full h-4 w-4 flex items-center justify-center">
+                    {cartCount}
+                  </span>
+                )}
+              </div>
+
+              {/* SUBTOTAL - Formatted with 2 decimal places */}
+              <span className="text-sm font-medium ml-1">
+                ₹{formatPrice(cartSubtotal)}
+              </span>
+            </button>
 
           </div>
 
@@ -149,9 +177,8 @@ const subtotal = cartData?.subtotal || 0;
       {/* CART DRAWER */}
       <CartDrawer
         open={cartOpen}
-        // onClose={() => setCartOpen(false)}
-          onClose={() => setCartOpen(false)}
-  openLogin={openLogin}
+        onClose={() => setCartOpen(false)}
+        openLogin={openLogin}
       />
     </>
   );

@@ -13,11 +13,10 @@ const Login = ({ switchToRegister, onSuccess }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(
     !!localStorage.getItem("token")
   );
-
-  const [user, setUser] = useState(() => {
-    const u = localStorage.getItem("user");
-    return u ? JSON.parse(u) : null;
-  });
+const [user, setUser] = useState(() => {
+  const u = localStorage.getItem("user");
+  return u ? JSON.parse(u) : null;
+});
 
   const [form, setForm] = useState({
     email: "",
@@ -32,47 +31,56 @@ const Login = ({ switchToRegister, onSuccess }) => {
 
   /* ================= SUBMIT ================= */
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setErrorMessage(null);
+  e.preventDefault();
+  setErrorMessage(null);
 
-    try {
-      const res = await execute(form);
-      console.log(res);
-      if (!res?.access_token) {
-        throw new Error("Invalid login response");
-      }
-
-      localStorage.setItem("token", res.access_token.split("|")[1]);
-      localStorage.setItem("role", res?.role);
-
-      if(res?.role=="admin")
-        navigate("/admin");
-      // localStorage.setItem("role", res?.role);
-      // localStorage.setItem("role", res?.role);
-      // console.log(res?.role.split("|")[1]);
-      
-      if (res.user) {
-        localStorage.setItem("user", JSON.stringify(res.user));
-        setUser(res.user);
-      }
-     await syncGuestData(cartSyncExecute, wishlistSyncExecute);
-      toast.success("Login Successful 🎉");
-      setIsLoggedIn(true);
-      onSuccess?.(res);
-
-    } catch (err) {
-      console.error("Login failed:", err);
-
-      // Smart error extraction
-      if (err?.response?.data?.message) {
-        setErrorMessage(err.response.data.message);
-      } else if (err?.message) {
-        setErrorMessage(err.message);
-      } else {
-        setErrorMessage("Something went wrong. Please try again.");
-      }
+  try {
+    const res = await execute(form);
+    //console.log(res); // This shows {message, user_id, name, email, role, access_token}
+    
+    if (!res?.access_token) {
+      throw new Error("Invalid login response");
     }
-  };
+
+    localStorage.setItem("token", res.access_token.split("|")[1]);
+    localStorage.setItem("role", res?.role);
+
+    if(res?.role == "admin")
+      navigate("/admin");
+    
+    // ✅ FIX: The user data is directly in the response
+    if (res.user_id) {  // Check if user_id exists in response
+      // Create user object from the response fields
+      const userData = {
+        id: res.user_id,
+        name: res.name,
+        email: res.email,
+        role: res.role
+      };
+      
+      localStorage.setItem("user", JSON.stringify(userData));
+      localStorage.setItem("user_id", res.user_id); // Store user_id separately
+      setUser(userData);
+      
+      //console.log("User data stored:", userData); // Debug log
+    }
+    
+    await syncGuestData(cartSyncExecute, wishlistSyncExecute);
+    toast.success("Login Successful 🎉");
+    setIsLoggedIn(true);
+    onSuccess?.(res);
+
+  } catch (err) {
+    console.error("Login failed:", err);
+    if (err?.response?.data?.message) {
+      setErrorMessage(err.response.data.message);
+    } else if (err?.message) {
+      setErrorMessage(err.message);
+    } else {
+      setErrorMessage("Something went wrong. Please try again.");
+    }
+  }
+}
 
   /* ================= LOGOUT ================= */
   const handleLogout = () => {

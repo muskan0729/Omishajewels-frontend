@@ -1,23 +1,30 @@
 import { useState } from "react";
 import axios from "axios";
 
-const BASE_URL = import.meta.env.VITE_API_URL;
+const BASE_URL = import.meta.env.VITE_API_URL; // Has trailing slash: "https://omishajewels.com/Backend/api/"
 
-export function useDelete(endpoint = "") {
+export function useDelete() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const executeDelete = async (id, options = {}) => {
+  const executeDelete = async (endpoint, options = {}) => {
     setLoading(true);
     setError(null);
 
     try {
-      // const token = localStorage.getItem("token"); // or however you store it
-      const token="XrL6wbmvvP6KbKRjpMJOJcfnC8MkpRMk3vVM5QsSd7227509";
+      const token = localStorage.getItem("token");
+      
+      // Remove leading slash if exists
+      const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
+      
+      // Construct URL - BASE_URL already has trailing slash
+      const url = `${BASE_URL}${cleanEndpoint}`;
+      
+      //console.log("Deleting from:", url); // Debug log
       
       const response = await axios.delete(
-        `${BASE_URL}${endpoint}/${id}`,
+        url,
         {
           headers: {
             Authorization: `Bearer ${token}`,

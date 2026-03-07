@@ -3,13 +3,14 @@ import { useGet } from "../hooks/useGet";
 import { useDelete } from "../hooks/useDelete";
 import { Link } from "react-router-dom";
 import Cartprocess from "../components/Cartprocess";
+import { toast } from "sonner"; // Add toast for notifications
 
 const ViewCart = () => {
-  const { data, loading, error } = useGet("cart");
- const { executeDelete } = useDelete();
-const [removingId, setRemovingId] = useState(null);
+  const { data, loading, error, refetch } = useGet("cart"); // Add refetch
+  const { executeDelete } = useDelete(); // Remove the default endpoint
+  const [removingId, setRemovingId] = useState(null);
 
-    const IMG_URL = import.meta.env.VITE_IMG_URL;
+  const IMG_URL = import.meta.env.VITE_IMG_URL;
 
   const [cartItems, setCartItems] = useState([]);
 
@@ -23,7 +24,7 @@ const [removingId, setRemovingId] = useState(null);
         oldPrice: Number(item.ebook.price),
         newPrice: Number(item.price),
         qty: Number(item.quantity),
-        image: item.ebook.image,  
+        image: item.ebook.image,
       }));
 
       setCartItems(formattedItems);
@@ -32,25 +33,30 @@ const [removingId, setRemovingId] = useState(null);
     }
   }, [data]);
 
-
   // 🔹 Remove single item
-const removeItem = async (itemId) => {
-  try {
-    setRemovingId(itemId);
+  const removeItem = async (itemId) => {
+    try {
+      setRemovingId(itemId);
 
-    await executeDelete(`cart/item/${itemId}`);
-
-    setCartItems((prev) =>
-      prev.filter((item) => item.id !== itemId)
-    );
-  } catch (err) {
-    console.error("Failed to remove item", err);
-  } finally {
-    setRemovingId(null);
-  }
-};
-
-
+      // ✅ Pass the FULL endpoint with ID
+      const result = await executeDelete(`cart/item/${itemId}`);
+      
+      //console.log("Delete result:", result); // Debug log
+      
+      // Remove from UI
+      setCartItems((prev) => prev.filter((item) => item.id !== itemId));
+      
+      // ✅ Refetch cart data to ensure sync with server
+      await refetch();
+      
+      toast.success("Item removed from cart");
+    } catch (err) {
+      console.error("Failed to remove item", err);
+      toast.error("Failed to remove item");
+    } finally {
+      setRemovingId(null);
+    }
+  };
 
   // 🔹 Calculate subtotal
   const estimatedTotal = cartItems.reduce(
@@ -96,15 +102,16 @@ const removeItem = async (itemId) => {
               ) : (
                 cartItems.map((item) => {
                   const itemTotal = item.newPrice * item.qty;
-                 const imageName = item.image?.split("/").pop();
+                  const imageName = item.image?.split("/").pop();
                   return (
                     <div key={item.id} className="border-b pb-8 mb-8">
                       <div className="flex justify-between gap-6">
-                       <div >
-                        <img 
-                        src={`${IMG_URL}${imageName}`}
-                        style={{width:"130px",height:"auto"}}
-                         />
+                        <div>
+                          <img
+                            src={`${IMG_URL}${imageName}`}
+                            style={{ width: "130px", height: "auto" }}
+                            alt={item.name}
+                          />
                         </div>
                         {/* Product Info */}
                         <div className="w-[70%]">
@@ -125,17 +132,13 @@ const removeItem = async (itemId) => {
                             {item.description}
                           </p>
 
-          
-
                           <button
                             onClick={() => removeItem(item.id)}
                             disabled={removingId === item.id}
-                            className="mt-4 text-sm underline text-gray-700 disabled:opacity-50"
+                            className="mt-4 text-sm underline text-gray-700 disabled:opacity-50 hover:text-red-500"
                           >
                             {removingId === item.id ? "Removing..." : "Remove item"}
                           </button>
-
-
                         </div>
 
                         {/* Item Total */}
@@ -144,7 +147,6 @@ const removeItem = async (itemId) => {
                             ₹{itemTotal.toFixed(2)}
                           </p>
                         </div>
-
                       </div>
                     </div>
                   );
