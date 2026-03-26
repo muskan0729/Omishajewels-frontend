@@ -1,14 +1,17 @@
+import i1 from "../../assets/images/insta/insta1.jpg";
+import i2 from  "../../assets/images/insta/insta2.jpg";
+import i3 from "../../assets/images/insta/insta3.jpg";
+import i4 from"../../assets/images/insta/insta4.jpg";
+import i5 from"../../assets/images/insta/insta5.jpg";
+import i6 from"../../assets/images/insta/insta6.jpg";
+import i7 from"../../assets/images/insta/insta7.jpg";
+import i8 from"../../assets/images/insta/insta8.jpg";
+import i9 from"../../assets/images/insta/insta9.jpg";
+import i10 from"../../assets/images/insta/insta10.jpg";
+
+
 const instagramImages = [
-  "/assets/images/insta/insta1.jpg",
-  "/assets/images/insta/insta2.jpg",
-  "/assets/images/insta/insta3.jpg",
-  "/assets/images/insta/insta4.jpg",
-  "/assets/images/insta/insta5.jpg",
-  "/assets/images/insta/insta6.jpg",
-  "/assets/images/insta/insta7.jpg",
-  "/assets/images/insta/insta8.jpg",
-  "/assets/images/insta/insta9.jpg",
-  "/assets/images/insta/insta10.jpg",
+  i1,i2,i3,i4,i5,i6,i7,i8,i9,i10
 ];
 
 const SectionEight = () => {

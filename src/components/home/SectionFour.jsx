@@ -1,5 +1,9 @@
 import { Link } from "react-router-dom";
 
+// ✅ Import images
+import section4Bg from "../../assets/images/section4.png";
+import section41 from "../../assets/images/section41.png";
+
 const SectionFour = () => {
   return (
     <section className="bg-white pt-0 py-28">
@@ -14,7 +18,7 @@ const SectionFour = () => {
         >
           {/* BACKGROUND IMAGE */}
           <img
-            src="/assets/images/section4.png"
+            src={section4Bg}
             alt="Books Background"
             className="absolute inset-0 w-full h-full object-cover"
           />
@@ -27,18 +31,18 @@ const SectionFour = () => {
             {/* LEFT IMAGE */}
             <div className="flex justify-center group">
               <img
-                src="/assets/images/section41.png"
+                src={section41}
                 alt="Reading Moment"
                 className="
-                rounded-2xl
-                shadow-2xl
-                w-full
-                max-w-md
-                object-cover
-                transition-all
-                duration-700
-                ease-out
-                group-hover:-translate-y-1
+                  rounded-2xl
+                  shadow-2xl
+                  w-full
+                  max-w-md
+                  object-cover
+                  transition-all
+                  duration-700
+                  ease-out
+                  group-hover:-translate-y-1
                 "
               />
             </div>

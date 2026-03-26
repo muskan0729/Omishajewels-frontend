@@ -1,6 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
+// ✅ Import images directly from assets
+import book1 from "../../assets/images/book1.jpg";
+import book2 from "../../assets/images/book2.jpg";
+import book3 from "../../assets/images/book3.jpg";
+
+import slider1 from "../../assets/images/slider1.png";
+import slider2 from "../../assets/images/slider2.png";
+import slider3 from "../../assets/images/slider3.jpg";
+
+// ✅ Use imported images in slides
 const slides = [
   {
     id: 1,
@@ -8,8 +18,8 @@ const slides = [
     title: "ART OF WAR",
     description:
       "The Art of War showing a warrior in black holding a sword, symbolizing strategy, discipline, and the art of conflict.",
-    image: "/assets/images/book1.jpg",
-    bg: "/assets/images/slider1.png",
+    image: book1,
+    bg: slider1,
   },
   {
     id: 2,
@@ -17,8 +27,8 @@ const slides = [
     title: "PSYCHO-CYBERNETICS",
     description:
       "Psycho-Cybernetics highlighting personal growth, self-image improvement, and the power of the subconscious mind.",
-    image: "/assets/images/book2.jpg",
-    bg: "/assets/images/slider2.png",
+    image: book2,
+    bg: slider2,
   },
   {
     id: 3,
@@ -26,8 +36,8 @@ const slides = [
     title: "THE BOOK THIEF",
     description:
       "Timeless lessons on wealth, greed, and happiness explained through powerful real-life stories.",
-    image: "/assets/images/book3.jpg",
-    bg: "/assets/images/slider3.jpg",
+    image: book3,
+    bg: slider3,
   },
 ];
 
@@ -54,7 +64,6 @@ const HeroSlider = () => {
 
       {/* CONTENT */}
       <div className="relative z-10 max-w-7xl mx-auto px-6 h-full grid md:grid-cols-2 gap-12 items-center">
-
         {/* LEFT – BOOK IMAGE */}
         <div className="flex justify-center">
           <img
@@ -77,13 +86,9 @@ const HeroSlider = () => {
           key={slide.title}
           className="text-white animate-[fadeRight_0.7s_ease-out]"
         >
-          <p className="text-sm tracking-widest mb-4 opacity-90">
-            {slide.tag}
-          </p>
+          <p className="text-sm tracking-widest mb-4 opacity-90">{slide.tag}</p>
 
-          <h1 className="text-4xl md:text-5xl font-bold mb-6">
-            {slide.title}
-          </h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-6">{slide.title}</h1>
 
           <p className="text-sm md:text-base text-white/90 max-w-lg">
             {slide.description}
@@ -91,22 +96,20 @@ const HeroSlider = () => {
 
           <div className="mt-10 flex gap-4">
             <Link
-                to="/shop"
-                className="px-8 py-3 bg-[#B8964E] text-white text-sm tracking-wide rounded-full transition-all duration-300 hover:bg-[#a68442] hover:-translate-y-0.2 hover:shadow-[0_3px_3px_rgba(184,150,78,0.35)]"
+              to="/shop"
+              className="px-8 py-3 bg-[#B8964E] text-white text-sm tracking-wide rounded-full transition-all duration-300 hover:bg-[#a68442] hover:-translate-y-0.2 hover:shadow-[0_3px_3px_rgba(184,150,78,0.35)]"
             >
-                SHOP NOW
+              SHOP NOW
             </Link>
 
-            {/* SECONDARY BUTTON */}
             <Link
-                to={`/books/${slide.id}`}
-                className="px-8 py-3 border border-[#B8964E] text-[#B8964E] text-sm tracking-wide rounded-full transition-all duration-300 hover:bg-[#B8964E] hover:text-white hover:-translate-y-0.2 hover:shadow-[0_3px_3px_rgba(184,150,78,0.25)]"
+              to={`/books/${slide.id}`}
+              className="px-8 py-3 border border-[#B8964E] text-[#B8964E] text-sm tracking-wide rounded-full transition-all duration-300 hover:bg-[#B8964E] hover:text-white hover:-translate-y-0.2 hover:shadow-[0_3px_3px_rgba(184,150,78,0.25)]"
             >
-                VIEW MORE
+              VIEW MORE
             </Link>
-            </div>
+          </div>
         </div>
-
       </div>
 
       {/* SLIDE INDICATORS */}
