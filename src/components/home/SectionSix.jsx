@@ -1,5 +1,10 @@
 import { Link } from "react-router-dom";
 
+// ✅ Import images
+import partner1 from "../../assets/images/partner1.png";
+import partner2 from "../../assets/images/partner2.jpg";
+import partner3 from "../../assets/images/partner3.jpg";
+
 const SectionSix = () => {
   return (
     <section className="bg-[#FEFCF9] pt-0 py-28">
@@ -14,7 +19,7 @@ const SectionSix = () => {
             {/* LEFT IMAGE (FIXED SIZE, IMAGE ADJUSTS) */}
             <div className="relative rounded-2xl overflow-hidden bg-[#F5F3EF] flex items-center justify-center">
               <img
-                src="/assets/images/partner1.png"
+                src={partner1}
                 alt="Typewriter"
                 className="
                   w-full h-full
@@ -94,7 +99,7 @@ const SectionSix = () => {
 
               <div className="rounded-2xl overflow-hidden bg-[#F5F3EF] flex items-center justify-center">
                 <img
-                  src="/assets/images/partner2.jpg"
+                  src={partner2}
                   alt="Nature"
                   className="
                     w-full h-full
@@ -109,7 +114,7 @@ const SectionSix = () => {
 
               <div className="rounded-2xl overflow-hidden bg-[#F5F3EF] flex items-center justify-center">
                 <img
-                  src="/assets/images/partner3.jpg"
+                  src={partner3}
                   alt="Forest"
                   className="
                     w-full h-full
