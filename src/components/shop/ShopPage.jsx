@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import ShopHero from "./ShopHero";
 import "./shop-page.css";
 import { usePost } from "../../hooks/usePost";
@@ -10,11 +10,11 @@ import { useGet } from "../../hooks/useGet";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import QuickViewModal from "../QuickViewModal";
-import { FiGrid, FiLayout } from "react-icons/fi";
+import { FiGrid } from "react-icons/fi";
 import { BsGrid1X2Fill, BsGrid3X3GapFill } from "react-icons/bs";
 import { FiDownload } from "react-icons/fi";
 import Loader from "../Loader";
-import axios from "axios"; // Add axios import
+import axios from "axios";
 
 const toLabel = (key) =>
   String(key || "")
@@ -49,14 +49,13 @@ const priceRanges = [
 
 export default function ShopPage() {
   const IMG_URL = import.meta.env.VITE_IMG_URL;
-  const API_BASE_URL = import.meta.env.VITE_API_URL; // Add API base URL
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
 
   const [showQuickModal, setShowQuickModal] = useState(false);
   const [cartLoadingIds, setCartLoadingIds] = useState([]);
   const [purchasedEbooks, setPurchasedEbooks] = useState({});
   const [downloadingIds, setDownloadingIds] = useState([]);
 
-  //api call
   const { execute: cartExecute } = usePost("cart/add");
   const { execute: wishlistExecute } = usePost("wishlist");
 
@@ -66,12 +65,10 @@ export default function ShopPage() {
   const token = localStorage.getItem("token");
   const isLoggedIn = !!userId && !!token;
 
-  // ✅ Use useGet hook for purchased ebooks
   const { data: purchasedData, loading: purchasedLoading } = useGet(
     isLoggedIn ? `my-library` : null
   );
 
-  // Process purchased ebooks data
   useEffect(() => {
     if (purchasedData?.success && purchasedData?.data) {
       const purchasedMap = {};
@@ -87,128 +84,148 @@ export default function ShopPage() {
     }
   }, [purchasedData]);
 
-  // hero category
   const [activeCategory, setActiveCategory] = useState("all");
-
-  // filters
-  const [onSale, setOnSale] = useState(false);
-  const [inStock, setInStock] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState("default");
   const [priceKey, setPriceKey] = useState("all");
-
-  // top show + grid buttons
   const [showCount, setShowCount] = useState(9);
   const [gridMode, setGridMode] = useState("grid3");
-
-  // data
   const [error, setError] = useState("");
   const [products, setProducts] = useState([]);
-
+  const [totalProducts, setTotalProducts] = useState(0);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [loading, setLoading] = useState(false);
+  
+  const isFirstRender = useRef(true);
 
   const handleQuickView = (product) => {
     setSelectedProduct(product);
     setShowQuickModal(true);
   };
 
-  const productsEndpoint =
-    activeCategory === "all"
-      ? "products"
-      : `categories/${activeCategory}/products`;
-  
-  const { data, loading, error: error_product } = useGet(productsEndpoint);
-
-  useEffect(() => {
-    if (loading) return;
-
-    if (error_product) {
+  // Fetch products with pagination and filters
+  const fetchProducts = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    
+    try {
+      let endpoint = activeCategory === "all" 
+        ? `${API_BASE_URL}products` 
+        : `${API_BASE_URL}categories/${activeCategory}/products`;
+      
+      const params = new URLSearchParams({
+        page: currentPage,
+        limit: showCount,
+      });
+      
+      // Add sort parameter if not default
+      if (sortBy !== "default") {
+        params.append("sort", sortBy);
+      }
+      
+      const url = `${endpoint}?${params.toString()}`;
+      console.log("Fetching products:", { url, page: currentPage, limit: showCount, sortBy, priceKey });
+      
+      const response = await axios.get(url, {
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : '',
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      if (response.data && response.data.success) {
+        const fetchedProducts = response.data.data?.data || response.data.data?.products || response.data.data || [];
+        setProducts(Array.isArray(fetchedProducts) ? fetchedProducts : []);
+        setTotalProducts(response.data.total || response.data.data?.total || fetchedProducts.length);
+      } else {
+        setProducts([]);
+        setTotalProducts(0);
+      }
+    } catch (err) {
+      console.error("Failed to fetch products:", err);
       setError("Failed to load products");
       setProducts([]);
-      return;
+      setTotalProducts(0);
+    } finally {
+      setLoading(false);
     }
+  }, [activeCategory, currentPage, showCount, sortBy, API_BASE_URL, token]);
 
-    const rawProducts =
-      data?.data?.data ??
-      data?.data?.products ??
-      data?.products ??
-      data?.data ??
-      data ??
-      [];
+  // Fetch products when dependencies change
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
-    setProducts(Array.isArray(rawProducts) ? rawProducts : []);
-  }, [data, loading, error_product, activeCategory]);
-
-  // categories + counts
-  const categories = useMemo(() => {
-    const map = new Map();
-    for (const p of products) {
-      const k = p.categories || "other";
-      map.set(k, (map.get(k) || 0) + 1);
+  // Handle page reset when showCount, sortBy, or activeCategory changes
+  useEffect(() => {
+    if (!isFirstRender.current) {
+      console.log("Resetting page to 1 due to change in:", { showCount, sortBy, activeCategory });
+      setCurrentPage(1);
     }
-    return Array.from(map.entries())
-      .map(([key, count]) => ({ key, count }))
-      .sort((a, b) => b.count - a.count);
-  }, [products]);
+    isFirstRender.current = false;
+  }, [showCount, sortBy, activeCategory]);
 
-  // top rated left list
+  // Calculate total pages
+  const totalPages = Math.ceil(totalProducts / showCount);
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(Math.min(Math.max(1, newPage), totalPages));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Handle show count change
+  const handleShowCountChange = (newCount) => {
+    console.log("Changing show count from", showCount, "to", newCount);
+    setShowCount(newCount);
+  };
+
+  // Apply price filtering client-side
+  const filteredProducts = useMemo(() => {
+    let out = [...products];
+    
+    const range = priceRanges.find((r) => r.key === priceKey) || priceRanges[0];
+    out = out.filter((p) => {
+      const fp = finalPrice(p.price, p.discountPercentage);
+      return fp >= range.min && fp <= range.max;
+    });
+    
+    // Apply sorting for price ranges (client-side since server might not support price ranges)
+    if (sortBy === "low-high") {
+      out.sort((a, b) => 
+        finalPrice(a.price, a.discountPercentage) - 
+        finalPrice(b.price, b.discountPercentage)
+      );
+    } else if (sortBy === "high-low") {
+      out.sort((a, b) => 
+        finalPrice(b.price, b.discountPercentage) - 
+        finalPrice(a.price, a.discountPercentage)
+      );
+    }
+    
+    return out;
+  }, [products, priceKey, sortBy]);
+
+  // Get top rated products from current products
   const topRated = useMemo(() => {
     return [...products]
       .sort((a, b) => (b.rating || 0) - (a.rating || 0))
       .slice(0, 3);
   }, [products]);
 
-  const filtered = useMemo(() => {
-    let out = [...products];
+  const visible = filteredProducts;
 
-    const range = priceRanges.find((r) => r.key === priceKey) || priceRanges[0];
-    out = out.filter((p) => {
-      const fp = finalPrice(p.price, p.discountPercentage);
-      return fp >= range.min && fp <= range.max;
-    });
-
-    switch (sortBy) {
-      case "popularity":
-        out.sort((a, b) => (b.stock || 0) - (a.stock || 0));
-        break;
-      case "rating":
-        out.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-        break;
-      case "newness":
-        out.sort((a, b) => (b.id || 0) - (a.id || 0));
-        break;
-      case "low-high":
-        out.sort(
-          (a, b) =>
-            finalPrice(a.price, a.discountPercentage) -
-            finalPrice(b.price, b.discountPercentage),
-        );
-        break;
-      case "high-low":
-        out.sort(
-          (a, b) =>
-            finalPrice(b.price, b.discountPercentage) -
-            finalPrice(a.price, a.discountPercentage),
-        );
-        break;
-      default:
-        out.sort((a, b) => (a.id || 0) - (b.id || 0));
-        break;
-    }
-
-    return out;
-  }, [products, priceKey, sortBy]);
-
-  const visible = filtered.slice(0, showCount);
-
+  // FIXED: Clear filters function - resets all filters and fetches all products
   const clearFilters = () => {
-    setOnSale(false);
-    setInStock(false);
+    console.log("Clearing all filters");
     setPriceKey("all");
     setSortBy("default");
+    setCurrentPage(1);
+    // No need to manually fetch - the useEffect will trigger due to state changes
   };
 
   const heroBack = () => {
     setActiveCategory("all");
+    setCurrentPage(1);
   };
   
   const handleAddToCart = async (book, qty = 1) => {
@@ -235,7 +252,6 @@ export default function ShopPage() {
     }
   };
 
-  // ✅ Secure download function - forces download instead of opening in new window
   const handleDownload = async (book) => {
     if (!isLoggedIn) {
       toast.error("Please login to download");
@@ -248,7 +264,6 @@ export default function ShopPage() {
       return;
     }
 
-    // Check if already downloading
     if (downloadingIds.includes(book.id)) {
       return;
     }
@@ -256,27 +271,23 @@ export default function ShopPage() {
     setDownloadingIds(prev => [...prev, book.id]);
 
     try {
-      // Use the API endpoint that handles authentication and forces download
       const downloadEndpoint = `${API_BASE_URL}ebook/${book.id}/download`;
       
-      // Make authenticated request with responseType blob to handle file download
       const response = await axios.get(downloadEndpoint, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/pdf',
         },
-        responseType: 'blob', // Important: get as blob
+        responseType: 'blob',
       });
 
-      // Create a blob URL and trigger download
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `${book.title}.pdf`); // Set filename
+      link.setAttribute('download', `${book.title}.pdf`);
       document.body.appendChild(link);
       link.click();
       
-      // Cleanup
       link.parentNode.removeChild(link);
       window.URL.revokeObjectURL(url);
       
@@ -295,10 +306,10 @@ export default function ShopPage() {
     }
   };
 
-  if (loading) return <Loader />;
+  if (loading && products.length === 0) return <Loader />;
 
-  if (error_product) {
-    return <div className="error center">Failed to load products</div>;
+  if (error) {
+    return <div className="error center">{error}</div>;
   }
 
   return (
@@ -307,7 +318,10 @@ export default function ShopPage() {
         {/* HERO */}
         <ShopHero
           activeCategory={activeCategory}
-          onChangeCategory={setActiveCategory}
+          onChangeCategory={(category) => {
+            setActiveCategory(category);
+            setCurrentPage(1);
+          }}
           onBack={heroBack}
         />
 
@@ -336,7 +350,7 @@ export default function ShopPage() {
                   <span key={n} className="showCount__item">
                     <button
                       className={showCount === n ? "active" : ""}
-                      onClick={() => setShowCount(n)}
+                      onClick={() => handleShowCountChange(n)}
                     >
                       {n}
                     </button>
@@ -440,7 +454,10 @@ export default function ShopPage() {
                 </button>
                 <span className="pipe">|</span>
                 <span className="metaText">
-                  Showing: <b>{visible.length}</b> / {filtered.length}
+                  Showing: <b>{visible.length}</b> of {totalProducts} products
+                  {totalPages > 1 && (
+                    <> &nbsp;| Page {currentPage} of {totalPages}</>
+                  )}
                 </span>
               </div>
 
@@ -448,175 +465,254 @@ export default function ShopPage() {
                 <div className="error center">{error}</div>
               ) : visible.length === 0 ? (
                 <div className="muted center">
-                  No products found in this category
+                  No products found
                 </div>
               ) : (
-                <div className={`products ${gridMode}`}>
-                  {visible.map((p) => {
-                    const productData = {
-                      product_id: p.id,
-                      id: p.id,
-                      name: p.title,
-                      price: finalPrice(p.price, p.discountPercentage),
-                      quantity: 1,
-                    };
+                <>
+                  <div className={`products ${gridMode}`}>
+                    {visible.map((p) => {
+                      const productData = {
+                        product_id: p.id,
+                        id: p.id,
+                        name: p.title,
+                        price: finalPrice(p.price, p.discountPercentage),
+                        quantity: 1,
+                      };
 
-                    const hasDiscount = (p.discountPercentage || 0) > 0;
-                    const fp = finalPrice(p.price, p.discountPercentage);
-                    const imageName = p.image?.split("/").pop();
-                    const imageSrc = imageName
-                      ? `${IMG_URL}${imageName}`
-                      : "/no-image.png";
-                    
-                    // Check if user has purchased this ebook
-                    const isPurchased = isLoggedIn ? purchasedEbooks[p.id] : null;
-                    const isDownloading = downloadingIds.includes(p.id);
-                    
-                    return (
-                      <div key={p.id} className="card">
-                        <div className="media">
-                          <Link to={`/products/${p.id}`}>
-                            <img src={imageSrc} alt={p.title} />
-                          </Link>
-                          
-                          {hasDiscount && (
-                            <div className="badge">
-                              -{Math.round(p.discountPercentage)}%
-                            </div>
-                          )}
+                      const hasDiscount = (p.discountPercentage || 0) > 0;
+                      const fp = finalPrice(p.price, p.discountPercentage);
+                      const imageName = p.image?.split("/").pop();
+                      const imageSrc = imageName
+                        ? `${IMG_URL}${imageName}`
+                        : "/no-image.png";
+                      
+                      const isPurchased = isLoggedIn ? purchasedEbooks[p.id] : null;
+                      const isDownloading = downloadingIds.includes(p.id);
+                      
+                      return (
+                        <div key={p.id} className="card">
+                          <div className="media">
+                            <Link to={`/products/${p.id}`}>
+                              <img src={imageSrc} alt={p.title} />
+                            </Link>
+                            
+                            {hasDiscount && (
+                              <div className="badge">
+                                -{Math.round(p.discountPercentage)}%
+                              </div>
+                            )}
 
-                          {/* Show expiry badge only for logged-in users with expiring access */}
-                          {isLoggedIn && isPurchased && isPurchased.days_remaining <= 3 && (
-                            <div className="badge expiry-badge">
-                              Expires in {isPurchased.days_remaining} days
-                            </div>
-                          )}
+                            {/* Show expiry badge only for logged-in users with expiring access */}
+                            {isLoggedIn && isPurchased && isPurchased.days_remaining <= 3 && (
+                              <div className="badge expiry-badge">
+                                Expires in {isPurchased.days_remaining} days
+                              </div>
+                            )}
 
-                          {/* Icons Box - Only show for non-purchased items */}
-                          {(!isPurchased || !isLoggedIn) && (
-                            <div className="iconsBox">
-                              <button
-                                title="Quick View"
-                                onClick={() => handleQuickView(p)}
-                              >
-                                +
-                              </button>
-                              
-                              {/* Wishlist button - only for logged-in users */}
-                              {isLoggedIn && (
+                            {/* Icons Box - Only show for non-purchased items */}
+                            {(!isPurchased || !isLoggedIn) && (
+                              <div className="iconsBox">
                                 <button
-                                  title="Wishlist"
-                                  onClick={() => {
-                                    if (wishlistIds.includes(p.id)) {
-                                      setWishlistIds((prev) =>
-                                        prev.filter((id) => id !== p.id),
-                                      );
-                                      toast.success("Removed from wishlist");
-                                    } else {
-                                      addToWishlistManager(
-                                        { ...productData, user_id: userId },
-                                        wishlistExecute,
-                                      );
-                                      setWishlistIds((prev) => [...prev, p.id]);
-                                      toast.success("Added to wishlist");
-                                    }
-                                  }}
-                                  className="text-xl"
+                                  title="Quick View"
+                                  onClick={() => handleQuickView(p)}
                                 >
-                                  {wishlistIds.includes(p.id) ? (
-                                    <span className="text-black">♥</span>
-                                  ) : (
-                                    <span className="text-gray-800">♡</span>
-                                  )}
+                                  +
                                 </button>
-                              )}
-                            </div>
-                          )}
+                                
+                                {/* Wishlist button - only for logged-in users */}
+                                {isLoggedIn && (
+                                  <button
+                                    title="Wishlist"
+                                    onClick={() => {
+                                      if (wishlistIds.includes(p.id)) {
+                                        setWishlistIds((prev) =>
+                                          prev.filter((id) => id !== p.id),
+                                        );
+                                        toast.success("Removed from wishlist");
+                                      } else {
+                                        addToWishlistManager(
+                                          { ...productData, user_id: userId },
+                                          wishlistExecute,
+                                        );
+                                        setWishlistIds((prev) => [...prev, p.id]);
+                                        toast.success("Added to wishlist");
+                                      }
+                                    }}
+                                    className="text-xl"
+                                  >
+                                    {wishlistIds.includes(p.id) ? (
+                                      <span className="text-black">♥</span>
+                                    ) : (
+                                      <span className="text-gray-800">♡</span>
+                                    )}
+                                  </button>
+                                )}
+                              </div>
+                            )}
 
-                          {/* Conditional button based on login status and purchase */}
-                          {!isLoggedIn ? (
-                            // Guest users - show Add to Cart
-                            <button
-                              className="addCart"
-                              onClick={() => handleAddToCart(productData)}
-                              disabled={cartLoadingIds.includes(p.id)}
-                            >
-                              {cartLoadingIds.includes(p.id)
-                                ? "Adding…"
-                                : "ADD TO CART"}
-                            </button>
-                          ) : isPurchased ? (
-                            // Logged-in user with purchase - show Download button only
-                            <button
-                              className="download-btn-single"
-                              onClick={() => handleDownload(p)}
-                              disabled={isDownloading}
-                              style={{
-                                position: 'absolute',
-                                bottom: '10px',
-                                left: '10px',
-                                right: '10px',
-                                backgroundColor: isDownloading ? '#888' : '#4CAF50',
-                                color: 'white',
-                                border: 'none',
-                                padding: '10px',
-                                borderRadius: '4px',
-                                cursor: isDownloading ? 'not-allowed' : 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '8px',
-                                fontWeight: '500',
-                                zIndex: '5',
-                                opacity: isDownloading ? 0.7 : 1
-                              }}
-                            >
-                              <FiDownload size={18} /> 
-                              {isDownloading ? "Downloading..." : "Download PDF"}
-                            </button>
-                          ) : (
-                            // Logged-in user without purchase - show Add to Cart
-                            <button
-                              className="addCart"
-                              onClick={() => handleAddToCart(productData)}
-                              disabled={cartLoadingIds.includes(p.id)}
-                            >
-                              {cartLoadingIds.includes(p.id)
-                                ? "Adding…"
-                                : "ADD TO CART"}
-                            </button>
-                          )}
-                        </div>
-
-                        <div className="info">
-                          <div className="pTitle">{p.title}</div>
-                          <div className="pCat">{p.category}</div>
-
-                          <div className="pPrice">
-                            {hasDiscount ? (
-                              <>
-                                <span className="mrp">{money(p.price)}</span>
-                                <span className="sale">{money(fp)}</span>
-                              </>
+                            {/* Conditional button based on login status and purchase */}
+                            {!isLoggedIn ? (
+                              // Guest users - show Add to Cart
+                              <button
+                                className="addCart"
+                                onClick={() => handleAddToCart(productData)}
+                                disabled={cartLoadingIds.includes(p.id)}
+                              >
+                                {cartLoadingIds.includes(p.id)
+                                  ? "Adding…"
+                                  : "ADD TO CART"}
+                              </button>
+                            ) : isPurchased ? (
+                              // Logged-in user with purchase - show Download button only
+                              <button
+                                className="download-btn-single"
+                                onClick={() => handleDownload(p)}
+                                disabled={isDownloading}
+                                style={{
+                                  position: 'absolute',
+                                  bottom: '10px',
+                                  left: '10px',
+                                  right: '10px',
+                                  backgroundColor: isDownloading ? '#888' : '#4CAF50',
+                                  color: 'white',
+                                  border: 'none',
+                                  padding: '10px',
+                                  borderRadius: '4px',
+                                  cursor: isDownloading ? 'not-allowed' : 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: '8px',
+                                  fontWeight: '500',
+                                  zIndex: '5',
+                                  opacity: isDownloading ? 0.7 : 1
+                                }}
+                              >
+                                <FiDownload size={18} /> 
+                                {isDownloading ? "Downloading..." : "Download PDF"}
+                              </button>
                             ) : (
-                              <span className="sale">{money(p.price)}</span>
+                              // Logged-in user without purchase - show Add to Cart
+                              <button
+                                className="addCart"
+                                onClick={() => handleAddToCart(productData)}
+                                disabled={cartLoadingIds.includes(p.id)}
+                              >
+                                {cartLoadingIds.includes(p.id)
+                                  ? "Adding…"
+                                  : "ADD TO CART"}
+                              </button>
                             )}
                           </div>
-                          
-                          {/* Show expiry info only for logged-in users with purchase */}
-                          {isLoggedIn && isPurchased && isPurchased.expiry_date && (
-                            <div className="expiry-info">
-                              Access until: {new Date(isPurchased.expiry_date).toLocaleDateString()}
-                              {isPurchased.days_remaining <= 7 && (
-                                <span className="expiry-warning"> • {isPurchased.days_remaining} days left</span>
+
+                          <div className="info">
+                            <div className="pTitle">{p.title}</div>
+                            <div className="pCat">{p.category}</div>
+
+                            <div className="pPrice">
+                              {hasDiscount ? (
+                                <>
+                                  <span className="mrp">{money(p.price)}</span>
+                                  <span className="sale">{money(fp)}</span>
+                                </>
+                              ) : (
+                                <span className="sale">{money(p.price)}</span>
                               )}
                             </div>
-                          )}
+                            
+                            {/* Show expiry info only for logged-in users with purchase */}
+                            {isLoggedIn && isPurchased && isPurchased.expiry_date && (
+                              <div className="expiry-info">
+                                Access until: {new Date(isPurchased.expiry_date).toLocaleDateString()}
+                                {isPurchased.days_remaining <= 7 && (
+                                  <span className="expiry-warning"> • {isPurchased.days_remaining} days left</span>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Pagination Controls - Brown color theme */}
+                  {totalPages > 1 && (
+                    <div className="pagination" style={{ 
+                      display: 'flex', 
+                      justifyContent: 'center', 
+                      gap: '10px', 
+                      marginTop: '30px',
+                      padding: '20px 0',
+                      flexWrap: 'wrap'
+                    }}>
+                      <button 
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="pagination-btn"
+                        style={{ 
+                          padding: '8px 16px',
+                          backgroundColor: currentPage === 1 ? '#f0f0f0' : '#8B4513',
+                          color: currentPage === 1 ? '#999' : 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                          transition: 'all 0.3s ease'
+                        }}
+                      >
+                        Previous
+                      </button>
+                      
+                      {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                        let pageNum;
+                        if (totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i;
+                        } else {
+                          pageNum = currentPage - 2 + i;
+                        }
+                        
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => handlePageChange(pageNum)}
+                            className={`pagination-btn ${currentPage === pageNum ? 'active' : ''}`}
+                            style={{ 
+                              padding: '8px 12px',
+                              backgroundColor: currentPage === pageNum ? '#8B4513' : '#f0f0f0',
+                              color: currentPage === pageNum ? 'white' : '#333',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              transition: 'all 0.3s ease'
+                            }}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                      
+                      <button 
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="pagination-btn"
+                        style={{ 
+                          padding: '8px 16px',
+                          backgroundColor: currentPage === totalPages ? '#f0f0f0' : '#8B4513',
+                          color: currentPage === totalPages ? '#999' : 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                          transition: 'all 0.3s ease'
+                        }}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </main>
           </div>
