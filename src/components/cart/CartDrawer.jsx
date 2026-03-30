@@ -1,26 +1,38 @@
+// CartDrawer.js
 import { FiX } from "react-icons/fi";
 import EmptyCart from "./EmptyCart";
-import { useGet } from "../../hooks/useGet";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { useCart } from "./../../context/CartContext";
 
-const CartDrawer = ({ open, onClose , openLogin }) => {
-  const [fallbackItems, setFallbackItems] = useState([]);
-  const [fallbackSubtotal, setFallbackSubtotal] = useState(0);
+const CartDrawer = ({ open, onClose, openLogin }) => {
+  const {
+    cartItems,
+    cartCount,
+    cartSubtotal,
+    isLoading,
+    isGuest,
+    removeFromCart,
+    updateQuantity,
+    refreshCart
+  } = useCart();
 
-  // 🔹 Login check
+  const [localItems, setLocalItems] = useState([]);
+  const [showFallback, setShowFallback] = useState(false);
+
   const isLoggedIn = !!localStorage.getItem("token");
-  
-  // 🔹 Call API ONLY if logged in
-  const { data, loading, error } = useGet(
-    open && isLoggedIn ? "cart" : null
-  );
 
-  // 🔹 Check sessionStorage for order data (for order page)
+  // Helper function to safely convert price to number
+  const safePrice = (price) => {
+    const num = parseFloat(price);
+    return isNaN(num) ? 0 : num;
+  };
+
+  // Check for order data in sessionStorage (for payment flow)
   useEffect(() => {
     if (open) {
       const storedOrder = sessionStorage.getItem("orderData");
-      if (storedOrder) {
+      if (storedOrder && !cartItems.length) {
         try {
           const orderData = JSON.parse(storedOrder);
           if (orderData.cartItems && orderData.cartItems.length > 0) {
@@ -28,77 +40,73 @@ const CartDrawer = ({ open, onClose , openLogin }) => {
               id: item.id,
               name: item.name,
               quantity: item.qty,
-              price: item.newPrice,
-              total: item.total
+              price: safePrice(item.newPrice),
+              total: safePrice(item.total),
+              image: item.img ? `${import.meta.env.VITE_IMG_URL}${item.img}` : null
             }));
-            setFallbackItems(items);
-            setFallbackSubtotal(orderData.subtotal || 0);
+            setLocalItems(items);
+            setShowFallback(true);
           }
         } catch (e) {
           console.error("Error parsing sessionStorage in CartDrawer", e);
         }
+      } else {
+        setShowFallback(false);
       }
     }
-  }, [open]);
+  }, [open, cartItems]);
 
-  // 🔹 Transform API data to match display format
-  const transformApiItems = (items) => {
-    if (!items) return [];
-    return items.map(item => ({
-      id: item.id,
-      name: item.ebook?.title || "Unknown Item",
-      quantity: item.quantity || 1,
-      price: parseFloat(item.price) || 0,
-    }));
+  // Refresh cart when drawer opens (if logged in)
+  useEffect(() => {
+    if (open && isLoggedIn && !isGuest) {
+      refreshCart();
+    }
+  }, [open, isLoggedIn, isGuest, refreshCart]);
+
+  // Handle quantity change
+  const handleQuantityChange = async (itemId, newQuantity) => {
+    if (newQuantity < 1) return;
+    await updateQuantity(itemId, newQuantity);
   };
 
-  // Determine which items to show
-  const apiItems = transformApiItems(data?.items);
-  const cartItems = apiItems.length > 0 ? apiItems : fallbackItems;
-  
-  // Calculate subtotal if not provided (convert string to number)
-  const calculatedSubtotal = cartItems.reduce((sum, item) => 
-    sum + (item.price * item.quantity), 0
-  );
-  
-  // ✅ Fix: Convert subtotal to number before using toFixed
-  const subtotal = parseFloat(data?.subtotal) || fallbackSubtotal || calculatedSubtotal;
-  const isEmpty = cartItems.length === 0;
-  
-  // Determine if we're using API data or fallback
-  const usingFallback = apiItems.length === 0 && fallbackItems.length > 0;
+  // Handle remove item
+  const handleRemoveItem = async (itemId) => {
+    await removeFromCart(itemId);
+  };
 
+  // Transform cart items to ensure prices are numbers
+  const transformedCartItems = cartItems.map(item => ({
+    ...item,
+    price: safePrice(item.price),
+    quantity: item.quantity || item.qty || 1
+  }));
+
+  const transformedLocalItems = localItems.map(item => ({
+    ...item,
+    price: safePrice(item.price),
+    quantity: item.quantity || 1
+  }));
+
+  // Determine which items to display
+  const displayItems = transformedCartItems.length > 0 ? transformedCartItems : transformedLocalItems;
+  const isEmpty = displayItems.length === 0 && !isLoading;
+  const subtotal = safePrice(cartSubtotal);
 
   if (!open) return null;
 
-  return (
-    <>
-      {/* OVERLAY */}
-      <div
-        onClick={onClose}
-        className="fixed inset-0 bg-black/40 z-[998]"
-      />
-
-      {/* DRAWER */}
-      <aside className="fixed top-0 right-0 h-full w-[360px] bg-white z-[999] shadow-xl animate-slideLeft flex flex-col">
-
-        {/* HEADER - Show item count */}
-        <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h3 className="text-sm font-semibold">
-            SHOPPING CART ({cartItems.length} {cartItems.length === 1 ? 'item' : 'items'})
-          </h3>
-          <button
-            onClick={onClose}
-            className="text-sm font-medium hover:opacity-60 flex items-center gap-1"
-          >
-            <FiX size={14} /> CLOSE
-          </button>
-        </div>
-
-        {/* CONTENT */}
-        <div className="flex-1 overflow-y-auto">
-          {/* NOT LOGGED IN */}
-          {!isLoggedIn && (
+  // Render guest login prompt
+  if (!isLoggedIn) {
+    return (
+      <>
+        <div onClick={onClose} className="fixed inset-0 bg-black/40 z-[998]" />
+        <aside className="fixed top-0 right-0 h-full w-[360px] bg-white z-[999] shadow-xl animate-slideLeft flex flex-col">
+          <div className="flex items-center justify-between px-6 py-4 border-b">
+            <h3 className="text-sm font-semibold">SHOPPING CART</h3>
+            <button onClick={onClose} className="text-sm font-medium hover:opacity-60 flex items-center gap-1">
+              <FiX size={14} /> CLOSE
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto">
             <div className="p-6 text-center space-y-4">
               <p className="text-sm text-gray-600">
                 Please login to view your cart
@@ -115,23 +123,52 @@ const CartDrawer = ({ open, onClose , openLogin }) => {
                 LOGIN TO VIEW CART
               </button>
             </div>
+          </div>
+        </aside>
+      </>
+    );
+  }
+
+  return (
+    <>
+      {/* OVERLAY */}
+      <div
+        onClick={onClose}
+        className="fixed inset-0 bg-black/40 z-[998]"
+      />
+
+      {/* DRAWER */}
+      <aside className="fixed top-0 right-0 h-full w-[360px] bg-white z-[999] shadow-xl animate-slideLeft flex flex-col">
+
+        {/* HEADER - Show item count */}
+        <div className="flex items-center justify-between px-6 py-4 border-b">
+          <h3 className="text-sm font-semibold">
+            SHOPPING CART ({cartCount} {cartCount === 1 ? 'item' : 'items'})
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-sm font-medium hover:opacity-60 flex items-center gap-1"
+          >
+            <FiX size={14} /> CLOSE
+          </button>
+        </div>
+
+        {/* CONTENT */}
+        <div className="flex-1 overflow-y-auto">
+          {/* Loading State */}
+          {isLoading && !showFallback && (
+            <div className="flex justify-center items-center h-32">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#B8964E]"></div>
+            </div>
           )}
 
-          {/* LOGGED IN STATES */}
-          {isLoggedIn && loading && !usingFallback && (
-            <p className="p-6 text-sm text-gray-500">
-              Loading cart...
-            </p>
+          {/* Empty Cart */}
+          {!isLoading && isEmpty && !showFallback && (
+            <EmptyCart />
           )}
 
-          {isLoggedIn && error && !usingFallback && (
-            <p className="p-6 text-sm text-red-500">
-              Failed to load cart
-            </p>
-          )}
-
-          {/* Show fallback notice if using session data */}
-          {isLoggedIn && usingFallback && (
+          {/* Fallback Notice (Order in progress) */}
+          {showFallback && (
             <div className="px-6 pt-4">
               <p className="text-xs text-orange-600 bg-orange-50 p-2 rounded">
                 ⚡ You have items waiting for payment
@@ -139,63 +176,118 @@ const CartDrawer = ({ open, onClose , openLogin }) => {
             </div>
           )}
 
-          {isLoggedIn && !loading && isEmpty && !usingFallback && (
-            <EmptyCart />
-          )}
-
-          {isLoggedIn && !isEmpty && (
+          {/* Cart Items */}
+          {!isEmpty && (
             <div className="p-6 space-y-4">
-              {cartItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex justify-between items-start border-b pb-4 last:border-0"
-                >
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{item.name}</p>
-                    <p className="text-xs text-gray-500">
-                      Qty: {item.quantity}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      ₹{item.price.toFixed(2)} each
-                    </p>
+              {displayItems.map((item) => {
+                const quantity = item.quantity || 1;
+                const price = safePrice(item.price);
+                const itemTotal = price * quantity;
+
+                return (
+                  <div
+                    key={item.id}
+                    className="flex gap-4 border-b pb-4 last:border-0"
+                  >
+                    {/* Product Image */}
+                    {item.image && (
+                      <div className="w-16 h-16 flex-shrink-0">
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-full h-full object-cover rounded"
+                          onError={(e) => {
+                            e.target.src = 'https://via.placeholder.com/80x80?text=No+Image';
+                          }}
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Product Details */}
+                    <div className="flex-1">
+                      <p className="text-sm font-medium mb-1">{item.name}</p>
+
+                      {/* Quantity Controls */}
+                      <div className="flex items-center gap-2 mb-2">
+                        <button
+                          onClick={() => handleQuantityChange(item.id, quantity - 1)}
+                          className="w-6 h-6 border border-gray-300 rounded text-xs hover:bg-gray-100"
+                          disabled={quantity <= 1}
+                        >
+                          -
+                        </button>
+                        <span className="text-xs w-8 text-center">
+                          {quantity}
+                        </span>
+                        <button
+                          onClick={() => handleQuantityChange(item.id, quantity + 1)}
+                          className="w-6 h-6 border border-gray-300 rounded text-xs hover:bg-gray-100"
+                        >
+                          +
+                        </button>
+                      </div>
+
+                      <p className="text-xs text-gray-500">
+                        ₹{price.toFixed(2)} each
+                      </p>
+                    </div>
+
+                    {/* Price and Remove */}
+                    <div className="text-right">
+                      <p className="text-sm font-semibold text-[#B8964E] mb-2">
+                        ₹{itemTotal.toFixed(2)}
+                      </p>
+                      <button
+                        onClick={() => handleRemoveItem(item.id)}
+                        className="text-xs text-red-500 hover:text-red-700"
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-semibold text-[#B8964E]">
-                      ₹{(item.price * item.quantity).toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
 
         {/* FOOTER */}
-        {isLoggedIn && !isEmpty && (
+        {!isEmpty && (
           <div className="border-t p-6 space-y-4">
             <div className="flex justify-between font-semibold">
               <span>SUBTOTAL:</span>
               <span className="text-[#B8964E]">
-                {/* ✅ Fix: Ensure subtotal is a number */}
-                ₹{typeof subtotal === 'number' ? subtotal.toFixed(2) : parseFloat(subtotal).toFixed(2)}
+                ₹{subtotal.toFixed(2)}
               </span>
             </div>
 
-            <Link
-              to={usingFallback ? "/order" : "/view-cart"}
-              onClick={onClose}
-              className="block w-full text-center bg-black text-white py-3 rounded text-sm font-semibold hover:opacity-90"
-            >
-              {usingFallback ? "COMPLETE PAYMENT" : "VIEW CART"}
-            </Link>
+            {!showFallback && (
+              <>
+                <Link
+                  to="/view-cart"
+                  onClick={onClose}
+                  className="block w-full text-center bg-black text-white py-3 rounded text-sm font-semibold hover:opacity-90 transition-opacity"
+                >
+                  VIEW CART
+                </Link>
 
-            {!usingFallback && (
+                <Link
+                  to="/checkout"
+                  onClick={onClose}
+                  className="block w-full text-center bg-[#B98B5E] text-white py-3 rounded text-sm font-semibold hover:opacity-90 transition-opacity"
+                >
+                  CHECKOUT
+                </Link>
+              </>
+            )}
+
+            {showFallback && (
               <Link
-                to="/checkout"
+                to="/order"
                 onClick={onClose}
-                className="block w-full text-center bg-[#B98B5E] text-white py-3 rounded text-sm font-semibold hover:opacity-90"
+                className="block w-full text-center bg-black text-white py-3 rounded text-sm font-semibold hover:opacity-90 transition-opacity"
               >
-                CHECKOUT
+                COMPLETE PAYMENT
               </Link>
             )}
           </div>

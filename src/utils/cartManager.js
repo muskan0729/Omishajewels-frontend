@@ -1,42 +1,22 @@
-import { toast } from "sonner";
+// utils/cartManager.js (updated)
 import { addToCartDB } from "../indexeddb/cartDB";
-import { addToWishlistDB } from "../indexeddb/wishlistDB";
+import { useCart } from "../context/CartContext";
 
-export const addToCartManager = async (product, execute) => {
-  const token = localStorage.getItem("token");
+// If you need to use these functions outside components, 
+// you should use the context directly instead
 
-  try {
-    if (token) {
-      // API
-      await execute(product);
-      toast.success("Added to cart");
-    } else {
-      // IndexedDB
-      await addToCartDB(product);
-      toast.success("Added to cart ");
-      // console.log(product);
+// For use within components:
+export const useCartManager = () => {
+  const { addToCart, isGuest } = useCart();
+  
+  const addToCartManager = async (product) => {
+    try {
+      await addToCart(product);
+      toast.success(`Added to cart ${!isGuest ? '' : '(Saved locally)'}`);
+    } catch (err) {
+      toast.error("Failed to add to cart");
     }
-  } catch (err) {
-    toast.error("Failed to add cart");
-    // console.log(err);
-  }
-};
-
-export const addToWishlistManager = async (product, execute) => {
-  const token = localStorage.getItem("token");
-
-  try {
-    if (token) {
-      // API
-      await execute(product);
-      toast.success("Added to wishlist");
-    } else {
-      // IndexedDB
-      await addToWishlistDB(product);
-      toast.success("Added to wishlist ");
-    }
-  } catch (err) {
-    toast.error("Failed to add wishlist");
-    // console.log(err);
-  }
+  };
+  
+  return { addToCartManager };
 };

@@ -1,29 +1,21 @@
+// SectionFive.js
 import { useEffect, useState } from "react";
 import LatestBookCard from "../books/LatestBookCard.jsx";
 import { useGet } from "../../hooks/useGet";
-import { toast } from "sonner";
-import { usePost } from "../../hooks/usePost.jsx";
-import { addToCartManager, addToWishlistManager } from "../../utils/cartManager.js";
-
-
 
 const SectionFive = () => {
   const [activeCategoryId, setActiveCategoryId] = useState(null);
- const { execute: cartExecute } = usePost("cart/add");
-  const { execute: wishlistExecute } = usePost("wishlist");
 
-    const userId = localStorage.getItem("user_id");
-  // ================== GET CATEGORIES ==================
+  // Get categories
   const {
     data: categoryRes,
     loading: loadingCategories,
     error: categoryError,
   } = useGet("categories");
-  // console.log("category data",categoryRes);
 
   const categories = categoryRes || [];
 
-  // ================== SET DEFAULT CATEGORY ==================
+  // Set default category
   const latestCategories = categories.slice(-5);
 
   useEffect(() => {
@@ -32,8 +24,7 @@ const SectionFive = () => {
     }
   }, [latestCategories, activeCategoryId]);
 
-
-  // ================== GET PRODUCTS BY CATEGORY ==================
+  // Get products by category
   const {
     data: productRes,
     loading: loadingProducts,
@@ -42,46 +33,13 @@ const SectionFive = () => {
     activeCategoryId ? `categories/${activeCategoryId}/products` : null
   );
 
-  // console.log("product by cat",productRes);
-
   const products = productRes?.data.data || [];
   const latestproducts = products.slice(-10);
-
-const handleAddToCart = async (product) => {
-  const productData = {
-    product_id: product.id,
-    title: product.title,
-    price: product.price,
-    quantity: 1,
-  };
-
-  addToCartManager(productData, cartExecute);
-  toast.success("Added to cart");
-};
-
-const handleAddToWishlist = async (product) => {
-  if (!userId) {
-    toast.error("Please login to add to wishlist");
-    return;
-  }
-
-  const productData = {
-    product_id: product.id,
-    title: product.title,
-    price: product.price,
-    quantity: 1,
-    user_id: userId,
-  };
-
-  addToWishlistManager(productData, wishlistExecute);
-  toast.success("Added to wishlist");
-};
-
 
   return (
     <section className="bg-white pt-0 py-28">
       <div className="max-w-7xl mx-auto px-6">
-        {/* ================= HEADER ================= */}
+        {/* HEADER */}
         <div className="text-center mb-20">
           <p className="text-sm italic text-[#B8964E] mb-2">
             Discover Great Authors
@@ -97,7 +55,7 @@ const handleAddToWishlist = async (product) => {
           </p>
         </div>
 
-        {/* ================= CATEGORY TABS ================= */}
+        {/* CATEGORY TABS */}
         <div className="flex justify-center gap-10 mb-16 text-sm tracking-widest flex-wrap">
           {loadingCategories ? (
             <p className="text-[#6B6B6B]">Loading categories...</p>
@@ -123,7 +81,7 @@ const handleAddToWishlist = async (product) => {
           )}
         </div>
 
-        {/* ================= PRODUCTS GRID ================= */}
+        {/* PRODUCTS GRID */}
         {loadingProducts ? (
           <p className="text-center text-[#6B6B6B]">Loading products...</p>
         ) : productError ? (
@@ -140,19 +98,12 @@ const handleAddToWishlist = async (product) => {
             "
           >
             {latestproducts?.slice(0, 15).map((product) => (
-              // <LatestBookCard key={product.id} book={product} />
-              <LatestBookCard
-  key={product.id}
-  book={product}
-  onAddToCart={handleAddToCart}
-  onAddToWishlist={handleAddToWishlist}
-/>
-
+              <LatestBookCard key={product.id} book={product} />
             ))}
           </div>
         )}
 
-        {/* ================= EMPTY STATE ================= */}
+        {/* EMPTY STATE */}
         {!loadingProducts && products.length === 0 && (
           <p className="text-center text-sm text-[#6B6B6B] mt-10">
             No products available in this category.

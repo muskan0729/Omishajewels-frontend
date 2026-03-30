@@ -73,7 +73,7 @@ const OrderSummaryModal = ({ isOpen, onClose, order }) => {
                         alt={ebook.title}
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                          console.log("Image failed to load even after correction:", e.target.src);
+                          //console.log("Image failed to load even after correction:", e.target.src);
                           e.target.onerror = null;
                           e.target.src = 'https://via.placeholder.com/80x80?text=No+Image';
                         }}

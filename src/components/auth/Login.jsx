@@ -1,95 +1,96 @@
+// Login.js
 import React, { useState } from "react";
 import { usePost } from "../../hooks/usePost";
-import { syncGuestData } from "../../utils/syncGuestData";
+import { useCart } from "./../../context/CartContext";
+import { useWishlist } from "../../context/WishlistContext";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+
 const Login = ({ switchToRegister, onSuccess }) => {
   const { execute, loading } = usePost("login");
-  const { execute: cartSyncExecute } = usePost("cart/add");
-  const { execute: wishlistSyncExecute } = usePost("wishlist");
-  const navigate=useNavigate();
+  const { syncGuestCart } = useCart();
+  const { syncGuestWishlist } = useWishlist();
+  const navigate = useNavigate();
+  
   const [errorMessage, setErrorMessage] = useState(null);
-
-  const [isLoggedIn, setIsLoggedIn] = useState(
-    !!localStorage.getItem("token")
-  );
-const [user, setUser] = useState(() => {
-  const u = localStorage.getItem("user");
-  return u ? JSON.parse(u) : null;
-});
+  const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem("token"));
+  const [user, setUser] = useState(() => {
+    const u = localStorage.getItem("user");
+    return u ? JSON.parse(u) : null;
+  });
 
   const [form, setForm] = useState({
     email: "",
     password: "",
   });
 
-  /* ================= HANDLE INPUT ================= */
   const handleChange = (e) => {
-    setErrorMessage(null); // clear error when typing
+    setErrorMessage(null);
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  /* ================= SUBMIT ================= */
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setErrorMessage(null);
+    e.preventDefault();
+    setErrorMessage(null);
 
-  try {
-    const res = await execute(form);
-    //console.log(res); // This shows {message, user_id, name, email, role, access_token}
-    
-    if (!res?.access_token) {
-      throw new Error("Invalid login response");
-    }
-
-    localStorage.setItem("token", res.access_token.split("|")[1]);
-    localStorage.setItem("role", res?.role);
-
-    if(res?.role == "admin")
-      navigate("/admin");
-    
-    // ✅ FIX: The user data is directly in the response
-    if (res.user_id) {  // Check if user_id exists in response
-      // Create user object from the response fields
-      const userData = {
-        id: res.user_id,
-        name: res.name,
-        email: res.email,
-        role: res.role
-      };
+    try {
+      const res = await execute(form);
       
-      localStorage.setItem("user", JSON.stringify(userData));
-      localStorage.setItem("user_id", res.user_id); // Store user_id separately
-      setUser(userData);
+      if (!res?.access_token) {
+        throw new Error("Invalid login response");
+      }
+
+      // Store token
+      localStorage.setItem("token", res.access_token.split("|")[1]);
+      localStorage.setItem("role", res?.role);
+
+      if (res?.role === "admin") {
+        navigate("/admin");
+      }
       
-      //console.log("User data stored:", userData); // Debug log
-    }
-    
-    await syncGuestData(cartSyncExecute, wishlistSyncExecute);
-    toast.success("Login Successful 🎉");
-    setIsLoggedIn(true);
-    onSuccess?.(res);
+      // Store user data
+      if (res.user_id) {
+        const userData = {
+          id: res.user_id,
+          name: res.name,
+          email: res.email,
+          role: res.role
+        };
+        
+        localStorage.setItem("user", JSON.stringify(userData));
+        localStorage.setItem("user_id", res.user_id);
+        setUser(userData);
+      }
+      
+      // Sync guest data using context methods
+      await syncGuestCart();
+      await syncGuestWishlist();
+      
+      toast.success("Login Successful 🎉");
+      setIsLoggedIn(true);
+      onSuccess?.(res);
 
-  } catch (err) {
-    console.error("Login failed:", err);
-    if (err?.response?.data?.message) {
-      setErrorMessage(err.response.data.message);
-    } else if (err?.message) {
-      setErrorMessage(err.message);
-    } else {
-      setErrorMessage("Something went wrong. Please try again.");
+    } catch (err) {
+      console.error("Login failed:", err);
+      if (err?.response?.data?.message) {
+        setErrorMessage(err.response.data.message);
+      } else if (err?.message) {
+        setErrorMessage(err.message);
+      } else {
+        setErrorMessage("Something went wrong. Please try again.");
+      }
     }
-  }
-}
+  };
 
-  /* ================= LOGOUT ================= */
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
+    localStorage.removeItem("user");
+    localStorage.removeItem("user_id");
     setIsLoggedIn(false);
     setUser(null);
-     toast.info("Logged out successfully 👋");
-     window.location.href = "/";
+    toast.info("Logged out successfully 👋");
+    window.location.href = "/";
   };
 
   return (
@@ -149,10 +150,8 @@ const [user, setUser] = useState(() => {
               />
             </div>
 
-            {/* ERROR BOX */}
             {errorMessage && (
-              <div className="bg-red-50 border border-red-200 text-red-600 
-                              text-sm p-3 rounded text-center">
+              <div className="bg-red-50 border border-red-200 text-red-600 text-sm p-3 rounded text-center">
                 {errorMessage}
               </div>
             )}
@@ -160,9 +159,7 @@ const [user, setUser] = useState(() => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-black text-white py-2.5 rounded 
-                         hover:bg-gray-900 transition 
-                         disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full bg-black text-white py-2.5 rounded hover:bg-gray-900 transition disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {loading ? "Logging in..." : "Log in"}
             </button>

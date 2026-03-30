@@ -1,15 +1,21 @@
+// Cartprocess.js
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import pageImage from "../assets/images/books-page-title.jpg";
+import { useCart } from "../context/CartContext";
 
 const Cartprocess = () => {
   const location = useLocation();
+  const { cartCount } = useCart(); // Optional: to show cart count in process
 
   const steps = [
     { key: "cart", label: "Shopping Cart", path: "/view-cart" },
     { key: "checkout", label: "Checkout", path: "/checkout" },
     { key: "complete", label: "Order Complete", path: "/order" },
   ];
+
+  // Check if cart is empty to disable checkout step (optional)
+  const isCheckoutDisabled = steps[1].path === location.pathname && cartCount === 0;
 
   return (
     <div className="relative w-full h-56 md:h-64 overflow-hidden">
@@ -28,6 +34,7 @@ const Cartprocess = () => {
         <ul className="flex items-center gap-6 text-xl md:text-2xl font-semibold tracking-wide">
           {steps.map((item, index) => {
             const isActive = location.pathname === item.path;
+            const isCompleted = location.pathname.includes('checkout') && item.key === 'cart';
 
             return (
               <li key={item.key} className="flex items-center gap-6">
@@ -36,6 +43,8 @@ const Cartprocess = () => {
                   className={`transition-colors duration-200 ${
                     isActive
                       ? "text-[#B8964E]"
+                      : isCompleted
+                      ? "text-green-400 hover:text-[#B8964E]/80"
                       : "text-white hover:text-[#B8964E]/80"
                   }`}
                 >

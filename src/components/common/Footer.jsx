@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom";
 
 import { MapPin, Phone, Mail } from "lucide-react";
 import { useGet } from "../../hooks/useGet";
+import logo from "../../assets/images/logo.png";
 
 export default function Footer() {
   // Fetch products using custom hook
@@ -25,7 +26,7 @@ export default function Footer() {
         {/* COMPANY INFO */}
         <div className="">
           <img
-            src="/assets/images/logo.png"
+            src={logo}
             alt="Omisha Jewels"
             className="w-25"
           />
