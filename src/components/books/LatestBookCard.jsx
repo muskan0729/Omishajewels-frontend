@@ -1,10 +1,13 @@
 // LatestBookCard.js
 import { Link } from "react-router-dom";
 import { FaHeart, FaDownload } from "react-icons/fa";
+import { FaHeart, FaDownload } from "react-icons/fa";
 import QuickViewModal from "../QuickViewModal";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import axios from "axios";
+import { useCart } from "./../../context/CartContext";
+import { useWishlist } from "./../../context/WishlistContext";
 import { useCart } from "./../../context/CartContext";
 import { useWishlist } from "./../../context/WishlistContext";
 
@@ -118,14 +121,24 @@ const LatestBookCard = ({ book }) => {
       toast.error("Please login to download");
       return;
     }
+    if (!isLoggedIn) {
+      toast.error("Please login to download");
+      return;
+    }
 
+    if (!isPurchased) {
+      toast.error("You haven't purchased this ebook");
+      return;
+    }
     if (!isPurchased) {
       toast.error("You haven't purchased this ebook");
       return;
     }
 
     if (isDownloading) return;
+    if (isDownloading) return;
 
+    setIsDownloading(true);
     setIsDownloading(true);
 
     try {
@@ -202,6 +215,12 @@ const LatestBookCard = ({ book }) => {
             </span>
           )}
 
+          {/* PURCHASED BADGE */}
+          {isPurchased && (
+            <span className="absolute top-3 left-3 bg-green-500 text-white text-xs font-semibold px-3 py-2 rounded-full z-10">
+              ✓ Owned
+            </span>
+          )}
           {/* PURCHASED BADGE */}
           {isPurchased && (
             <span className="absolute top-3 left-3 bg-green-500 text-white text-xs font-semibold px-3 py-2 rounded-full z-10">
@@ -348,6 +367,7 @@ const LatestBookCard = ({ book }) => {
             {book.title}
           </Link>
 
+          <p className="text-sm text-[#9B9B9B]">{book.category}</p>
           <p className="text-sm text-[#9B9B9B]">{book.category}</p>
 
           <div className="text-base pt-1">

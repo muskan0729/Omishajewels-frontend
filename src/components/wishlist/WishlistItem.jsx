@@ -2,11 +2,14 @@
 import { FiX, FiDownload, FiCheckCircle } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import axios from "axios";
 import { useWishlist } from "./../../context/WishlistContext";
 import { useCart } from "./../../context/CartContext";
+import { useWishlist } from "./../../context/WishlistContext";
+import { useCart } from "./../../context/CartContext";
 
+const WishlistItem = ({ product, wishlistId, isPurchased }) => {
 const WishlistItem = ({ product, wishlistId, isPurchased }) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [imgError, setImgError] = useState(false);
@@ -14,6 +17,7 @@ const WishlistItem = ({ product, wishlistId, isPurchased }) => {
   const { addToCart, isGuest } = useCart();
 
   if (!product) return null;
+
 
   const API_BASE_URL = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem("token");
@@ -38,6 +42,7 @@ const WishlistItem = ({ product, wishlistId, isPurchased }) => {
   const handleDownload = async (e) => {
     e.preventDefault();
     e.stopPropagation();
+
 
     if (!isPurchased) {
       toast.error("Please purchase this ebook first");
@@ -69,16 +74,20 @@ const WishlistItem = ({ product, wishlistId, isPurchased }) => {
       const link = document.createElement('a');
       link.href = url;
 
+
       const cleanTitle = product.title.replace(/[^\w\s]/gi, '').replace(/\s+/g, ' ');
       link.setAttribute('download', `${cleanTitle}.pdf`);
 
+
       document.body.appendChild(link);
       link.click();
+
 
       setTimeout(() => {
         link.parentNode?.removeChild(link);
         window.URL.revokeObjectURL(url);
       }, 100);
+
 
       toast.success("Download started");
     } catch (err) {
@@ -96,7 +105,7 @@ const WishlistItem = ({ product, wishlistId, isPurchased }) => {
     } finally {
       setIsDownloading(false);
     }
-  };
+  }, [isPurchased, isDownloading, API_BASE_URL, product.id, product.title, token]);
 
   const handleAddToCart = async (e) => {
     e.preventDefault();
@@ -134,7 +143,7 @@ const WishlistItem = ({ product, wishlistId, isPurchased }) => {
         className="cursor-pointer absolute top-3 right-3 z-10 flex items-center justify-center w-8 h-8 rounded-full bg-white border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-300 transition"
         title="Remove from wishlist"
       >
-        <FiX size={14} />
+        <FiX size={14} className={isRemoving ? 'animate-pulse' : ''} />
       </button>
 
       {isPurchased && (
@@ -160,6 +169,7 @@ const WishlistItem = ({ product, wishlistId, isPurchased }) => {
         <Link to={`/products/${product.id}`}>
           <img
             src={imgError ? placeholderImage : imageUrl}
+            src={imgError ? placeholderImage : imageUrl}
             alt={product.title}
             className="h-40 object-contain transition-transform duration-300 group-hover:scale-110"
             onError={() => setImgError(true)}
@@ -182,7 +192,7 @@ const WishlistItem = ({ product, wishlistId, isPurchased }) => {
           ) : (
             <button
               onClick={handleAddToCart}
-              className="bg-[#B98B5E] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#9e7e42] transition"
+              className="bg-[#B98B5E] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#9e7e42] transition transform hover:scale-105"
             >
               Add to Cart
             </button>
@@ -190,7 +200,7 @@ const WishlistItem = ({ product, wishlistId, isPurchased }) => {
         </div>
 
         {isDownloading && (
-          <div className="absolute bottom-0 left-0 right-0 bg-green-600 text-white text-xs py-1 text-center">
+          <div className="absolute bottom-0 left-0 right-0 bg-green-600 text-white text-xs py-1 text-center animate-pulse">
             Downloading...
           </div>
         )}
@@ -198,7 +208,7 @@ const WishlistItem = ({ product, wishlistId, isPurchased }) => {
 
       <div className="mt-4 text-center">
         <Link to={`/products/${product.id}`}>
-          <h3 className="font-medium text-sm text-gray-800 leading-snug line-clamp-2 hover:text-[#B98B5E]">
+          <h3 className="font-medium text-sm text-gray-800 leading-snug line-clamp-2 hover:text-[#B98B5E] transition-colors">
             {product.title}
           </h3>
         </Link>
@@ -223,9 +233,9 @@ const WishlistItem = ({ product, wishlistId, isPurchased }) => {
         {isPurchased && isPurchased.expiry_date && (
           <div className="mt-2 text-xs text-gray-500">
             <span>Access until: </span>
-            <span className={isPurchased.days_remaining <= 3 ? "text-orange-500 font-medium" : "text-gray-600"}>
+            <span className={isExpiringSoon ? "text-red-500 font-medium" : isExpiringWithinWeek ? "text-orange-500" : "text-gray-600"}>
               {new Date(isPurchased.expiry_date).toLocaleDateString()}
-              {isPurchased.days_remaining <= 7 && (
+              {isExpiringWithinWeek && (
                 <span className="ml-1">
                   • {isPurchased.days_remaining} days left
                 </span>

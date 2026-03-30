@@ -107,6 +107,7 @@ const QuickViewModal = ({ book, onClose, isPurchased, onDownload, isLoggedIn }) 
   };
 
   if (!book) return null;
+  if (!book) return null;
 
   return (
     <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50 px-4">
@@ -141,6 +142,11 @@ const QuickViewModal = ({ book, onClose, isPurchased, onDownload, isLoggedIn }) 
             />
           </div>
 
+          {/* RIGHT CONTENT */}
+          <div>
+            <h2 className="text-2xl font-serif text-gray-800 mb-3">
+              {book.title}
+            </h2>
           {/* RIGHT CONTENT */}
           <div>
             <h2 className="text-2xl font-serif text-gray-800 mb-3">
@@ -199,7 +205,13 @@ const QuickViewModal = ({ book, onClose, isPurchased, onDownload, isLoggedIn }) 
             </div>
 
             <hr className="my-6" />
+            <hr className="my-6" />
 
+            {/* CATEGORY */}
+            <p className="text-sm text-gray-700 mb-5">
+              <strong>Category:</strong>{" "}
+              <span className="text-gray-500">{book.category}</span>
+            </p>
             {/* CATEGORY */}
             <p className="text-sm text-gray-700 mb-5">
               <strong>Category:</strong>{" "}
@@ -252,4 +264,5 @@ const QuickViewModal = ({ book, onClose, isPurchased, onDownload, isLoggedIn }) 
   );
 };
 
+export default QuickViewModal;
 export default QuickViewModal;

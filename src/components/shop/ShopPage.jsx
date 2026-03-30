@@ -11,6 +11,9 @@ import { FiDownload } from "react-icons/fi";
 import ShopPageSkeleton from "./ShopPageSkeleton";
 import { useCart } from "./../../context/CartContext";
 import { useWishlist } from "./../../context/WishlistContext";
+import ShopPageSkeleton from "./ShopPageSkeleton";
+import { useCart } from "./../../context/CartContext";
+import { useWishlist } from "./../../context/WishlistContext";
 
 const toLabel = (key) =>
   String(key || "")
@@ -35,6 +38,7 @@ const priceRanges = [
   { key: "0-3500", label: "₹0.00 - ₹3,500.00", min: 0, max: 3500 },
   { key: "3500-7000", label: "₹3,500.00 - ₹7,000.00", min: 3500, max: 7000 },
   { key: "7000-10500", label: "₹7,000.00 - ₹10,500.00", min: 7000, max: 10500 },
+  { key: "10500-14000", label: "₹10,500.00 - ₹14,000.00", min: 10500, max: 14000 },
   { key: "10500-14000", label: "₹10,500.00 - ₹14,000.00", min: 10500, max: 14000 },
 ];
 
@@ -62,11 +66,28 @@ export default function ShopPage() {
 
   const isFirstRender = useRef(true);
   const prevFiltersRef = useRef({ showCount: 9, sortBy: "default", activeCategory: "all" });
+  const [selectedProduct, setSelectedProduct] = useState(null);
+
+  const { addToCart, isGuest: isCartGuest } = useCart();
+  const { addToWishlist, removeFromWishlist, wishlistItems } = useWishlist();
+
+  const [activeCategory, setActiveCategory] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortBy, setSortBy] = useState("default");
+  const [priceKey, setPriceKey] = useState("all");
+  const [showCount, setShowCount] = useState(9);
+  const [gridMode, setGridMode] = useState("grid3");
+  const [products, setProducts] = useState([]);
+  const [totalProducts, setTotalProducts] = useState(0);
+
+  const isFirstRender = useRef(true);
+  const prevFiltersRef = useRef({ showCount: 9, sortBy: "default", activeCategory: "all" });
 
   const userId = localStorage.getItem("user_id");
   const token = localStorage.getItem("token");
   const isLoggedIn = !!userId && !!token;
 
+  const { data: purchasedData } = useGet(isLoggedIn ? `my-library` : null);
   const { data: purchasedData } = useGet(isLoggedIn ? `my-library` : null);
 
   useEffect(() => {
@@ -126,7 +147,15 @@ export default function ShopPage() {
       activeCategory !== prevFilters.activeCategory;
 
     if (hasFilterChanged && !isFirstRender.current) {
+    const prevFilters = prevFiltersRef.current;
+    const hasFilterChanged =
+      showCount !== prevFilters.showCount ||
+      sortBy !== prevFilters.sortBy ||
+      activeCategory !== prevFilters.activeCategory;
+
+    if (hasFilterChanged && !isFirstRender.current) {
       setCurrentPage(1);
+      prevFiltersRef.current = { showCount, sortBy, activeCategory };
       prevFiltersRef.current = { showCount, sortBy, activeCategory };
     }
     isFirstRender.current = false;
@@ -134,23 +163,25 @@ export default function ShopPage() {
 
   const totalPages = Math.ceil(totalProducts / showCount);
 
-  const handlePageChange = (newPage) => {
+  const handlePageChange = useCallback((newPage) => {
     setCurrentPage(Math.min(Math.max(1, newPage), totalPages));
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  }, [totalPages]);
 
   const handleShowCountChange = (newCount) => {
     setShowCount(newCount);
-  };
+  }, []);
 
   const filteredProducts = useMemo(() => {
     let out = [...products];
 
     const range = priceRanges.find((r) => r.key === priceKey) || priceRanges[0];
+    
     out = out.filter((p) => {
       const fp = finalPrice(p.price, p.discountPercentage);
       return fp >= range.min && fp <= range.max;
     });
+
 
     if (sortBy === "low-high") {
       out.sort((a, b) =>
@@ -164,13 +195,12 @@ export default function ShopPage() {
       );
     }
 
+
     return out;
   }, [products, priceKey, sortBy]);
 
   const topRated = useMemo(() => {
-    return [...products]
-      .sort((a, b) => (b.rating || 0) - (a.rating || 0))
-      .slice(0, 3);
+    return [...products].sort((a, b) => (b.rating || 0) - (a.rating || 0)).slice(0, 3);
   }, [products]);
 
   const visible = filteredProducts;
@@ -181,7 +211,7 @@ export default function ShopPage() {
     setCurrentPage(1);
   };
 
-  const heroBack = () => {
+  const heroBack = useCallback(() => {
     setActiveCategory("all");
     setCurrentPage(1);
   };
@@ -193,7 +223,6 @@ export default function ShopPage() {
 
   const handleAddToCart = async (book, qty = 1) => {
     const productId = book.id;
-
     if (cartLoadingIds.includes(productId)) return;
     setCartLoadingIds((prev) => [...prev, productId]);
 
@@ -218,15 +247,16 @@ export default function ShopPage() {
     } catch (err) {
       toast.error("Failed to add to cart");
     } finally {
-      setCartLoadingIds((prev) => prev.filter((id) => id !== productId));
+      setCartLoadingIds(prev => prev.filter(id => id !== productId));
     }
-  };
+  }, [addToCart, isCartGuest, cartLoadingIds]);
 
-  const handleDownload = async (book) => {
+  const handleDownload = useCallback(async (book) => {
     if (!isLoggedIn) {
       toast.error("Please login to download");
       return;
     }
+
 
     const purchased = purchasedEbooks[book.id];
     if (!purchased || !purchased.hasAccess) {
@@ -234,6 +264,7 @@ export default function ShopPage() {
       return;
     }
 
+    if (downloadingIds.includes(book.id)) return;
     if (downloadingIds.includes(book.id)) return;
 
     setDownloadingIds(prev => [...prev, book.id]);
@@ -258,6 +289,7 @@ export default function ShopPage() {
 
       link.parentNode.removeChild(link);
       window.URL.revokeObjectURL(url);
+
 
       toast.success("Download started");
     } catch (err) {
@@ -330,9 +362,7 @@ export default function ShopPage() {
           <div className="wrap">
             <div className="crumbText">
               Home <span>/</span>{" "}
-              <b>
-                {activeCategory === "all" ? "SHOP" : toLabel(activeCategory)}
-              </b>
+              <b>{activeCategory === "all" ? "SHOP" : toLabel(activeCategory)}</b>
             </div>
           </div>
         </div>
@@ -345,13 +375,10 @@ export default function ShopPage() {
                 <b>Show :</b>
                 {[9, 12, 18, 24].map((n, idx) => (
                   <span key={n} className="showCount__item">
-                    <button
-                      className={showCount === n ? "active" : ""}
-                      onClick={() => handleShowCountChange(n)}
-                    >
+                    <button className={showCount === n ? "active" : ""} onClick={() => handleShowCountChange(n)}>
                       {n}
                     </button>
-                    {idx !== 3 ? <span className="slash">/</span> : null}
+                    {idx !== 3 && <span className="slash">/</span>}
                   </span>
                 ))}
               </div>
@@ -387,9 +414,7 @@ export default function ShopPage() {
                   {topRated.map((p) => {
                     const fp = finalPrice(p.price, p.discountPercentage);
                     const imageName = p.image?.split("/").pop();
-                    const imageSrc = imageName
-                      ? `${IMG_URL}${imageName}`
-                      : "/no-image.png";
+                    const imageSrc = imageName ? `${IMG_URL}${imageName}` : "/no-image.png";
                     return (
                       <div key={p.id} className="topratedItem">
                         <img src={imageSrc} alt={p.title} />
@@ -417,11 +442,7 @@ export default function ShopPage() {
                     { key: "low-high", label: "Price: low to high" },
                     { key: "high-low", label: "Price: high to low" },
                   ].map((s) => (
-                    <button
-                      key={s.key}
-                      className={`link ${sortBy === s.key ? "active" : ""}`}
-                      onClick={() => setSortBy(s.key)}
-                    >
+                    <button key={s.key} className={`link ${sortBy === s.key ? "active" : ""}`} onClick={() => setSortBy(s.key)}>
                       {s.label}
                     </button>
                   ))}
@@ -430,11 +451,7 @@ export default function ShopPage() {
                 <div className="filtersCol">
                   <h3 className="title">PRICE FILTER</h3>
                   {priceRanges.map((r) => (
-                    <button
-                      key={r.key}
-                      className={`link ${priceKey === r.key ? "active" : ""}`}
-                      onClick={() => setPriceKey(r.key)}
-                    >
+                    <button key={r.key} className={`link ${priceKey === r.key ? "active" : ""}`} onClick={() => setPriceKey(r.key)}>
                       {r.label}
                     </button>
                   ))}
@@ -442,18 +459,16 @@ export default function ShopPage() {
               </div>
 
               <div className="metaRow">
-                <button className="clearBtn" onClick={clearFilters}>
-                  ✕ clear filters
-                </button>
+                <button className="clearBtn" onClick={clearFilters}>✕ clear filters</button>
                 <span className="pipe">|</span>
                 <span className="metaText">
                   Showing: <b>{visible.length}</b> of {totalProducts} products
-                  {totalPages > 1 && (
-                    <> &nbsp;| Page {currentPage} of {totalPages}</>
-                  )}
+                  {totalPages > 1 && <> &nbsp;| Page {currentPage} of {totalPages}</>}
                 </span>
               </div>
 
+              {visible.length === 0 ? (
+                <div className="muted center">No products found</div>
               {visible.length === 0 ? (
                 <div className="muted center">No products found</div>
               ) : (
@@ -471,6 +486,8 @@ export default function ShopPage() {
                       const isDownloading = downloadingIds.includes(p.id);
                       const inWishlist = isLoggedIn && isInWishlistCheck(p.id);
 
+                      const inWishlist = isLoggedIn && isInWishlistCheck(p.id);
+
                       return (
                         <div key={p.id} className="card">
                           <div className="media">
@@ -485,9 +502,7 @@ export default function ShopPage() {
                             )}
 
                             {isLoggedIn && isPurchased && isPurchased.days_remaining <= 3 && (
-                              <div className="badge expiry-badge">
-                                Expires in {isPurchased.days_remaining} days
-                              </div>
+                              <div className="badge expiry-badge">Expires in {isPurchased.days_remaining} days</div>
                             )}
 
                             {(!isPurchased || !isLoggedIn) && (
@@ -536,23 +551,12 @@ export default function ShopPage() {
                                 onClick={() => handleDownload(p)}
                                 disabled={isDownloading}
                                 style={{
-                                  position: 'absolute',
-                                  bottom: '10px',
-                                  left: '10px',
-                                  right: '10px',
-                                  backgroundColor: isDownloading ? '#888' : '#4CAF50',
-                                  color: 'white',
-                                  border: 'none',
-                                  padding: '10px',
-                                  borderRadius: '4px',
-                                  cursor: isDownloading ? 'not-allowed' : 'pointer',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  gap: '8px',
-                                  fontWeight: '500',
-                                  zIndex: '5',
-                                  opacity: isDownloading ? 0.7 : 1
+                                  position: 'absolute', bottom: '10px', left: '10px', right: '10px',
+                                  backgroundColor: isDownloading ? '#888' : '#4CAF50', color: 'white',
+                                  border: 'none', padding: '10px', borderRadius: '4px',
+                                  cursor: isDownloading ? 'not-allowed' : 'pointer', display: 'flex',
+                                  alignItems: 'center', justifyContent: 'center', gap: '8px',
+                                  fontWeight: '500', zIndex: '5', opacity: isDownloading ? 0.7 : 1
                                 }}
                               >
                                 <FiDownload size={18} />
@@ -574,7 +578,6 @@ export default function ShopPage() {
                           <div className="info">
                             <div className="pTitle">{p.title}</div>
                             <div className="pCat">{p.category}</div>
-
                             <div className="pPrice">
                               {hasDiscount ? (
                                 <>
@@ -623,6 +626,7 @@ export default function ShopPage() {
                       >
                         Previous
                       </button>
+
 
                       {[...Array(Math.min(5, totalPages))].map((_, i) => {
                         let pageNum;
