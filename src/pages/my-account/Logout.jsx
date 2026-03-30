@@ -12,7 +12,7 @@ const AuthButton = ({ openLogin }) => {
     try {
       await execute(); // token auto-sent
     } catch (err) {
-      console.warn("Logout API failed, clearing token anyway");
+      //console.warn("Logout API failed, clearing token anyway");
     } finally {
       localStorage.removeItem("token");
       localStorage.removeItem("role");

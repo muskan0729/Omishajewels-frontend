@@ -10,7 +10,7 @@ export const syncGuestData = async (cartExecute, wishlistExecute) => {
   const userId = localStorage.getItem("user_id");
 
   if (!userId) {
-    console.warn("No user_id found in localStorage → skipping wishlist sync");
+    //console.warn("No user_id found in localStorage → skipping wishlist sync");
     // You can still sync cart if you want
   }
 

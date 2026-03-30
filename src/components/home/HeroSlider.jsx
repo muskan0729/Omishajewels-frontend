@@ -6,9 +6,9 @@ import book1 from "../../assets/images/book1.jpg";
 import book2 from "../../assets/images/book2.jpg";
 import book3 from "../../assets/images/book3.jpg";
 
-import slider1 from "../../assets/images/slider1.png";
-import slider2 from "../../assets/images/slider2.png";
-import slider3 from "../../assets/images/slider3.jpg";
+import slider1 from "../../assets/images/slider1.webp";
+import slider2 from "../../assets/images/slider2.webp";
+import slider3 from "../../assets/images/slider3.webp";
 
 // ✅ Use imported images in slides
 const slides = [
@@ -77,7 +77,7 @@ const HeroSlider = () => {
               hover:scale-105
               animate-[fadeUp_0.7s_ease-out]
               cursor-pointer
-            "
+            "loading="lazy"
           />
         </div>
 

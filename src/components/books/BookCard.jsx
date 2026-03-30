@@ -1,6 +1,69 @@
+// BookCard.js
 import { Link } from "react-router-dom";
+import { useCart } from "../../context/CartContext";
+import { useWishlist } from "../../context/WishlistContext";
+import { toast } from "sonner";
 
 const BookCard = ({ book }) => {
+  const { addToCart, isGuest: isCartGuest } = useCart();
+  const { addToWishlist } = useWishlist();
+
+  const handleAddToCart = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    try {
+      const product = {
+        id: book.id,
+        name: book.title,
+        price: book.price,
+        quantity: 1,
+        image: book.image,
+        oldPrice: book.oldPrice,
+        category: book.category
+      };
+      
+      const success = await addToCart(product);
+      
+      if (success) {
+        toast.success(`Added to cart${isCartGuest ? ' (Saved locally)' : ''}`);
+      } else {
+        toast.error("Failed to add to cart");
+      }
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      toast.error("Failed to add to cart");
+    }
+  };
+
+  const handleAddToWishlist = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    try {
+      const product = {
+        id: book.id,
+        name: book.title,
+        price: book.price,
+        image: book.image,
+        oldPrice: book.oldPrice,
+        category: book.category,
+        discount: book.discount
+      };
+      
+      const success = await addToWishlist(product);
+      
+      if (success) {
+        toast.success("Added to wishlist");
+      } else {
+        toast.error("Failed to add to wishlist");
+      }
+    } catch (error) {
+      console.error("Error adding to wishlist:", error);
+      toast.error("Failed to add to wishlist");
+    }
+  };
+
   return (
     <div
       className="
@@ -21,7 +84,6 @@ const BookCard = ({ book }) => {
     >
       {/* IMAGE */}
       <div className="relative h-[280px] bg-[#F5F3EF] flex items-center justify-center overflow-hidden">
-
         {/* DISCOUNT BADGE */}
         {book.discount && (
           <span
@@ -48,7 +110,6 @@ const BookCard = ({ book }) => {
 
       {/* CONTENT */}
       <div className="p-5 text-center space-y-2">
-
         <Link
           to={`/books/${book.id}`}
           className="
@@ -94,6 +155,7 @@ const BookCard = ({ book }) => {
 
         {/* BUTTON */}
         <button
+          onClick={handleAddToCart}
           className="
             mt-4 w-full
             py-2 text-sm tracking-wide
@@ -107,7 +169,6 @@ const BookCard = ({ book }) => {
         >
           ADD TO CART
         </button>
-
       </div>
     </div>
   );

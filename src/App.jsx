@@ -54,114 +54,125 @@ import CartDrawer from "./components/cart/CartDrawer";
 import AdminRoute from "./pages/admin/AdminRoute";
 // import Images from "./pages/admin/Images";
 
+/* PROVIDERS */
+import { CartProvider } from "./context/CartContext";
+import { WishlistProvider } from "./context/WishlistContext";
+
 function App() {
   const [cartOpen, setCartOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [authView, setAuthView] = useState("login");
+  //const [shopLoading, setShopLoading] = useState(true);
 
   return (
     <>
       <Toaster position="bottom-left" richColors closeButton />
 
       <BrowserRouter>
-    <ScrollTop />
-        <Routes>
-          {/* ================= PUBLIC + ACCOUNT LAYOUT ================= */}
-          <Route
-            path="/*"
-            element={
-              <>
-                <Header
-                  openLogin={() => {
-                    setAuthView("login");
-                    setAuthOpen(true);
-                  }}
-                />
+        <CartProvider>
+          <WishlistProvider>
+            <ScrollTop />
+            <Routes>
+              {/* ================= PUBLIC + ACCOUNT LAYOUT ================= */}
+              <Route
+                path="/*"
+                element={
+                  <>
+                    <Header
+                      openLogin={() => {
+                        setAuthView("login");
+                        setAuthOpen(true);
+                      }}
+                    />
 
-                {/* AUTH SIDEBAR */}
-                <AuthSidebar
-                  open={authOpen}
-                  setOpen={setAuthOpen}
-                  view={authView}
-                  setView={setAuthView}
-                />
+                    {/* AUTH SIDEBAR */}
+                    <AuthSidebar
+                      open={authOpen}
+                      setOpen={setAuthOpen}
+                      view={authView}
+                      setView={setAuthView}
+                    />
 
-                <CartDrawer
-                  open={cartOpen}
-                  onClose={() => setCartOpen(false)}
-                  openLogin={() => {
-                    setAuthView("login");
-                    setAuthOpen(true);
-                  }}
-                />
-                
-
-
-
-                <main className="min-h-screen bg-[#FEFCF9]">
-                  <Routes>
-                    {/* PUBLIC ROUTES */}
-                    <Route path="/" element={<Home />} />
-                    <Route path="/shop" element={<ShopPage />} />
-                    <Route path="/view-cart" element={<ViewCart />} />
-                    <Route path="/checkout" element={<Checkout />} />
-                    <Route path="/order" element={<OrderComplete />} />
-
-                    <Route path="/about" element={<AboutUs />} />
-                    <Route path="/contact" element={<ContactUs />} />
-                    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                    <Route path="/shipping-policy" element={<ShippingPolicy />} />
-                    <Route path="/terms" element={<TermsConditions />} />
-                    <Route path="/refund-policy" element={<RefundCancellation />} />
-                    <Route path="/return-policy" element={<ReturnPolicy />} />
-                    <Route path="/wishlist" element={<WishlistPage />} />
-
-                    {/* MY ACCOUNT */}
-                    <Route path="/my-account" element={<MyAccountLayout />}>
-                      {/* <Route index element={<DashboardMyAccount />} /> */}
-                      <Route index element={<DashboardMyAccount openLogin={() => { setAuthView("login");setAuthOpen(true);}}/>}/>
-                      <Route path="orders" element={<Orders />} />
-                      <Route path="downloads" element={<Downloads />} />
-                      <Route path="addresses" element={<Addresses />} />
-                      <Route path="account-details" element={<AccountDetails />} />
-                      <Route path="wishlist" element={<AccountWishlist />} />
-                      <Route path="logout" element={<Logout />} />
-                      <Route path="edit-address/billing" element={<EditBillingAddress />} />
-                      <Route path="edit-address/shipping" element={<EditShippingAddress />} />
-                    </Route>
-
-<Route path="/products/:id" element={<ProductDetails />} />
-                    <Route path="/cartprocess" element={<Cartprocess />} />
-                  </Routes>
-                </main>
-
-                <Footer />
-              </>
-            }
-          />
-
-          {/* ================= ADMIN ROUTES ================= */}
-          <Route element={<AdminRoute />}>
-            <Route path="/admin/*" element={<AdminLayout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="categories" element={<Categories />} />
-              <Route path="ebooks" element={<Ebooks />} />
-              <Route path="orders" element={<Allorders />} />
-              <Route path="users" element={<Users />} />
-              <Route path="transactions" element={<Transactions />} />
-            </Route></Route>
+                    <CartDrawer
+                      open={cartOpen}
+                      onClose={() => setCartOpen(false)}
+                      openLogin={() => {
+                        setAuthView("login");
+                        setAuthOpen(true);
+                      }}
+                    />
 
 
-          <Route path="/admin/*" element={<AdminLayout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="categories" element={<Categories />} />
-            <Route path="ebooks" element={<Ebooks />} />
-            <Route path="orders" element={<Allorders />} />
-            <Route path="users" element={<Users />} />
-            <Route path="transactions" element={<Transactions />} />
-            {/* <Route path="images" element={<Images />} /> */}
-          </Route>
-        </Routes>
+
+
+                    <main className="min-h-screen bg-[#FEFCF9]">
+                      <Routes>
+                        {/* PUBLIC ROUTES */}
+                        <Route path="/" element={<Home />} />
+                   // In your routes, simply use ShopPage directly - it handles its own loading state
+                        <Route path="/shop" element={<ShopPage />} />
+
+                        <Route path="/view-cart" element={<ViewCart />} />
+                        <Route path="/checkout" element={<Checkout />} />
+                        <Route path="/order" element={<OrderComplete />} />
+
+                        <Route path="/about" element={<AboutUs />} />
+                        <Route path="/contact" element={<ContactUs />} />
+                        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                        <Route path="/shipping-policy" element={<ShippingPolicy />} />
+                        <Route path="/terms" element={<TermsConditions />} />
+                        <Route path="/refund-policy" element={<RefundCancellation />} />
+                        <Route path="/return-policy" element={<ReturnPolicy />} />
+                        <Route path="/wishlist" element={<WishlistPage />} />
+
+                        {/* MY ACCOUNT */}
+                        <Route path="/my-account" element={<MyAccountLayout />}>
+                          {/* <Route index element={<DashboardMyAccount />} /> */}
+                          <Route index element={<DashboardMyAccount openLogin={() => { setAuthView("login"); setAuthOpen(true); }} />} />
+                          <Route path="orders" element={<Orders />} />
+                          <Route path="downloads" element={<Downloads />} />
+                          <Route path="addresses" element={<Addresses />} />
+                          <Route path="account-details" element={<AccountDetails />} />
+                          <Route path="wishlist" element={<AccountWishlist />} />
+                          <Route path="logout" element={<Logout />} />
+                          <Route path="edit-address/billing" element={<EditBillingAddress />} />
+                          <Route path="edit-address/shipping" element={<EditShippingAddress />} />
+                        </Route>
+
+                        <Route path="/products/:id" element={<ProductDetails />} />
+                        <Route path="/cartprocess" element={<Cartprocess />} />
+                      </Routes>
+                    </main>
+
+                    <Footer />
+                  </>
+                }
+              />
+
+              {/* ================= ADMIN ROUTES ================= */}
+              <Route element={<AdminRoute />}>
+                <Route path="/admin/*" element={<AdminLayout />}>
+                  <Route index element={<Dashboard />} />
+                  <Route path="categories" element={<Categories />} />
+                  <Route path="ebooks" element={<Ebooks />} />
+                  <Route path="orders" element={<Allorders />} />
+                  <Route path="users" element={<Users />} />
+                  <Route path="transactions" element={<Transactions />} />
+                </Route></Route>
+
+
+              <Route path="/admin/*" element={<AdminLayout />}>
+                <Route index element={<Dashboard />} />
+                <Route path="categories" element={<Categories />} />
+                <Route path="ebooks" element={<Ebooks />} />
+                <Route path="orders" element={<Allorders />} />
+                <Route path="users" element={<Users />} />
+                <Route path="transactions" element={<Transactions />} />
+                {/* <Route path="images" element={<Images />} /> */}
+              </Route>
+            </Routes>
+          </WishlistProvider>
+        </CartProvider>
       </BrowserRouter>
     </>
   );

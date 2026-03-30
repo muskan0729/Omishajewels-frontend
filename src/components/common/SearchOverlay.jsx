@@ -1,30 +1,35 @@
+// SearchOverlay.js
 import { useEffect, useState } from "react";
 import { useGet } from "../../hooks/useGet";
 import { Link } from "react-router-dom";
-import { FiDownload } from "react-icons/fi"; // Removed FiEye
+import { FiDownload } from "react-icons/fi";
 import { toast } from "sonner";
-import axios from "axios"; // Add axios import
+import axios from "axios";
+import { useCart } from "./../../context/CartContext";
+import { useWishlist } from "./../../context/WishlistContext";
 
 export default function SearchOverlay({ open, onClose }) {
   const [query, setQuery] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [downloadingIds, setDownloadingIds] = useState([]); // Track downloading products
+  const [downloadingIds, setDownloadingIds] = useState([]);
+  const [purchasedEbooks, setPurchasedEbooks] = useState({});
+  
+  const { addToCart, isGuest: isCartGuest } = useCart();
+  const { addToWishlist } = useWishlist();
   
   const userId = localStorage.getItem("user_id");
   const token = localStorage.getItem("token");
   const isLoggedIn = !!userId && !!token;
 
   const IMG_URL = import.meta.env.VITE_IMG_URL;
-  const API_BASE_URL = import.meta.env.VITE_API_URL; // Add API base URL
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-  // ✅ Use useGet hook for purchased ebooks
+  // Use useGet hook for purchased ebooks
   const { data: purchasedData, loading: purchasedLoading } = useGet(
     isLoggedIn ? `my-library` : null
   );
-  
-  const [purchasedEbooks, setPurchasedEbooks] = useState({});
 
-  // Process purchased ebooks data when it arrives
+  // Process purchased ebooks data
   useEffect(() => {
     if (purchasedData?.success && purchasedData?.data) {
       const purchasedMap = {};
@@ -35,16 +40,15 @@ export default function SearchOverlay({ open, onClose }) {
     }
   }, [purchasedData]);
 
-  // debounce search (300ms)
+  // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearchTerm(query);
     }, 300);
-
     return () => clearTimeout(timer);
   }, [query]);
 
-  // ✅ Use useGet hook for search
+  // Use useGet hook for search
   const { data: searchData, loading: searchLoading, error: searchError } = useGet(
     searchTerm ? `products?search=${searchTerm}` : null
   );
@@ -61,23 +65,65 @@ export default function SearchOverlay({ open, onClose }) {
 
   const products = searchData?.data?.data || [];
 
-  // ✅ Secure download function
+  // Handle add to cart
+  const handleAddToCart = async (product) => {
+    try {
+      const cartProduct = {
+        id: product.id,
+        name: product.title,
+        price: product.price,
+        quantity: 1,
+        image: product.image,
+        oldPrice: product.old_price,
+        category: product.category
+      };
+      
+      const success = await addToCart(cartProduct);
+      
+      if (success) {
+        toast.success(`Added to cart${isCartGuest ? ' (Saved locally)' : ''}`);
+        onClose();
+      }
+    } catch (error) {
+      toast.error("Failed to add to cart");
+    }
+  };
+
+  // Handle add to wishlist
+  const handleAddToWishlist = async (product) => {
+    try {
+      const wishlistProduct = {
+        id: product.id,
+        name: product.title,
+        price: product.price,
+        image: product.image,
+        oldPrice: product.old_price,
+        category: product.category
+      };
+      
+      const success = await addToWishlist(wishlistProduct);
+      
+      if (success) {
+        toast.success("Added to wishlist");
+      }
+    } catch (error) {
+      toast.error("Failed to add to wishlist");
+    }
+  };
+
+  // Handle download
   const handleDownload = async (product) => {
     if (!isLoggedIn) {
       toast.error("Please login to download");
       return;
     }
 
-    if (downloadingIds.includes(product.id)) {
-      return;
-    }
+    if (downloadingIds.includes(product.id)) return;
 
     setDownloadingIds(prev => [...prev, product.id]);
 
     try {
       const downloadEndpoint = `${API_BASE_URL}ebook/${product.id}/download`;
-      
-      //console.log("Downloading from:", downloadEndpoint);
       
       const response = await axios.get(downloadEndpoint, {
         headers: {
@@ -87,30 +133,26 @@ export default function SearchOverlay({ open, onClose }) {
         timeout: 30000,
       });
 
-      // Create blob and trigger download
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       
-      // Clean filename
       const cleanTitle = product.title.replace(/[^\w\s]/gi, '').replace(/\s+/g, ' ');
       link.setAttribute('download', `${cleanTitle}.pdf`);
       
       document.body.appendChild(link);
       link.click();
       
-      // Cleanup
       setTimeout(() => {
         link.parentNode?.removeChild(link);
         window.URL.revokeObjectURL(url);
       }, 100);
       
       toast.success("Download started");
-      onClose(); // Close search overlay after download starts
+      onClose();
     } catch (err) {
       console.error("Download failed:", err);
-      
       if (err.response?.status === 401) {
         toast.error("Session expired. Please login again.");
       } else if (err.response?.status === 403) {
@@ -125,21 +167,8 @@ export default function SearchOverlay({ open, onClose }) {
     }
   };
 
-  // Removed handleViewPDF function
-
-  const handleAddToCart = (product) => {
-    if (!isLoggedIn) {
-      toast.error("Please login to add to cart");
-      return;
-    }
-    // Your existing add to cart logic
-    toast.success("Added to cart");
-    onClose();
-  };
-
   return (
     <div className="fixed inset-0 z-[999] bg-white animate-slideUp">
-      {/* CLOSE */}
       <button
         onClick={onClose}
         className="absolute top-6 right-8 text-3xl text-black hover:opacity-60"
@@ -148,7 +177,6 @@ export default function SearchOverlay({ open, onClose }) {
       </button>
 
       <div className="h-full flex flex-col items-center pt-28 px-6">
-        {/* SEARCH INPUT */}
         <input
           type="text"
           autoFocus
@@ -167,38 +195,26 @@ export default function SearchOverlay({ open, onClose }) {
           "
         />
 
-        {/* DIVIDER */}
         <div className="w-full max-w-2xl h-[1px] bg-gray-200 my-6" />
 
-        {/* EMPTY TEXT */}
         {!query && (
           <p className="text-black text-sm">
             Start typing to see products you are looking for.
           </p>
         )}
 
-        {/* LOADING */}
         {query && searchLoading && (
-          <p className="mt-10 text-sm text-gray-500">
-            Searching products...
-          </p>
+          <p className="mt-10 text-sm text-gray-500">Searching products...</p>
         )}
 
-        {/* ERROR */}
         {query && searchError && (
-          <p className="mt-10 text-sm text-red-500">
-            Failed to load products
-          </p>
+          <p className="mt-10 text-sm text-red-500">Failed to load products</p>
         )}
 
-        {/* NO RESULTS */}
         {query && !searchLoading && products.length === 0 && (
-          <p className="mt-10 text-sm text-gray-500">
-            No products found
-          </p>
+          <p className="mt-10 text-sm text-gray-500">No products found</p>
         )}
 
-        {/* SEARCH RESULTS */}
         {query && products.length > 0 && (
           <div className="mt-14 w-full max-w-5xl grid grid-cols-2 md:grid-cols-4 gap-8">
             {products.map((product) => {
@@ -219,6 +235,7 @@ export default function SearchOverlay({ open, onClose }) {
                   isDownloading={isDownloading}
                   onDownload={() => handleDownload(product)}
                   onAddToCart={() => handleAddToCart(product)}
+                  onAddToWishlist={() => handleAddToWishlist(product)}
                 />
               );
             })}
@@ -239,26 +256,20 @@ function SearchProduct({
   isLoggedIn,
   isDownloading,
   onDownload, 
-  onAddToCart 
+  onAddToCart,
+  onAddToWishlist
 }) {
   return (
     <div className="text-center cursor-pointer group">
-      {/* IMAGE */}
       <div className="relative mx-auto h-44 w-32 bg-gray-100 mb-3 flex items-center justify-center overflow-hidden">
         {image ? (
-          <img
-            src={image}
-            alt={title}
-            className="w-full h-full object-cover"
-          />
+          <img src={image} alt={title} className="w-full h-full object-cover" />
         ) : (
           <span className="text-gray-400 text-sm">Image</span>
         )}
         
-        {/* Show action buttons on hover */}
         <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
           {isLoggedIn && isPurchased ? (
-            // Purchased - show download only (View removed)
             <button
               onClick={(e) => {
                 e.preventDefault();
@@ -275,24 +286,31 @@ function SearchProduct({
               <FiDownload size={16} className={isDownloading ? 'animate-pulse' : ''} />
             </button>
           ) : (
-            // Not purchased or guest - show add to cart
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                if (!isLoggedIn) {
-                  toast.error("Please login to add to cart");
-                  return;
-                }
-                onAddToCart();
-              }}
-              className="bg-[#B8964E] text-white px-4 py-2 rounded-md text-sm hover:bg-[#9e7e42]"
-            >
-              Add to Cart
-            </button>
+            <>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  onAddToCart();
+                }}
+                className="bg-[#B8964E] text-white px-4 py-2 rounded-md text-sm hover:bg-[#9e7e42]"
+              >
+                Add to Cart
+              </button>
+              {isLoggedIn && (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onAddToWishlist();
+                  }}
+                  className="bg-gray-700 text-white p-2 rounded-md hover:bg-gray-600"
+                >
+                  ♡
+                </button>
+              )}
+            </>
           )}
         </div>
 
-        {/* Downloading overlay text (optional) */}
         {isDownloading && (
           <div className="absolute bottom-0 left-0 right-0 bg-green-600 text-white text-xs py-1 text-center">
             Downloading...
@@ -317,7 +335,6 @@ function SearchProduct({
         </span>
       </div>
       
-      {/* Purchase badge - only for logged-in users */}
       {isLoggedIn && isPurchased && (
         <div className="mt-1 text-xs text-green-600 font-medium">
           ✓ Purchased
