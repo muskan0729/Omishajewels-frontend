@@ -1,5 +1,5 @@
 import { useGet } from "../../hooks/useGet";
-import heroImg from "../../assets/images/herosectionshop.webp";
+import heroImg from "../../assets/images/herosectionshop.png";
 
 const toLabel = (key) => String(key || "Shop").replace(/-/g, " ").toUpperCase();
 
@@ -31,7 +31,6 @@ export default function ShopHero({
       ? toLabel(activeCatObject.name)
       : "Category");
 
-  // Show actual content (categories are loaded at page level now)
   return (
     <section className="hero">
       <img src={heroImg} alt="Shop Banner" className="hero__img" />

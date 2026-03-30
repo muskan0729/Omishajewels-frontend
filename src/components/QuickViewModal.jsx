@@ -4,32 +4,30 @@ import {
   FaTwitter,
   FaPinterest,
   FaLinkedin,
-  FaHeart,
 } from "react-icons/fa";
 import { useCart } from "./../context/CartContext";
 import { useWishlist } from "./../context/WishlistContext";
 import { toast } from "sonner";
 
-const QuickViewModal = ({ book, onClose, isPurchased, onDownload, isLoggedIn, inWishlist, onWishlistToggle }) => {
+const QuickViewModal = ({ book, onClose, isPurchased, onDownload, isLoggedIn }) => {
   const [qty, setQty] = useState(1);
   const [imgError, setImgError] = useState(false);
-  
   const { addToCart, isGuest: isCartGuest } = useCart();
   const { addToWishlist, removeFromWishlist, wishlistItems } = useWishlist();
-  
+
+  // Get image URL from environment
   const IMG_BASE_URL = import.meta.env.VITE_IMG_URL;
-  const placeholderImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='400' viewBox='0 0 300 400'%3E%3Crect width='300' height='400' fill='%23f0f0f0'/%3E%3Ctext x='150' y='200' font-family='Arial' font-size='14' text-anchor='middle' fill='%23999999'%3ENo Image%3C/text%3E%3C/svg%3E";
 
-  // Check if product is in wishlist (either from prop or context)
-  const isInWishlist = useMemo(() => {
-    if (inWishlist !== undefined) return inWishlist;
-    return wishlistItems.some(item => item.id === book?.id);
-  }, [inWishlist, wishlistItems, book?.id]);
+  // Check if product is in wishlist
+  const isInWishlist = useMemo(() => 
+    wishlistItems.some(item => item.id === book?.id),
+    [wishlistItems, book?.id]
+  );
 
-  // Convert image path
+  // Convert image path from storage to public/uploads
   const convertImagePath = useCallback((imagePath) => {
     if (!imagePath) return '';
-    
+
     if (imagePath.includes('/public/uploads/')) return imagePath;
     if (imagePath.includes('/storage/uploads/')) {
       return imagePath.replace('/storage/uploads/', '/public/uploads/');
@@ -37,12 +35,16 @@ const QuickViewModal = ({ book, onClose, isPurchased, onDownload, isLoggedIn, in
     if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
       return imagePath;
     }
-    
+
     const filename = imagePath.split('/').pop();
     return `${IMG_BASE_URL}${filename}`;
   }, [IMG_BASE_URL]);
 
+  // Get the converted image URL
   const imageUrl = useMemo(() => convertImagePath(book?.image), [book?.image, convertImagePath]);
+
+  // Fallback image
+  const placeholderImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='400' viewBox='0 0 300 400'%3E%3Crect width='300' height='400' fill='%23f0f0f0'/%3E%3Ctext x='150' y='200' font-family='Arial' font-size='14' text-anchor='middle' fill='%23999999'%3ENo Image%3C/text%3E%3C/svg%3E";
 
   // Handle quantity change
   const handleQuantityChange = useCallback((delta) => {
@@ -61,9 +63,9 @@ const QuickViewModal = ({ book, onClose, isPurchased, onDownload, isLoggedIn, in
         oldPrice: book.oldPrice,
         category: book.category
       };
-      
+
       const success = await addToCart(product);
-      
+
       if (success) {
         toast.success(`Added ${qty} item(s) to cart${isCartGuest ? ' (Saved locally)' : ''}`);
         onClose();
@@ -91,12 +93,10 @@ const QuickViewModal = ({ book, onClose, isPurchased, onDownload, isLoggedIn, in
         const success = await addToWishlist(product);
         toast[success ? "success" : "error"](success ? "Added to wishlist" : "Failed to add to wishlist");
       }
-      // Call parent toggle if provided
-      if (onWishlistToggle) onWishlistToggle();
     } catch (error) {
       toast.error("Operation failed");
     }
-  }, [book, isInWishlist, addToWishlist, removeFromWishlist, onWishlistToggle]);
+  }, [book, isInWishlist, addToWishlist, removeFromWishlist]);
 
   // Share URLs
   const shareUrls = useMemo(() => ({
@@ -111,6 +111,7 @@ const QuickViewModal = ({ book, onClose, isPurchased, onDownload, isLoggedIn, in
   return (
     <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50 px-4">
       <div className="bg-white w-full max-w-5xl rounded-sm shadow-lg relative overflow-hidden">
+        {/* Close Button */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-500 hover:text-black text-2xl z-10 transition-colors"
@@ -155,7 +156,7 @@ const QuickViewModal = ({ book, onClose, isPurchased, onDownload, isLoggedIn, in
               </span>
             </div>
 
-            {/* QUANTITY SELECTOR - Only show if not purchased */}
+            {/* QUANTITY SELECTOR */}
             {(!isPurchased || !isLoggedIn) && (
               <div className="mb-6">
                 <label className="block text-sm text-gray-600 mb-2">Quantity:</label>
@@ -195,11 +196,6 @@ const QuickViewModal = ({ book, onClose, isPurchased, onDownload, isLoggedIn, in
                   onClick={handleWishlistToggle}
                   className="flex items-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold px-6 py-3 rounded-full text-sm uppercase transition-colors"
                 >
-                  <FaHeart 
-                    className={`transition-colors ${
-                      isInWishlist ? 'text-red-500' : 'text-gray-400'
-                    }`}
-                  />
                   {isInWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
                 </button>
               )}

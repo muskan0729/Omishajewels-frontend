@@ -85,9 +85,19 @@ export default function ShopPage() {
   }, [purchasedData]);
 
   const buildEndpoint = useCallback(() => {
-    let endpoint = activeCategory === "all" ? `products` : `categories/${activeCategory}/products`;
-    const params = new URLSearchParams({ page: currentPage, limit: showCount });
-    if (sortBy !== "default") params.append("sort", sortBy);
+    let endpoint = activeCategory === "all"
+      ? `products`
+      : `categories/${activeCategory}/products`;
+
+    const params = new URLSearchParams({
+      page: currentPage,
+      limit: showCount,
+    });
+
+    if (sortBy !== "default") {
+      params.append("sort", sortBy);
+    }
+
     return `${endpoint}?${params.toString()}`;
   }, [activeCategory, currentPage, showCount, sortBy]);
 
@@ -103,7 +113,9 @@ export default function ShopPage() {
   }, [productsData]);
 
   useEffect(() => {
-    if (buildEndpoint()) refetch();
+    if (buildEndpoint()) {
+      refetch();
+    }
   }, [buildEndpoint, refetch]);
 
   useEffect(() => {
@@ -141,9 +153,15 @@ export default function ShopPage() {
     });
 
     if (sortBy === "low-high") {
-      out.sort((a, b) => finalPrice(a.price, a.discountPercentage) - finalPrice(b.price, b.discountPercentage));
+      out.sort((a, b) =>
+        finalPrice(a.price, a.discountPercentage) -
+        finalPrice(b.price, b.discountPercentage)
+      );
     } else if (sortBy === "high-low") {
-      out.sort((a, b) => finalPrice(b.price, b.discountPercentage) - finalPrice(a.price, a.discountPercentage));
+      out.sort((a, b) =>
+        finalPrice(b.price, b.discountPercentage) -
+        finalPrice(a.price, a.discountPercentage)
+      );
     }
 
     return out;
@@ -174,8 +192,7 @@ export default function ShopPage() {
   const handleAddToCart = useCallback(async (book, qty = 1) => {
     const productId = book.id;
     if (cartLoadingIds.includes(productId)) return;
-    
-    setCartLoadingIds(prev => [...prev, productId]);
+    setCartLoadingIds((prev) => [...prev, productId]);
 
     try {
       const cartItem = {
@@ -206,7 +223,7 @@ export default function ShopPage() {
     }
 
     const purchased = purchasedEbooks[book.id];
-    if (!purchased?.hasAccess) {
+    if (!purchased || !purchased.hasAccess) {
       toast.error("Download not available");
       return;
     }
@@ -217,7 +234,10 @@ export default function ShopPage() {
 
     try {
       const response = await fetch(`${API_BASE_URL}ebook/${book.id}/download`, {
-        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/pdf' },
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/pdf',
+        },
       });
 
       const blob = await response.blob();
@@ -227,6 +247,7 @@ export default function ShopPage() {
       link.setAttribute('download', `${book.title}.pdf`);
       document.body.appendChild(link);
       link.click();
+
       link.parentNode?.removeChild(link);
       window.URL.revokeObjectURL(url);
 
@@ -307,15 +328,15 @@ export default function ShopPage() {
               </div>
 
               <div className="gridBtns">
-                {[
-                  { mode: "grid2", icon: BsGrid1X2Fill },
-                  { mode: "grid3", icon: FiGrid },
-                  { mode: "grid4", icon: BsGrid3X3GapFill }
-                ].map(({ mode, icon: Icon }) => (
-                  <button key={mode} className={gridMode === mode ? "active" : ""} onClick={() => setGridMode(mode)}>
-                    <Icon size={18} />
-                  </button>
-                ))}
+                <button className={gridMode === "grid2" ? "active" : ""} onClick={() => setGridMode("grid2")}>
+                  <BsGrid1X2Fill size={18} />
+                </button>
+                <button className={gridMode === "grid3" ? "active" : ""} onClick={() => setGridMode("grid3")}>
+                  <FiGrid size={18} />
+                </button>
+                <button className={gridMode === "grid4" ? "active" : ""} onClick={() => setGridMode("grid4")}>
+                  <BsGrid3X3GapFill size={18} />
+                </button>
               </div>
             </div>
           </div>
@@ -429,7 +450,10 @@ export default function ShopPage() {
                                 {cartLoadingIds.includes(p.id) ? "Adding…" : "ADD TO CART"}
                               </button>
                             ) : isPurchased ? (
-                              <button className="download-btn-single" onClick={() => handleDownload(p)} disabled={isDownloading}
+                              <button
+                                className="download-btn-single"
+                                onClick={() => handleDownload(p)}
+                                disabled={isDownloading}
                                 style={{
                                   position: 'absolute', bottom: '10px', left: '10px', right: '10px',
                                   backgroundColor: isDownloading ? '#888' : '#4CAF50', color: 'white',
@@ -439,7 +463,8 @@ export default function ShopPage() {
                                   fontWeight: '500', zIndex: '5', opacity: isDownloading ? 0.7 : 1
                                 }}
                               >
-                                <FiDownload size={18} /> {isDownloading ? "Downloading..." : "Download PDF"}
+                                <FiDownload size={18} />
+                                {isDownloading ? "Downloading..." : "Download PDF"}
                               </button>
                             ) : (
                               <button className="addCart" onClick={() => handleAddToCart(p)} disabled={cartLoadingIds.includes(p.id)}>
@@ -476,9 +501,26 @@ export default function ShopPage() {
                   </div>
 
                   {totalPages > 1 && (
-                    <div className="pagination" style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '30px', padding: '20px 0', flexWrap: 'wrap' }}>
-                      <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}
-                        style={{ padding: '8px 16px', backgroundColor: currentPage === 1 ? '#f0f0f0' : '#8B4513', color: currentPage === 1 ? '#999' : 'white', border: 'none', borderRadius: '4px', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}>
+                    <div className="pagination" style={{
+                      display: 'flex',
+                      justifyContent: 'center',
+                      gap: '10px',
+                      marginTop: '30px',
+                      padding: '20px 0',
+                      flexWrap: 'wrap'
+                    }}>
+                      <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        style={{
+                          padding: '8px 16px',
+                          backgroundColor: currentPage === 1 ? '#f0f0f0' : '#8B4513',
+                          color: currentPage === 1 ? '#999' : 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: currentPage === 1 ? 'not-allowed' : 'pointer'
+                        }}
+                      >
                         Previous
                       </button>
 
@@ -490,15 +532,35 @@ export default function ShopPage() {
                         else pageNum = currentPage - 2 + i;
 
                         return (
-                          <button key={pageNum} onClick={() => handlePageChange(pageNum)}
-                            style={{ padding: '8px 12px', backgroundColor: currentPage === pageNum ? '#8B4513' : '#f0f0f0', color: currentPage === pageNum ? 'white' : '#333', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                          <button
+                            key={pageNum}
+                            onClick={() => handlePageChange(pageNum)}
+                            style={{
+                              padding: '8px 12px',
+                              backgroundColor: currentPage === pageNum ? '#8B4513' : '#f0f0f0',
+                              color: currentPage === pageNum ? 'white' : '#333',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer'
+                            }}
+                          >
                             {pageNum}
                           </button>
                         );
                       })}
 
-                      <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}
-                        style={{ padding: '8px 16px', backgroundColor: currentPage === totalPages ? '#f0f0f0' : '#8B4513', color: currentPage === totalPages ? '#999' : 'white', border: 'none', borderRadius: '4px', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}>
+                      <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        style={{
+                          padding: '8px 16px',
+                          backgroundColor: currentPage === totalPages ? '#f0f0f0' : '#8B4513',
+                          color: currentPage === totalPages ? '#999' : 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: currentPage === totalPages ? 'not-allowed' : 'pointer'
+                        }}
+                      >
                         Next
                       </button>
                     </div>
@@ -513,7 +575,10 @@ export default function ShopPage() {
       {showQuickModal && selectedProduct && (
         <QuickViewModal
           book={selectedProduct}
-          onClose={() => { setShowQuickModal(false); setSelectedProduct(null); }}
+          onClose={() => {
+            setShowQuickModal(false);
+            setSelectedProduct(null);
+          }}
           isPurchased={isLoggedIn ? purchasedEbooks[selectedProduct?.id] : null}
           onDownload={() => handleDownload(selectedProduct)}
           isLoggedIn={isLoggedIn}

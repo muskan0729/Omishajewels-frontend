@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
+// context/CartContext.jsx
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useGet } from '../hooks/useGet';
 import { usePost } from '../hooks/usePost';
 import { useDelete } from '../hooks/useDelete';
@@ -29,52 +30,57 @@ export const CartProvider = ({ children }) => {
   const { executeDelete: deleteCartItemAPI } = useDelete();
   const { executePut: updateCartItemAPI } = usePut('cart/item');
 
-  const IMG_BASE_URL = import.meta.env.VITE_IMG_URL;
-  const isMounted = useRef(true);
+  const IMG_BASE_URL = import.meta.env.VITE_IMG_URL; // https://omishajewels.com/Backend/public/uploads/ebook-images/
 
   // Helper functions
-  const safeNumber = useCallback((value) => {
+  const safeNumber = (value) => {
     const num = parseFloat(value);
     return isNaN(num) ? 0 : num;
-  }, []);
+  };
 
-  const safeQuantity = useCallback((value) => {
+  const safeQuantity = (value) => {
     const num = parseInt(value, 10);
-    return isNaN(num) ? 1 : Math.max(1, num);
-  }, []);
+    return isNaN(num) ? 1 : num;
+  };
 
   // Convert image path from storage to public/uploads
-  const convertImagePath = useCallback((imagePath) => {
+  const convertImagePath = (imagePath) => {
     if (!imagePath) return '';
     
-    if (imagePath.includes('/public/uploads/')) return imagePath;
+    // If it's already using the public URL format, return as-is
+    if (imagePath.includes('/public/uploads/')) {
+      return imagePath;
+    }
     
+    // Extract just the filename from the path
+    // Example: "https://omishajewels.com/Backend/storage/uploads/ebook-images/Ebook1_1770812530_2.png"
+    // becomes: "Ebook1_1770812530_2.png"
     const filename = imagePath.split('/').pop();
+    
+    // Return with the public uploads URL
     return `${IMG_BASE_URL}${filename}`;
-  }, [IMG_BASE_URL]);
+  };
 
   // Transform API cart items to consistent format
-  const transformCartItems = useCallback((apiData) => {
+  const transformCartItems = (apiData) => {
     if (!apiData?.items) return [];
     
     return apiData.items.map(item => ({
-      id: item.id,
+      id: item.id,  // cart item ID
       cartItemId: item.id,
       ebookId: item.ebook?.id,
       name: item.ebook?.title || 'Product',
       price: safeNumber(item.price),
       quantity: safeQuantity(item.quantity),
       total: safeNumber(item.total),
-      image: convertImagePath(item.ebook?.image),
+      image: convertImagePath(item.ebook?.image),  // Convert storage path to public path
       description: item.ebook?.description || '',
       oldPrice: safeNumber(item.ebook?.price),
     }));
-  }, [safeNumber, safeQuantity, convertImagePath]);
+  };
 
   // Update metrics from API data
   const updateCartMetrics = useCallback((data) => {
-    if (!isMounted.current) return;
-    
     if (data?.items) {
       const items = transformCartItems(data);
       const count = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -89,19 +95,17 @@ export const CartProvider = ({ children }) => {
       setCartCount(0);
       setCartSubtotal(0);
     }
-  }, [transformCartItems, safeNumber]);
+  }, []);
 
   // Update metrics for guest cart
   const updateGuestCartMetrics = useCallback((items) => {
-    if (!isMounted.current) return;
-    
     const count = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
     const subtotal = items.reduce((sum, item) => sum + (safeNumber(item.price) * (item.quantity || 1)), 0);
     
     setCartItems(items);
     setCartCount(count);
     setCartSubtotal(subtotal);
-  }, [safeNumber]);
+  }, []);
 
   // Load cart
   const loadCart = useCallback(async () => {
@@ -124,14 +128,12 @@ export const CartProvider = ({ children }) => {
     } catch (error) {
       console.error('Failed to load cart:', error);
     } finally {
-      if (isMounted.current) setIsLoading(false);
+      setIsLoading(false);
     }
   }, [fetchedData, fetchCartAPI, updateCartMetrics, updateGuestCartMetrics]);
 
   // Refresh cart
   const refreshCart = useCallback(async () => {
-    if (!isMounted.current) return;
-    
     if (!isGuest) {
       try {
         setIsLoading(true);
@@ -139,7 +141,7 @@ export const CartProvider = ({ children }) => {
       } catch (error) {
         console.error('Failed to refresh cart:', error);
       } finally {
-        if (isMounted.current) setIsLoading(false);
+        setIsLoading(false);
       }
     } else {
       const guestCart = await getCartDB();
@@ -183,9 +185,9 @@ export const CartProvider = ({ children }) => {
       toast.error("Failed to add to cart");
       return false;
     }
-  }, [isGuest, addToCartAPI, refreshCart, safeQuantity, safeNumber]);
+  }, [isGuest, addToCartAPI, refreshCart]);
 
-  // Remove from cart
+  // Remove from cart - using cart item ID
   const removeFromCart = useCallback(async (cartItemId) => {
     try {
       if (!isGuest) {
@@ -210,7 +212,7 @@ export const CartProvider = ({ children }) => {
     }
   }, [isGuest, deleteCartItemAPI, refreshCart]);
 
-  // Update quantity
+  // Update quantity - using cart item ID
   const updateQuantity = useCallback(async (cartItemId, quantity) => {
     try {
       const newQuantity = safeQuantity(quantity);
@@ -242,7 +244,7 @@ export const CartProvider = ({ children }) => {
       console.error('Failed to update quantity:', error);
       return false;
     }
-  }, [isGuest, updateCartItemAPI, refreshCart, safeQuantity]);
+  }, [isGuest, updateCartItemAPI, refreshCart]);
 
   // Clear cart
   const clearCart = useCallback(async () => {
@@ -291,7 +293,7 @@ export const CartProvider = ({ children }) => {
           console.error('Failed to sync cart:', error);
           toast.error("Failed to sync cart");
         } finally {
-          if (isMounted.current) setIsLoading(false);
+          setIsLoading(false);
         }
       } else {
         setIsGuest(false);
@@ -300,34 +302,22 @@ export const CartProvider = ({ children }) => {
     }
   }, [isGuest, addToCartAPI, fetchCartAPI]);
 
-  // Cleanup on unmount
   useEffect(() => {
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
-
-  // Update cart metrics when API data changes
-  useEffect(() => {
-    if (fetchedData && !isGuest && isMounted.current) {
+    if (fetchedData && !isGuest) {
       updateCartMetrics(fetchedData);
     }
   }, [fetchedData, isGuest, updateCartMetrics]);
 
-  // Initial load
   useEffect(() => {
-    if (isMounted.current) {
-      loadCart();
-    }
+    loadCart();
   }, [loadCart]);
 
-  // Auth state change handler
   useEffect(() => {
     const checkAuth = () => {
       const token = localStorage.getItem("token");
-      if (token && isGuest && isMounted.current) {
+      if (token && isGuest) {
         syncGuestCart();
-      } else if (!token && !isGuest && isMounted.current) {
+      } else if (!token && !isGuest) {
         setIsGuest(true);
         loadCart();
       }
@@ -337,22 +327,20 @@ export const CartProvider = ({ children }) => {
     return () => window.removeEventListener('storage', checkAuth);
   }, [isGuest, syncGuestCart, loadCart]);
 
-  // Memoized value object
-  const value = useMemo(() => ({
-    cartData,
-    cartItems,
-    cartCount,
-    cartSubtotal,
-    isLoading,
-    isGuest,
-    refreshCart,
-    addToCart,
-    removeFromCart,
-    updateQuantity,
-    clearCart,
-    syncGuestCart
-  }), [cartData, cartItems, cartCount, cartSubtotal, isLoading, isGuest, 
-      refreshCart, addToCart, removeFromCart, updateQuantity, clearCart, syncGuestCart]);
+ const value = {
+  cartData,  // ← Add this line
+  cartItems,
+  cartCount,
+  cartSubtotal,
+  isLoading,
+  isGuest,
+  refreshCart,
+  addToCart,
+  removeFromCart,
+  updateQuantity,
+  clearCart,
+  syncGuestCart
+};
 
   return (
     <CartContext.Provider value={value}>

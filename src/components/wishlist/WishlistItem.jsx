@@ -1,5 +1,4 @@
-import { FiX, FiDownload, FiCheckCircle, FiHeart } from "react-icons/fi";
-import { FaHeart } from "react-icons/fa";
+import { FiX, FiDownload, FiCheckCircle } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useState, useCallback, useMemo } from "react";
@@ -27,7 +26,7 @@ const WishlistItem = ({ product, wishlistId, isPurchased }) => {
     [product.image]
   );
 
-  // Check if product is expiring soon
+  // Check expiry status
   const isExpiringSoon = useMemo(() => 
     isPurchased && isPurchased.days_remaining <= 3 && isPurchased.days_remaining > 0,
     [isPurchased]

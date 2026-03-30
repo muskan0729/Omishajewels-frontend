@@ -1,4 +1,4 @@
-import heroImg from "../../assets/images/herosectionshop.webp";
+import heroImg from "../../assets/images/herosectionshop.png";
 
 export default function ShopPageSkeleton() {
   return (

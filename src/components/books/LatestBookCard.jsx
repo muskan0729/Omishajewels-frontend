@@ -79,7 +79,7 @@ const LatestBookCard = ({ book }) => {
     }
   }, [book, addToCart, isCartGuest]);
 
-  // Handle wishlist toggle (add/remove)
+  // Handle wishlist toggle
   const handleWishlistToggle = useCallback(async (e) => {
     e?.preventDefault();
     e?.stopPropagation();
@@ -98,7 +98,6 @@ const LatestBookCard = ({ book }) => {
           category: book.category,
           discount: book.discount
         };
-        
         const success = await addToWishlist(product);
         toast[success ? "success" : "error"](
           success ? `Added to wishlist${isWishlistGuest ? ' (Saved locally)' : ''}` : "Failed to add to wishlist"
@@ -164,24 +163,6 @@ const LatestBookCard = ({ book }) => {
     }
   }, [book.id, book.title, isLoggedIn, isPurchased, isDownloading, API_BASE_URL, token]);
 
-  // Memoized expiry info
-  const expiryInfo = useMemo(() => {
-    if (!isPurchased || !purchaseInfo?.expiry_date) return null;
-    
-    const isExpiringVerySoon = purchaseInfo.days_remaining <= 3;
-    
-    return (
-      <div className="text-xs text-gray-500 mt-1">
-        Access until: {new Date(purchaseInfo.expiry_date).toLocaleDateString()}
-        {purchaseInfo.days_remaining <= 7 && (
-          <span className={isExpiringVerySoon ? "text-red-500 ml-1 font-medium" : "text-orange-500 ml-1"}>
-            • {purchaseInfo.days_remaining} days left
-          </span>
-        )}
-      </div>
-    );
-  }, [isPurchased, purchaseInfo]);
-
   return (
     <>
       <div className="group bg-white rounded-2xl border border-[#E9E4DA] shadow-[0_8px_20px_rgba(0,0,0,0.06)] overflow-hidden transition-all duration-300 hover:shadow-[0_16px_36px_rgba(184,150,78,0.25)] relative">
@@ -220,18 +201,15 @@ const LatestBookCard = ({ book }) => {
                 <b>+</b>
               </button>
 
-              {/* Wishlist Button - Colorless heart when not in wishlist, colored when added */}
               <button 
-                className="w-9 h-9 bg-white shadow-md rounded-full flex items-center justify-center hover:bg-[#B8964E] hover:text-white transition group/wishlist"
+                className="w-9 h-9 bg-white shadow-md rounded-full flex items-center justify-center hover:bg-[#B8964E] hover:text-white transition"
                 onClick={handleWishlistToggle}
                 aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
               >
                 <FaHeart 
                   size={14} 
                   className={`transition-all duration-300 ${
-                    inWishlist 
-                      ? 'text-red-500' 
-                      : 'text-gray-300 group-hover/wishlist:text-white'
+                    inWishlist ? 'text-red-500' : 'text-gray-400 group-hover:text-white'
                   }`}
                 />
               </button>
@@ -292,7 +270,17 @@ const LatestBookCard = ({ book }) => {
             </span>
           </div>
 
-          {expiryInfo}
+          {/* Expiry info for purchased books */}
+          {isPurchased && purchaseInfo?.expiry_date && (
+            <div className="text-xs text-gray-500 mt-1">
+              Access until: {new Date(purchaseInfo.expiry_date).toLocaleDateString()}
+              {purchaseInfo.days_remaining <= 7 && (
+                <span className="text-orange-500 ml-1">
+                  • {purchaseInfo.days_remaining} days left
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -303,8 +291,6 @@ const LatestBookCard = ({ book }) => {
           isPurchased={isPurchased}
           onDownload={handleDownload}
           isLoggedIn={isLoggedIn}
-          inWishlist={inWishlist}
-          onWishlistToggle={handleWishlistToggle}
         />
       )}
     </>
