@@ -48,25 +48,9 @@ import SectionFive from "../components/home/SectionFive";
 import SectionSix from "../components/home/SectionSix";
 import SectionSeven from "../components/home/SectionSeven";
 import SectionEight from "../components/home/SectionEight";
-import HomePageSkeleton from "./HomePageSkeleton";
 
 const Home = () => {
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Simulate loading time (remove this in production)
-    // In production, you'll want to load actual data
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 2000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Show skeleton while loading
-  if (loading) {
-    return <HomePageSkeleton />;
-  }
+ 
 
   // Show actual content when loaded
   return (

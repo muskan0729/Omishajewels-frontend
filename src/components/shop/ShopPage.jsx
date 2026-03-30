@@ -84,24 +84,41 @@ export default function ShopPage() {
     }
   }, [purchasedData]);
 
-  const buildEndpoint = useCallback(() => {
-    let endpoint = activeCategory === "all"
-      ? `products`
-      : `categories/${activeCategory}/products`;
+  // const buildEndpoint = useCallback(() => {
+  //   let endpoint = activeCategory === "all"
+  //     ? `products`
+  //     : `categories/${activeCategory}/products`;
 
-    const params = new URLSearchParams({
-      page: currentPage,
-      limit: showCount,
-    });
+  //   const params = new URLSearchParams({
+  //     page: currentPage,
+  //     limit: showCount,
+  //   });
 
-    if (sortBy !== "default") {
-      params.append("sort", sortBy);
-    }
+  //   if (sortBy !== "default") {
+  //     params.append("sort", sortBy);
+  //   }
 
-    return `${endpoint}?${params.toString()}`;
-  }, [activeCategory, currentPage, showCount, sortBy]);
+  //   return `${endpoint}?${params.toString()}`;
+  // }, [activeCategory, currentPage, showCount, sortBy]);
 
-  const { data: productsData, loading: productsLoading, error: productsError, refetch } = useGet(buildEndpoint());
+const endpoint_api = useMemo(() => {
+  let base = activeCategory === "all"
+    ? `products`
+    : `categories/${activeCategory}/products`;
+
+  const params = new URLSearchParams({
+    page: currentPage,
+    limit: showCount,
+  });
+
+  if (sortBy !== "default") {
+    params.append("sort", sortBy);
+  }
+
+  return `${base}?${params.toString()}`;
+}, [activeCategory, currentPage, showCount, sortBy]);
+
+  const { data: productsData, loading: productsLoading, error: productsError, refetch } = useGet(endpoint_api);
   const { data: categoriesData, loading: categoriesLoading, error: categoriesError } = useGet("categories");
 
   useEffect(() => {
@@ -112,11 +129,15 @@ export default function ShopPage() {
     }
   }, [productsData]);
 
-  useEffect(() => {
-    if (buildEndpoint()) {
-      refetch();
-    }
-  }, [buildEndpoint, refetch]);
+
+  if (currentPage !== 1) {
+  setCurrentPage(1);
+}
+  // useEffect(() => {
+  //   if (buildEndpoint()) {
+  //     refetch();
+  //   }
+  // }, [buildEndpoint, refetch]);
 
   useEffect(() => {
     const prevFilters = prevFiltersRef.current;

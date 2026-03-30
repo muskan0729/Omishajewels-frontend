@@ -1,7 +1,9 @@
 // SectionFive.js
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import LatestBookCard from "../books/LatestBookCard.jsx";
 import { useGet } from "../../hooks/useGet";
+
+
 
 const SectionFive = () => {
   const [activeCategoryId, setActiveCategoryId] = useState(null);
@@ -16,13 +18,22 @@ const SectionFive = () => {
   const categories = categoryRes || [];
 
   // Set default category
-  const latestCategories = categories.slice(-5);
+  // const latestCategories = categories.slice(-5);
+const latestCategories = useMemo(() => {
+  return categories.slice(-5);
+}, [categories]);
 
-  useEffect(() => {
-    if (latestCategories.length > 0 && !activeCategoryId) {
-      setActiveCategoryId(latestCategories[0].id);
-    }
-  }, [latestCategories, activeCategoryId]);
+  // useEffect(() => {
+  //   if (latestCategories.length > 0 && !activeCategoryId) {
+  //     setActiveCategoryId(latestCategories[0].id);
+  //   }
+  // }, [latestCategories, activeCategoryId]);
+
+useEffect(() => {
+  if (latestCategories.length > 0) {
+    setActiveCategoryId((prev) => prev || latestCategories[0].id);
+  }
+}, [latestCategories]);
 
   // Get products by category
   const {
@@ -33,9 +44,16 @@ const SectionFive = () => {
     activeCategoryId ? `categories/${activeCategoryId}/products` : null
   );
 
-  const products = productRes?.data.data || [];
-  const latestproducts = products.slice(-10);
+  const products = productRes?.data?.data || [];
+  // const latestproducts = products.slice(-10);
 
+  const latestproducts = useMemo(() => {
+  return products.slice(-10);
+}, [products]);
+
+
+
+  
   return (
     <section className="bg-white pt-0 py-28">
       <div className="max-w-7xl mx-auto px-6">
@@ -97,9 +115,12 @@ const SectionFive = () => {
               gap-16
             "
           >
-            {latestproducts?.slice(0, 15).map((product) => (
+            {/* {latestproducts?.slice(0, 15).map((product) => (
               <LatestBookCard key={product.id} book={product} />
-            ))}
+            ))} */}
+            {latestproducts.map((product) => (
+  <LatestBookCard key={product.id} book={product} />
+))}
           </div>
         )}
 

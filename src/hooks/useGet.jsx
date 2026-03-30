@@ -11,28 +11,38 @@
     
 
     const fetchData = useCallback(async () => {
+       const start = performance.now();
       setLoading(true);
       setError(null);
 
-      try {
-        const response = await axios.get(`${BASE_URL}${endpoint}`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
-        //  console.log("fetch succeeded → setting data");
-        setData(response.data);
-      } catch (err) {
-        setError(
-          err?.response?.data?.message ||
-          err?.message ||
-          "Something went wrong"
-        );
-      } finally {
-        setLoading(false);
-      }
-    }, [endpoint]); // ✅ stable unless endpoint changes
+ try {
+    const response = await axios.get(`${BASE_URL}${endpoint}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+
+    console.log("✅ API RESPONSE:", response.data);
+    setData(response.data);
+
+  } catch (err) {
+    setError(
+      err?.response?.data?.message ||
+      err?.message ||
+      "Something went wrong"
+    );
+  } finally {
+    const end = performance.now();
+    console.log(
+      `⏱ API TIME (${endpoint}):`,
+      (end - start).toFixed(2),
+      "ms"
+    );
+
+    setLoading(false);
+  }
+}, [endpoint]);
 
     useEffect(() => {
       // console.log("useEffect triggered → calling fetchData");
