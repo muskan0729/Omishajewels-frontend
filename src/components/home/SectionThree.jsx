@@ -1,3 +1,7 @@
+import s1 from "../../assets/images/section1.jpg";
+import s2 from "../../assets/images/section2.jpg";
+import s3 from "../../assets/images/section3.jpg";
+
 const sections = [
   {
     id: 1,
@@ -5,7 +9,7 @@ const sections = [
     title: "Self-Publishing And Book Printing",
     description:
       "Publish your book in both eBook and paperback formats to reach a wider audience and gain more visibility.",
-    image: "/assets/images/section1.jpg",
+    image: s1,
   },
   {
     id: 2,
@@ -13,7 +17,7 @@ const sections = [
     title: "New, Rare And Out-of-Print Books",
     description:
       "Discover thousands of new authors in hundreds of categories including Fiction and Non-Fiction.",
-    image: "/assets/images/section2.jpg",
+    image: s2,
   },
   {
     id: 3,
@@ -21,7 +25,7 @@ const sections = [
     title: "Where Books And People Meet",
     description:
       "Millions of books and other items are listed for sale by trusted sellers from around the world.",
-    image: "/assets/images/section3.jpg",
+    image: s3,
   },
 ];
 

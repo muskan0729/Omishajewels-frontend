@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+// MyAccountWishlist.js
+import { useState, useEffect, useRef } from "react";
 import EmptyWishlist from "../../components/wishlist/EmptyWishlist";
 import WishlistItem from "../../components/wishlist/WishlistItem";
-import { useGet } from "../../hooks/useGet";
-import { useDelete } from "../../hooks/useDelete";
+import { useWishlist } from "../../context/WishlistContext";
+import { useGet } from "./../../hooks/useGet";
 import Loader from "../../components/Loader";
-import { toast } from "sonner"; // ✅ ADD THIS IMPORT
 
 const MyAccountWishlist = () => {
   const token = localStorage.getItem("token");
@@ -12,47 +12,58 @@ const MyAccountWishlist = () => {
   const isLoggedIn = !!userId && !!token;
 
   const [purchasedEbooks, setPurchasedEbooks] = useState({});
+  const hasRefreshed = useRef(false);
 
-  // ✅ Use useGet for wishlist
-  const { data, loading, error, refetch } = useGet("wishlist");
+  const { 
+    wishlistItems, 
+    wishlistCount, 
+    isLoading: wishlistLoading, 
+    isGuest,
+    refreshWishlist
+  } = useWishlist();
   
-  // ✅ Use useGet for purchased ebooks (instead of manual fetch)
-  const { data: purchasedData } = useGet(isLoggedIn ? "my-library" : null);
-  
-  // ✅ UseDelete hook
-  const { executeDelete } = useDelete();
+  const { data: purchasedData, loading: purchasedLoading } = useGet(
+    isLoggedIn ? "my-library" : null
+  );
 
-  // ✅ Process purchased ebooks when data arrives
   useEffect(() => {
     if (purchasedData?.success && purchasedData?.data) {
       const purchasedMap = {};
-      purchasedData.data.active.forEach(item => {
-        purchasedMap[item.id] = {
-          hasAccess: true,
-          download_url: item.download_url,
-          expiry_date: item.access_expiry,
-          days_remaining: item.days_remaining
-        };
-      });
+      
+      if (purchasedData.data.active) {
+        purchasedData.data.active.forEach(item => {
+          purchasedMap[item.id] = {
+            hasAccess: true,
+            download_url: item.download_url,
+            expiry_date: item.access_expiry,
+            days_remaining: item.days_remaining
+          };
+        });
+      }
+      
+      if (purchasedData.data.expired) {
+        purchasedData.data.expired.forEach(item => {
+          purchasedMap[item.id] = {
+            hasAccess: false,
+            expired: true,
+            expiry_date: item.access_expiry,
+            days_remaining: 0
+          };
+        });
+      }
+      
       setPurchasedEbooks(purchasedMap);
     }
   }, [purchasedData]);
 
-  const wishlist = data?.data || [];
+  useEffect(() => {
+    if (isLoggedIn && !hasRefreshed.current) {
+      hasRefreshed.current = true;
+      refreshWishlist();
+    }
+  }, [isLoggedIn, refreshWishlist]);
 
-const handleRemove = async (wishlistId) => {
-  try {
-    // ✅ Pass the full endpoint with ID
-    await executeDelete(`wishlist/${wishlistId}`);
-    refetch(); 
-    toast.success("Removed from wishlist");
-  } catch (err) {
-    console.error("Delete failed", err);
-    toast.error("Failed to remove from wishlist");
-  }
-};
-
-  const isEmpty = !loading && wishlist.length === 0;
+  const isEmpty = !wishlistLoading && wishlistItems.length === 0;
 
   if (!token) {
     return (
@@ -63,33 +74,37 @@ const handleRemove = async (wishlistId) => {
     );
   }
 
-  if (loading) {
+  if (wishlistLoading || purchasedLoading) {
     return <Loader />;
   }
 
-  if (error) {
-    return <div className="p-10 text-center text-red-500">{error}</div>;
+  if (!wishlistItems && !wishlistLoading) {
+    return <div className="p-10 text-center text-red-500">Failed to load wishlist</div>;
   }
 
   return (
     <div className="p-10">
-      {/* PAGE TITLE */}
       <div className="border-b pb-4 mb-8">
-        <h2 className="text-lg font-semibold">YOUR PRODUCTS WISHLIST</h2>
+        <h2 className="text-lg font-semibold">
+          YOUR PRODUCTS WISHLIST ({wishlistCount} {wishlistCount === 1 ? 'item' : 'items'})
+        </h2>
+        {isGuest && wishlistCount > 0 && (
+          <p className="text-xs text-gray-500 mt-2">
+            💡 Your wishlist is saved locally. Login to sync with your account.
+          </p>
+        )}
       </div>
 
-      {/* CONTENT */}
       {isEmpty ? (
         <EmptyWishlist />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10">
-          {wishlist.map((item) => (
+          {wishlistItems.map((item) => (
             <WishlistItem
               key={item.id}
-              product={item.ebook}
+              product={item}
               wishlistId={item.id}
-              onRemove={handleRemove}
-              isPurchased={purchasedEbooks[item.ebook?.id]}
+              isPurchased={purchasedEbooks[item.id]}
             />
           ))}
         </div>

@@ -1,3 +1,6 @@
+import about from "../assets/images/about-store.webp";
+import ebooks from "../assets/images/ebooks.webp";
+
 export default function AboutUs() {
   return (
     <div className="bg-white text-gray-700">
@@ -50,7 +53,7 @@ export default function AboutUs() {
         {/* IMAGE */}
         <div>
           <img
-            src="\assets\images\about-store.jpg"
+            src={about}
             alt="About Omisha Jewels"
             className="rounded-lg shadow-md w-full"
           />
@@ -64,7 +67,7 @@ export default function AboutUs() {
           {/* IMAGE */}
           <div>
             <img
-              src="\assets\images\ebooks.png"
+              src={ebooks}
               alt="Omisha Jewels eBooks"
               className="rounded-lg shadow-md w-full"
             />

@@ -104,7 +104,7 @@ export default function Ebooks() {
 
       refetch();
     } catch (err) {
-      console.error(err);
+      //console.error(err);
       alert(
         `❌ Failed to create ebook: ${
           err.message || postError?.message || "Unknown error"
@@ -136,7 +136,7 @@ export default function Ebooks() {
       setOpenModal(false);
       refetch();
     } catch (err) {
-      console.error(err);
+      //console.error(err);
       alert(
         `❌ Failed to update ebook: ${
           err.message || putError?.message || "Unknown error"
@@ -153,7 +153,7 @@ export default function Ebooks() {
       await remove(`${ebook.id}`, { onSuccess: refetch });
       alert(`✅ Ebook "${ebook.title}" deleted successfully!`);
     } catch (err) {
-      console.error(err);
+      //console.error(err);
       alert(
         `❌ Failed to delete ebook: ${
           err.message || deleteError?.message || "Unknown error"

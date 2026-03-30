@@ -1,52 +1,48 @@
+// Header.js (simplified version)
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { FiUser, FiSearch, FiHeart, FiShoppingCart } from "react-icons/fi";
 import { useState, useEffect } from "react";
 import SearchOverlay from "./SearchOverlay";
 import CartDrawer from "../cart/CartDrawer";
-// import { useGet } from "../../hooks/useGet";
-import useAutoFetch from "../../hooks/useAutoFetch";
+import { useCart } from "./../../context/CartContext";
+import { useWishlist } from "./../../context/WishlistContext";
+import logo from "../../assets/images/logo.png";
 
 const Header = ({ openLogin }) => {
-  const { data: wishlistData } = useAutoFetch("wishlist", 2000);
-  const total_wishlist_count = wishlistData?.total_count || 0;
-
-  const { data: cartData } = useAutoFetch("cart", 2000);
-
-  // Calculate cart count from items
-  const [cartCount, setCartCount] = useState(0);
-  const [cartSubtotal, setCartSubtotal] = useState(0);
-
-  // Update cart count and subtotal whenever cart data changes
-  useEffect(() => {
-    if (cartData?.items) {
-      // Calculate total quantity
-      const count = cartData.items.reduce(
-        (total, item) => total + parseInt(item.quantity ?? 1, 10),
-        0
-      );
-      //console.log(cartData);
-      //console.log(count);
-      setCartCount(count);
-
-      // Calculate subtotal from items (price * quantity)
-      const subtotal = cartData.items.reduce((total, item) => {
-        const price = parseFloat(item.price) || 0;
-        const quantity = item.quantity;
-        return total + (price * quantity);
-      }, 0);
-
-      setCartSubtotal(subtotal);
-    } else {
-      setCartCount(0);
-      setCartSubtotal(0);
-    }
-  }, [cartData]);
+  const { wishlistCount, refreshWishlist } = useWishlist();
+  const { cartCount, cartSubtotal, refreshCart, isGuest } = useCart();
 
   const [searchOpen, setSearchOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
 
   const navigate = useNavigate();
   const isLoggedIn = !!localStorage.getItem("token");
+
+  // Only fetch when needed (no auto-polling)
+  useEffect(() => {
+    if (isLoggedIn) {
+      refreshCart();
+      refreshWishlist();
+    }
+  }, [isLoggedIn, refreshCart, refreshWishlist]);
+
+  // Refresh data when tab becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        if (isLoggedIn) {
+          refreshCart();
+          refreshWishlist();
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [isLoggedIn, refreshCart, refreshWishlist]);
 
   const handleWishlistClick = () => {
     if (!isLoggedIn) {
@@ -56,10 +52,11 @@ const Header = ({ openLogin }) => {
     navigate("/my-account/wishlist");
   };
 
-  // Format price to always show 2 decimal places
   const formatPrice = (price) => {
     return Number(price).toFixed(2);
   };
+
+
 
   return (
     <>
@@ -69,7 +66,7 @@ const Header = ({ openLogin }) => {
           {/* LOGO */}
           <Link to="/" className="flex items-center">
             <img
-              src="/assets/images/logo.png"
+              src={logo}
               alt="Omisha Jewels"
               className="h-25 w-auto object-contain"
             />
@@ -131,10 +128,10 @@ const Header = ({ openLogin }) => {
             >
               <FiHeart size={22} />
 
-              {total_wishlist_count > 0 && (
+              {wishlistCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] 
                                 font-semibold rounded-full h-4 w-4 flex items-center justify-center">
-                  {total_wishlist_count}
+                  {wishlistCount}
                 </span>
               )}
             </button>

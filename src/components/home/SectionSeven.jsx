@@ -1,11 +1,14 @@
 import { useState } from "react";
 import LatestBookCard from "../books/LatestBookCard.jsx";
+import b3 from "../../assets/images/book3.jpg";
+import b2 from "../../assets/images/book2.jpg";
+
 
 const latestBooks = [
   {
     id: 101,
     title: "The Creative Mind",
-    image: "/assets/images/book3.jpg",
+    image: b3,
     category: "Business",
     price: 8200,
     oldPrice: 10500,
@@ -15,7 +18,7 @@ const latestBooks = [
   {
     id: 102,
     title: "History of Time",
-    image: "/assets/images/book2.jpg",
+    image: b2,
     category: "History",
     price: 9100,
     oldPrice: 12000,
@@ -25,7 +28,7 @@ const latestBooks = [
   {
     id: 103,
     title: "Fantasy Realm",
-    image: "/assets/images/book3.jpg",
+    image: b3,
     category: "Fantasy",
     price: 7600,
     oldPrice: 9800,
@@ -35,7 +38,7 @@ const latestBooks = [
   {
     id: 104,
     title: "Modern Biography",
-    image: "/assets/images/book2.jpg",
+    image: b2,
     category: "Biography",
     price: 8800,
     oldPrice: 11000,
