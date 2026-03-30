@@ -1,13 +1,9 @@
-// LatestBookCard.js
 import { Link } from "react-router-dom";
-import { FaHeart, FaDownload } from "react-icons/fa";
 import { FaHeart, FaDownload } from "react-icons/fa";
 import QuickViewModal from "../QuickViewModal";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import axios from "axios";
-import { useCart } from "./../../context/CartContext";
-import { useWishlist } from "./../../context/WishlistContext";
 import { useCart } from "./../../context/CartContext";
 import { useWishlist } from "./../../context/WishlistContext";
 
@@ -18,7 +14,7 @@ const LatestBookCard = ({ book }) => {
   const [purchaseInfo, setPurchaseInfo] = useState(null);
   
   const { addToCart, isGuest: isCartGuest } = useCart();
-  const { addToWishlist, isGuest: isWishlistGuest } = useWishlist();
+  const { addToWishlist, removeFromWishlist, wishlistItems, isGuest: isWishlistGuest } = useWishlist();
   
   const IMG_URL = import.meta.env.VITE_IMG_URL;
   const API_BASE_URL = import.meta.env.VITE_API_URL;
@@ -29,6 +25,12 @@ const LatestBookCard = ({ book }) => {
 
   const imageName = book.image?.split("/").pop();
 
+  // Check if product is in wishlist
+  const inWishlist = useMemo(() => 
+    wishlistItems.some(item => item.id === book.id),
+    [wishlistItems, book.id]
+  );
+
   // Check if book is purchased
   useEffect(() => {
     const checkPurchaseStatus = async () => {
@@ -36,9 +38,7 @@ const LatestBookCard = ({ book }) => {
       
       try {
         const response = await axios.get(`${API_BASE_URL}ebook/${book.id}/check-access`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
+          headers: { 'Authorization': `Bearer ${token}` },
         });
         
         if (response.data?.success && response.data?.data?.has_access) {
@@ -46,7 +46,7 @@ const LatestBookCard = ({ book }) => {
           setPurchaseInfo(response.data.data);
         }
       } catch (error) {
-        console.error("Failed to check purchase status:", error);
+        // Silent fail
       }
     };
 
@@ -54,7 +54,7 @@ const LatestBookCard = ({ book }) => {
   }, [book?.id, isLoggedIn, token, API_BASE_URL]);
 
   // Handle add to cart
-  const handleAddToCart = async (e) => {
+  const handleAddToCart = useCallback(async (e) => {
     e?.preventDefault();
     e?.stopPropagation();
     
@@ -71,49 +71,45 @@ const LatestBookCard = ({ book }) => {
       };
       
       const success = await addToCart(product);
-      
-      if (success) {
-        toast.success(`Added to cart${isCartGuest ? ' (Saved locally)' : ''}`);
-      } else {
-        toast.error("Failed to add to cart");
-      }
+      toast[success ? "success" : "error"](
+        success ? `Added to cart${isCartGuest ? ' (Saved locally)' : ''}` : "Failed to add to cart"
+      );
     } catch (error) {
-      console.error("Error adding to cart:", error);
       toast.error("Failed to add to cart");
     }
-  };
+  }, [book, addToCart, isCartGuest]);
 
-  // Handle add to wishlist
-  const handleAddToWishlist = async (e) => {
+  // Handle wishlist toggle
+  const handleWishlistToggle = useCallback(async (e) => {
     e?.preventDefault();
     e?.stopPropagation();
     
     try {
-      const product = {
-        id: book.id,
-        name: book.title,
-        price: book.price,
-        image: book.image,
-        oldPrice: book.oldPrice,
-        category: book.category,
-        discount: book.discount
-      };
-      
-      const success = await addToWishlist(product);
-      
-      if (success) {
-        toast.success(`Added to wishlist${isWishlistGuest ? ' (Saved locally)' : ''}`);
+      if (inWishlist) {
+        const success = await removeFromWishlist(book.id);
+        toast[success ? "success" : "error"](success ? "Removed from wishlist" : "Failed to remove from wishlist");
       } else {
-        toast.error("Failed to add to wishlist");
+        const product = {
+          id: book.id,
+          name: book.title,
+          price: book.price,
+          image: book.image,
+          oldPrice: book.oldPrice,
+          category: book.category,
+          discount: book.discount
+        };
+        const success = await addToWishlist(product);
+        toast[success ? "success" : "error"](
+          success ? `Added to wishlist${isWishlistGuest ? ' (Saved locally)' : ''}` : "Failed to add to wishlist"
+        );
       }
     } catch (error) {
-      console.error("Error adding to wishlist:", error);
-      toast.error("Failed to add to wishlist");
+      toast.error("Operation failed");
     }
-  };
+  }, [book, inWishlist, addToWishlist, removeFromWishlist, isWishlistGuest]);
 
   // Secure download function
-  const handleDownload = async (e) => {
+  const handleDownload = useCallback(async (e) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -121,51 +117,34 @@ const LatestBookCard = ({ book }) => {
       toast.error("Please login to download");
       return;
     }
-    if (!isLoggedIn) {
-      toast.error("Please login to download");
-      return;
-    }
 
-    if (!isPurchased) {
-      toast.error("You haven't purchased this ebook");
-      return;
-    }
     if (!isPurchased) {
       toast.error("You haven't purchased this ebook");
       return;
     }
 
     if (isDownloading) return;
-    if (isDownloading) return;
 
-    setIsDownloading(true);
     setIsDownloading(true);
 
     try {
-      const downloadEndpoint = `${API_BASE_URL}ebook/${book.id}/download`;
-      
-      const response = await axios.get(downloadEndpoint, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+      const response = await axios.get(`${API_BASE_URL}ebook/${book.id}/download`, {
+        headers: { 'Authorization': `Bearer ${token}` },
         responseType: 'blob',
         timeout: 30000,
       });
 
-      // Create blob and trigger download
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       
-      // Clean filename
       const cleanTitle = book.title.replace(/[^\w\s]/gi, '').replace(/\s+/g, ' ');
       link.setAttribute('download', `${cleanTitle}.pdf`);
       
       document.body.appendChild(link);
       link.click();
       
-      // Cleanup
       setTimeout(() => {
         link.parentNode?.removeChild(link);
         window.URL.revokeObjectURL(url);
@@ -173,42 +152,24 @@ const LatestBookCard = ({ book }) => {
       
       toast.success("Download started");
     } catch (err) {
-      console.error("Download failed:", err);
-      
-      if (err.response?.status === 401) {
-        toast.error("Session expired. Please login again.");
-      } else if (err.response?.status === 403) {
-        toast.error("Your access has expired. Please purchase again.");
-      } else if (err.response?.status === 404) {
-        toast.error("File not found. Please contact support.");
-      } else {
-        toast.error("Failed to download. Please try again.");
-      }
+      const errorMessages = {
+        401: "Session expired. Please login again.",
+        403: "Your access has expired. Please purchase again.",
+        404: "File not found. Please contact support."
+      };
+      toast.error(errorMessages[err.response?.status] || "Failed to download. Please try again.");
     } finally {
       setIsDownloading(false);
     }
-  };
+  }, [book.id, book.title, isLoggedIn, isPurchased, isDownloading, API_BASE_URL, token]);
 
   return (
     <>
-      <div
-        className="
-          group
-          bg-white
-          rounded-2xl
-          border border-[#E9E4DA]
-          shadow-[0_8px_20px_rgba(0,0,0,0.06)]
-          overflow-hidden
-          transition-all
-          duration-300
-          hover:shadow-[0_16px_36px_rgba(184,150,78,0.25)]
-          relative
-        "
-      >
+      <div className="group bg-white rounded-2xl border border-[#E9E4DA] shadow-[0_8px_20px_rgba(0,0,0,0.06)] overflow-hidden transition-all duration-300 hover:shadow-[0_16px_36px_rgba(184,150,78,0.25)] relative">
         {/* IMAGE SECTION */}
         <div className="relative h-[260px] bg-[#F5F3EF] flex items-center justify-center overflow-hidden">
 
-          {/* DISCOUNT BADGE - only show if not purchased */}
+          {/* DISCOUNT BADGE */}
           {book.discount && !isPurchased && (
             <span className="absolute top-3 left-3 bg-[#B8964E] text-white text-xs font-semibold px-3 py-2 rounded-full z-10">
               {book.discount}
@@ -221,39 +182,17 @@ const LatestBookCard = ({ book }) => {
               ✓ Owned
             </span>
           )}
-          {/* PURCHASED BADGE */}
-          {isPurchased && (
-            <span className="absolute top-3 left-3 bg-green-500 text-white text-xs font-semibold px-3 py-2 rounded-full z-10">
-              ✓ Owned
-            </span>
-          )}
 
-          {/* EXPIRY BADGE - if expiring soon */}
+          {/* EXPIRY BADGE */}
           {isPurchased && purchaseInfo?.days_remaining <= 3 && purchaseInfo?.days_remaining > 0 && (
             <span className="absolute top-3 right-3 bg-orange-500 text-white text-xs font-semibold px-3 py-2 rounded-full z-10">
               Expires in {purchaseInfo.days_remaining}d
             </span>
           )}
 
-          {/* ICONS RIGHT - only show if not purchased */}
+          {/* ICONS RIGHT */}
           {!isPurchased && (
-            <div
-              className="
-                absolute
-                top-4
-                right-3
-                flex
-                flex-col
-                gap-3
-                opacity-0
-                translate-x-6
-                group-hover:opacity-100
-                group-hover:translate-x-0
-                transition-all
-                duration-300
-                z-20
-              "
-            >
+            <div className="absolute top-4 right-3 flex flex-col gap-3 opacity-0 translate-x-6 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 z-20">
               <button 
                 className="w-9 h-9 bg-white shadow-md rounded-full flex items-center justify-center hover:bg-[#B8964E] hover:text-white transition"
                 onClick={() => setShowQuickModal(true)}
@@ -264,86 +203,45 @@ const LatestBookCard = ({ book }) => {
 
               <button 
                 className="w-9 h-9 bg-white shadow-md rounded-full flex items-center justify-center hover:bg-[#B8964E] hover:text-white transition"
-                onClick={handleAddToWishlist}
-                aria-label="Add to wishlist"
+                onClick={handleWishlistToggle}
+                aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
               >
-                <FaHeart size={14} />
+                <FaHeart 
+                  size={14} 
+                  className={`transition-all duration-300 ${
+                    inWishlist ? 'text-red-500' : 'text-gray-400 group-hover:text-white'
+                  }`}
+                />
               </button>
             </div>
           )}
 
           <Link to={`/products/${book.id}`}>
-            {/* BOOK IMAGE */}
             <img
               src={`${IMG_URL}${imageName}`}
               alt={book.title}
-              className="
-                h-full
-                object-contain
-                transition-transform
-                duration-300
-                group-hover:scale-105
-              "
+              className="h-full object-contain transition-transform duration-300 group-hover:scale-105"
+              loading="lazy"
+              onError={(e) => {
+                e.target.src = 'https://via.placeholder.com/260x260?text=No+Image';
+              }}
             />
           </Link>
 
-          {/* BOTTOM BUTTON - Conditional based on purchase status */}
+          {/* BOTTOM BUTTON */}
           {isPurchased ? (
-            // Download button for purchased books
             <button
               onClick={handleDownload}
               disabled={isDownloading}
-              className="
-                absolute
-                bottom-0
-                left-0
-                w-full
-                bg-green-500
-                hover:bg-green-600
-                text-white
-                font-semibold
-                py-3
-                text-sm
-                tracking-wide
-                flex
-                items-center
-                justify-center
-                gap-2
-                opacity-0
-                translate-y-6
-                group-hover:opacity-100
-                group-hover:translate-y-0
-                transition-all
-                duration-300
-                disabled:bg-gray-400
-                disabled:cursor-not-allowed
-              "
+              className="absolute bottom-0 left-0 w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 text-sm tracking-wide flex items-center justify-center gap-2 opacity-0 translate-y-6 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
               <FaDownload className={isDownloading ? 'animate-pulse' : ''} />
               {isDownloading ? 'Downloading...' : 'Download PDF'}
             </button>
           ) : (
-            // Add to cart button for non-purchased books
             <button
               onClick={handleAddToCart}
-              className="
-                absolute
-                bottom-0
-                left-0
-                w-full
-                bg-[#B8964E]
-                text-white
-                font-semibold
-                py-3
-                text-sm
-                tracking-wide
-                opacity-0
-                translate-y-6
-                group-hover:opacity-100
-                group-hover:translate-y-0
-                transition-all
-                duration-300
-              "
+              className="absolute bottom-0 left-0 w-full bg-[#B8964E] text-white font-semibold py-3 text-sm tracking-wide opacity-0 translate-y-6 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300"
             >
               ADD TO CART
             </button>
@@ -354,20 +252,11 @@ const LatestBookCard = ({ book }) => {
         <div className="p-5 text-center space-y-2">
           <Link
             to={`/products/${book.id}`}
-            className="
-              block
-              text-base
-              font-medium
-              text-[#2E2E2E]
-              truncate
-              group-hover:text-[#B8964E]
-              transition-colors
-            "
+            className="block text-base font-medium text-[#2E2E2E] truncate group-hover:text-[#B8964E] transition-colors"
           >
             {book.title}
           </Link>
 
-          <p className="text-sm text-[#9B9B9B]">{book.category}</p>
           <p className="text-sm text-[#9B9B9B]">{book.category}</p>
 
           <div className="text-base pt-1">
@@ -376,7 +265,6 @@ const LatestBookCard = ({ book }) => {
                 ₹{book.oldPrice.toLocaleString()}
               </span>
             )}
-
             <span className="text-[#B8964E] font-semibold">
               ₹{book.price.toLocaleString()}
             </span>

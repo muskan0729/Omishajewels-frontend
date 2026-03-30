@@ -11,9 +11,6 @@ import { FiDownload } from "react-icons/fi";
 import ShopPageSkeleton from "./ShopPageSkeleton";
 import { useCart } from "./../../context/CartContext";
 import { useWishlist } from "./../../context/WishlistContext";
-import ShopPageSkeleton from "./ShopPageSkeleton";
-import { useCart } from "./../../context/CartContext";
-import { useWishlist } from "./../../context/WishlistContext";
 
 const toLabel = (key) =>
   String(key || "")
@@ -38,7 +35,6 @@ const priceRanges = [
   { key: "0-3500", label: "₹0.00 - ₹3,500.00", min: 0, max: 3500 },
   { key: "3500-7000", label: "₹3,500.00 - ₹7,000.00", min: 3500, max: 7000 },
   { key: "7000-10500", label: "₹7,000.00 - ₹10,500.00", min: 7000, max: 10500 },
-  { key: "10500-14000", label: "₹10,500.00 - ₹14,000.00", min: 10500, max: 14000 },
   { key: "10500-14000", label: "₹10,500.00 - ₹14,000.00", min: 10500, max: 14000 },
 ];
 
@@ -66,28 +62,11 @@ export default function ShopPage() {
 
   const isFirstRender = useRef(true);
   const prevFiltersRef = useRef({ showCount: 9, sortBy: "default", activeCategory: "all" });
-  const [selectedProduct, setSelectedProduct] = useState(null);
-
-  const { addToCart, isGuest: isCartGuest } = useCart();
-  const { addToWishlist, removeFromWishlist, wishlistItems } = useWishlist();
-
-  const [activeCategory, setActiveCategory] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [sortBy, setSortBy] = useState("default");
-  const [priceKey, setPriceKey] = useState("all");
-  const [showCount, setShowCount] = useState(9);
-  const [gridMode, setGridMode] = useState("grid3");
-  const [products, setProducts] = useState([]);
-  const [totalProducts, setTotalProducts] = useState(0);
-
-  const isFirstRender = useRef(true);
-  const prevFiltersRef = useRef({ showCount: 9, sortBy: "default", activeCategory: "all" });
 
   const userId = localStorage.getItem("user_id");
   const token = localStorage.getItem("token");
   const isLoggedIn = !!userId && !!token;
 
-  const { data: purchasedData } = useGet(isLoggedIn ? `my-library` : null);
   const { data: purchasedData } = useGet(isLoggedIn ? `my-library` : null);
 
   useEffect(() => {
@@ -147,15 +126,7 @@ export default function ShopPage() {
       activeCategory !== prevFilters.activeCategory;
 
     if (hasFilterChanged && !isFirstRender.current) {
-    const prevFilters = prevFiltersRef.current;
-    const hasFilterChanged =
-      showCount !== prevFilters.showCount ||
-      sortBy !== prevFilters.sortBy ||
-      activeCategory !== prevFilters.activeCategory;
-
-    if (hasFilterChanged && !isFirstRender.current) {
       setCurrentPage(1);
-      prevFiltersRef.current = { showCount, sortBy, activeCategory };
       prevFiltersRef.current = { showCount, sortBy, activeCategory };
     }
     isFirstRender.current = false;
@@ -168,20 +139,18 @@ export default function ShopPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [totalPages]);
 
-  const handleShowCountChange = (newCount) => {
+  const handleShowCountChange = useCallback((newCount) => {
     setShowCount(newCount);
   }, []);
 
   const filteredProducts = useMemo(() => {
     let out = [...products];
-
     const range = priceRanges.find((r) => r.key === priceKey) || priceRanges[0];
     
     out = out.filter((p) => {
       const fp = finalPrice(p.price, p.discountPercentage);
       return fp >= range.min && fp <= range.max;
     });
-
 
     if (sortBy === "low-high") {
       out.sort((a, b) =>
@@ -195,7 +164,6 @@ export default function ShopPage() {
       );
     }
 
-
     return out;
   }, [products, priceKey, sortBy]);
 
@@ -205,23 +173,23 @@ export default function ShopPage() {
 
   const visible = filteredProducts;
 
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setPriceKey("all");
     setSortBy("default");
     setCurrentPage(1);
-  };
+  }, []);
 
   const heroBack = useCallback(() => {
     setActiveCategory("all");
     setCurrentPage(1);
-  };
+  }, []);
 
-  const handleQuickView = (product) => {
+  const handleQuickView = useCallback((product) => {
     setSelectedProduct(product);
     setShowQuickModal(true);
-  };
+  }, []);
 
-  const handleAddToCart = async (book, qty = 1) => {
+  const handleAddToCart = useCallback(async (book, qty = 1) => {
     const productId = book.id;
     if (cartLoadingIds.includes(productId)) return;
     setCartLoadingIds((prev) => [...prev, productId]);
@@ -238,12 +206,9 @@ export default function ShopPage() {
       };
 
       const success = await addToCart(cartItem);
-
-      if (success) {
-        toast.success(`Added to cart${isCartGuest ? ' (Saved locally)' : ''}`);
-      } else {
-        toast.error("Failed to add to cart");
-      }
+      toast[success ? "success" : "error"](
+        success ? `Added to cart${isCartGuest ? ' (Saved locally)' : ''}` : "Failed to add to cart"
+      );
     } catch (err) {
       toast.error("Failed to add to cart");
     } finally {
@@ -257,7 +222,6 @@ export default function ShopPage() {
       return;
     }
 
-
     const purchased = purchasedEbooks[book.id];
     if (!purchased || !purchased.hasAccess) {
       toast.error("Download not available");
@@ -265,14 +229,11 @@ export default function ShopPage() {
     }
 
     if (downloadingIds.includes(book.id)) return;
-    if (downloadingIds.includes(book.id)) return;
 
     setDownloadingIds(prev => [...prev, book.id]);
 
     try {
-      const downloadEndpoint = `${API_BASE_URL}ebook/${book.id}/download`;
-
-      const response = await fetch(downloadEndpoint, {
+      const response = await fetch(`${API_BASE_URL}ebook/${book.id}/download`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/pdf',
@@ -287,34 +248,28 @@ export default function ShopPage() {
       document.body.appendChild(link);
       link.click();
 
-      link.parentNode.removeChild(link);
+      link.parentNode?.removeChild(link);
       window.URL.revokeObjectURL(url);
-
 
       toast.success("Download started");
     } catch (err) {
-      console.error("Download failed:", err);
       toast.error("Failed to download. Please try again.");
     } finally {
       setDownloadingIds(prev => prev.filter(id => id !== book.id));
     }
-  };
+  }, [isLoggedIn, purchasedEbooks, downloadingIds, API_BASE_URL, token]);
 
-  const isInWishlistCheck = (productId) => {
+  const isInWishlistCheck = useCallback((productId) => {
     return wishlistItems.some(item => item.id === productId);
-  };
+  }, [wishlistItems]);
 
-  const handleWishlistToggle = async (product) => {
+  const handleWishlistToggle = useCallback(async (product) => {
     const isInWishlistNow = isInWishlistCheck(product.id);
 
     try {
       if (isInWishlistNow) {
         const success = await removeFromWishlist(product.id);
-        if (success) {
-          toast.success("Removed from wishlist");
-        } else {
-          toast.error("Failed to remove from wishlist");
-        }
+        toast[success ? "success" : "error"](success ? "Removed from wishlist" : "Failed to remove from wishlist");
       } else {
         const wishlistItem = {
           id: product.id,
@@ -324,27 +279,16 @@ export default function ShopPage() {
           oldPrice: product.old_price,
           category: product.category
         };
-
         const success = await addToWishlist(wishlistItem);
-        if (success) {
-          toast.success("Added to wishlist");
-        } else {
-          toast.error("Failed to add to wishlist");
-        }
+        toast[success ? "success" : "error"](success ? "Added to wishlist" : "Failed to add to wishlist");
       }
     } catch (err) {
-      console.error('Wishlist toggle error:', err);
       toast.error("Operation failed");
     }
-  };
+  }, [isInWishlistCheck, removeFromWishlist, addToWishlist]);
 
-  if (productsLoading || categoriesLoading) {
-    return <ShopPageSkeleton />;
-  }
-
-  if (productsError || categoriesError) {
-    return <div className="error center">{productsError || categoriesError}</div>;
-  }
+  if (productsLoading || categoriesLoading) return <ShopPageSkeleton />;
+  if (productsError || categoriesError) return <div className="error center">{productsError || categoriesError}</div>;
 
   return (
     <>
@@ -384,22 +328,13 @@ export default function ShopPage() {
               </div>
 
               <div className="gridBtns">
-                <button
-                  className={gridMode === "grid2" ? "active" : ""}
-                  onClick={() => setGridMode("grid2")}
-                >
+                <button className={gridMode === "grid2" ? "active" : ""} onClick={() => setGridMode("grid2")}>
                   <BsGrid1X2Fill size={18} />
                 </button>
-                <button
-                  className={gridMode === "grid3" ? "active" : ""}
-                  onClick={() => setGridMode("grid3")}
-                >
+                <button className={gridMode === "grid3" ? "active" : ""} onClick={() => setGridMode("grid3")}>
                   <FiGrid size={18} />
                 </button>
-                <button
-                  className={gridMode === "grid4" ? "active" : ""}
-                  onClick={() => setGridMode("grid4")}
-                >
+                <button className={gridMode === "grid4" ? "active" : ""} onClick={() => setGridMode("grid4")}>
                   <BsGrid3X3GapFill size={18} />
                 </button>
               </div>
@@ -469,8 +404,6 @@ export default function ShopPage() {
 
               {visible.length === 0 ? (
                 <div className="muted center">No products found</div>
-              {visible.length === 0 ? (
-                <div className="muted center">No products found</div>
               ) : (
                 <>
                   <div className={`products ${gridMode}`}>
@@ -478,14 +411,9 @@ export default function ShopPage() {
                       const hasDiscount = (p.discountPercentage || 0) > 0;
                       const fp = finalPrice(p.price, p.discountPercentage);
                       const imageName = p.image?.split("/").pop();
-                      const imageSrc = imageName
-                        ? `${IMG_URL}${imageName}`
-                        : "/no-image.png";
-
+                      const imageSrc = imageName ? `${IMG_URL}${imageName}` : "/no-image.png";
                       const isPurchased = isLoggedIn ? purchasedEbooks[p.id] : null;
                       const isDownloading = downloadingIds.includes(p.id);
-                      const inWishlist = isLoggedIn && isInWishlistCheck(p.id);
-
                       const inWishlist = isLoggedIn && isInWishlistCheck(p.id);
 
                       return (
@@ -495,55 +423,31 @@ export default function ShopPage() {
                               <img src={imageSrc} alt={p.title} />
                             </Link>
 
-                            {hasDiscount && (
-                              <div className="badge">
-                                -{Math.round(p.discountPercentage)}%
-                              </div>
-                            )}
-
+                            {hasDiscount && <div className="badge">-{Math.round(p.discountPercentage)}%</div>}
                             {isLoggedIn && isPurchased && isPurchased.days_remaining <= 3 && (
                               <div className="badge expiry-badge">Expires in {isPurchased.days_remaining} days</div>
                             )}
 
                             {(!isPurchased || !isLoggedIn) && (
                               <div className="iconsBox">
-                                <button
-                                  title="Quick View"
-                                  onClick={() => handleQuickView(p)}
-                                >
-                                  +
-                                </button>
-
+                                <button title="Quick View" onClick={() => handleQuickView(p)}>+</button>
                                 {isLoggedIn && (
                                   <button
                                     title={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
                                     onClick={() => handleWishlistToggle(p)}
-                                    style={{
-                                      background: 'none',
-                                      border: 'none',
-                                      cursor: 'pointer',
-                                      fontSize: '20px'
-                                    }}
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px' }}
                                   >
-                                    {inWishlist ? (
-                                      <span style={{ color: '#ff4444' }}>♥</span>
-                                    ) : (
-                                      <span style={{ color: '#666' }}>♡</span>
-                                    )}
+                                    <span style={{ color: inWishlist ? '#ff4444' : '#ccc' }}>
+                                      {inWishlist ? '♥' : '♡'}
+                                    </span>
                                   </button>
                                 )}
                               </div>
                             )}
 
                             {!isLoggedIn ? (
-                              <button
-                                className="addCart"
-                                onClick={() => handleAddToCart(p)}
-                                disabled={cartLoadingIds.includes(p.id)}
-                              >
-                                {cartLoadingIds.includes(p.id)
-                                  ? "Adding…"
-                                  : "ADD TO CART"}
+                              <button className="addCart" onClick={() => handleAddToCart(p)} disabled={cartLoadingIds.includes(p.id)}>
+                                {cartLoadingIds.includes(p.id) ? "Adding…" : "ADD TO CART"}
                               </button>
                             ) : isPurchased ? (
                               <button
@@ -563,14 +467,8 @@ export default function ShopPage() {
                                 {isDownloading ? "Downloading..." : "Download PDF"}
                               </button>
                             ) : (
-                              <button
-                                className="addCart"
-                                onClick={() => handleAddToCart(p)}
-                                disabled={cartLoadingIds.includes(p.id)}
-                              >
-                                {cartLoadingIds.includes(p.id)
-                                  ? "Adding…"
-                                  : "ADD TO CART"}
+                              <button className="addCart" onClick={() => handleAddToCart(p)} disabled={cartLoadingIds.includes(p.id)}>
+                                {cartLoadingIds.includes(p.id) ? "Adding…" : "ADD TO CART"}
                               </button>
                             )}
                           </div>
@@ -588,7 +486,6 @@ export default function ShopPage() {
                                 <span className="sale">{money(p.price)}</span>
                               )}
                             </div>
-
                             {isLoggedIn && isPurchased && isPurchased.expiry_date && (
                               <div className="expiry-info">
                                 Access until: {new Date(isPurchased.expiry_date).toLocaleDateString()}
@@ -627,18 +524,12 @@ export default function ShopPage() {
                         Previous
                       </button>
 
-
                       {[...Array(Math.min(5, totalPages))].map((_, i) => {
                         let pageNum;
-                        if (totalPages <= 5) {
-                          pageNum = i + 1;
-                        } else if (currentPage <= 3) {
-                          pageNum = i + 1;
-                        } else if (currentPage >= totalPages - 2) {
-                          pageNum = totalPages - 4 + i;
-                        } else {
-                          pageNum = currentPage - 2 + i;
-                        }
+                        if (totalPages <= 5) pageNum = i + 1;
+                        else if (currentPage <= 3) pageNum = i + 1;
+                        else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
+                        else pageNum = currentPage - 2 + i;
 
                         return (
                           <button
