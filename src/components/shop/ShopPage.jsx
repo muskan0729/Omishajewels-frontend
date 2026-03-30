@@ -373,7 +373,7 @@ const endpoint_api = useMemo(() => {
                     const imageSrc = imageName ? `${IMG_URL}${imageName}` : "/no-image.png";
                     return (
                       <div key={p.id} className="topratedItem">
-                        <img src={imageSrc} alt={p.title} />
+                        <img src={imageSrc} alt={p.title} loading="lazy" />
                         <div>
                           <div className="topratedName">{p.title}</div>
                           <div className="topratedMrp">{money(p.price)}</div>
@@ -441,7 +441,7 @@ const endpoint_api = useMemo(() => {
                         <div key={p.id} className="card">
                           <div className="media">
                             <Link to={`/products/${p.id}`}>
-                              <img src={imageSrc} alt={p.title} />
+                              <img src={imageSrc} alt={p.title} loading="lazy" />
                             </Link>
 
                             {hasDiscount && <div className="badge">-{Math.round(p.discountPercentage)}%</div>}
