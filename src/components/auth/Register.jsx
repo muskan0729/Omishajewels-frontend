@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { usePost } from "../../hooks/usePost";
 import { toast } from "sonner";
 
-const Register = ({ switchToLogin }) => {
+const Register = ({ switchToLogin, onSuccess }) => {
   const [formdata, setformdata] = useState({
     name: "",
     email: "",
@@ -11,7 +11,6 @@ const Register = ({ switchToLogin }) => {
   });
 
   const [formErrors, setFormErrors] = useState({});
-
   const { loading, execute } = usePost("register");
 
   const handleChange = (e) => {
@@ -21,7 +20,7 @@ const Register = ({ switchToLogin }) => {
     setFormErrors({ ...formErrors, [e.target.name]: "" });
   };
 
-  // frontend validation
+  /* ================= VALIDATION ================= */
   const validate = () => {
     let errors = {};
 
@@ -50,10 +49,10 @@ const Register = ({ switchToLogin }) => {
     return errors;
   };
 
+  /* ================= REGISTER ================= */
   const handleRegister = async (e) => {
     e.preventDefault();
 
-    // check validation
     const errors = validate();
     setFormErrors(errors);
 
@@ -64,32 +63,54 @@ const Register = ({ switchToLogin }) => {
 
     try {
       const res = await execute(formdata);
-      // console.log("registered", res);
-      if (res?.access_token) {
-        localStorage.setItem("token", res.access_token);
-        localStorage.setItem("token_type", res.token_type); // optional
-      }
-      toast.success("Registered successfully 🎉");
-      switchToLogin();
-    } catch (err) {
-      // console.log("Backend error:", err);
-      toast.error("Error");
 
-      // Laravel validation error format support
+      // ❌ if backend failed
+      if (!res || !res.access_token) {
+        throw new Error(res?.message || "Registration failed");
+      }
+
+      /* ================= STORE TOKEN ================= */
+      localStorage.setItem("token", res.access_token);
+
+      /* ================= STORE USER (🔥 FIX) ================= */
+      const userData = {
+        id: res.user_id ?? null,
+        name: res.name ?? formdata.name,
+        email: res.email ?? formdata.email,
+        role: res.role || "user",
+      };
+
+      localStorage.setItem("user", JSON.stringify(userData));
+
+      toast.success("Registered successfully 🎉");
+
+      /* ================= CLOSE / SWITCH ================= */
+      onSuccess?.(res);
+
+      if (!onSuccess) {
+        switchToLogin();
+      }
+
+    } catch (err) {
+      console.error("Register error:", err);
+
+      // Laravel validation errors
       if (err?.errors) {
         setFormErrors(err.errors);
-        toast.error("Validation error", {
-          description: "Please check the form fields",
-        });
-      } else {
-        toast.error("Something went wrong ❌");
       }
+
+      toast.error(
+        err?.message ||
+        err?.error ||
+        "Registration failed (try new email)"
+      );
     }
   };
 
   return (
     <>
       <form className="space-y-5" onSubmit={handleRegister}>
+
         {/* Full Name */}
         <div>
           <label className="block text-sm font-medium">Full Name</label>
