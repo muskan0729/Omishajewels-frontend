@@ -1,8 +1,13 @@
 import React, { useState } from "react";
 import { usePost } from "../../hooks/usePost";
+import { useCart } from "./../../context/CartContext";
+import { useWishlist } from "../../context/WishlistContext";
 import { toast } from "sonner";
 
 const Register = ({ switchToLogin, onSuccess }) => {
+  const { syncGuestCart } = useCart();
+  const { syncGuestWishlist } = useWishlist();
+  
   const [formdata, setformdata] = useState({
     name: "",
     email: "",
@@ -15,12 +20,9 @@ const Register = ({ switchToLogin, onSuccess }) => {
 
   const handleChange = (e) => {
     setformdata({ ...formdata, [e.target.name]: e.target.value });
-
-    // remove error while typing
     setFormErrors({ ...formErrors, [e.target.name]: "" });
   };
 
-  /* ================= VALIDATION ================= */
   const validate = () => {
     let errors = {};
 
@@ -49,7 +51,6 @@ const Register = ({ switchToLogin, onSuccess }) => {
     return errors;
   };
 
-  /* ================= REGISTER ================= */
   const handleRegister = async (e) => {
     e.preventDefault();
 
@@ -64,15 +65,14 @@ const Register = ({ switchToLogin, onSuccess }) => {
     try {
       const res = await execute(formdata);
 
-      // ❌ if backend failed
       if (!res || !res.access_token) {
         throw new Error(res?.message || "Registration failed");
       }
 
-      /* ================= STORE TOKEN ================= */
+      // Store token
       localStorage.setItem("token", res.access_token);
 
-      /* ================= STORE USER (🔥 FIX) ================= */
+      // Store user data
       const userData = {
         id: res.user_id ?? null,
         name: res.name ?? formdata.name,
@@ -81,10 +81,24 @@ const Register = ({ switchToLogin, onSuccess }) => {
       };
 
       localStorage.setItem("user", JSON.stringify(userData));
+      
+      // ✅ IMPORTANT: Store user_id for cart operations
+      if (res.user_id) {
+        localStorage.setItem("user_id", res.user_id);
+      }
 
       toast.success("Registered successfully 🎉");
 
-      /* ================= CLOSE / SWITCH ================= */
+      // ✅ CRITICAL FIX: Sync guest cart and wishlist to user account
+      try {
+        await syncGuestCart();
+        await syncGuestWishlist();
+        console.log("✅ Guest cart and wishlist synced successfully");
+      } catch (syncError) {
+        console.error("Error syncing guest data:", syncError);
+        // Don't block registration flow if sync fails
+      }
+
       onSuccess?.(res);
 
       if (!onSuccess) {
@@ -94,7 +108,6 @@ const Register = ({ switchToLogin, onSuccess }) => {
     } catch (err) {
       console.error("Register error:", err);
 
-      // Laravel validation errors
       if (err?.errors) {
         setFormErrors(err.errors);
       }
@@ -110,7 +123,6 @@ const Register = ({ switchToLogin, onSuccess }) => {
   return (
     <>
       <form className="space-y-5" onSubmit={handleRegister}>
-
         {/* Full Name */}
         <div>
           <label className="block text-sm font-medium">Full Name</label>
@@ -182,7 +194,6 @@ const Register = ({ switchToLogin, onSuccess }) => {
           )}
         </div>
 
-        {/* Submit Button */}
         <button
           className="w-full bg-black text-white py-2.5 rounded disabled:opacity-50"
           type="submit"
