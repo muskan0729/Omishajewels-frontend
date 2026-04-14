@@ -1,11 +1,21 @@
 import Login from "./Login";
 import Register from "./Register";
-
+import { useCart } from "./../../context/CartContext";
+import { useWishlist } from "../../context/WishlistContext";
 
 const AuthSidebar = ({ open, setOpen, view, setView }) => {
+  const { refreshCart } = useCart();
+  const { refreshWishlist } = useWishlist();
+
+  const handleAuthSuccess = async () => {
+    // Refresh cart and wishlist after successful auth
+    await refreshCart();
+    await refreshWishlist();
+    setOpen(false); // Close sidebar
+  };
+
   return (
     <>
-      {/* Overlay */}
       <div
         className={`fixed inset-0 z-40 transition-all duration-300
         ${open ? "opacity-100 visible" : "opacity-0 invisible"}
@@ -13,7 +23,6 @@ const AuthSidebar = ({ open, setOpen, view, setView }) => {
         onClick={() => setOpen(false)}
       />
 
-      {/* Sidebar */}
       <div
         className={`fixed top-0 right-0 z-50 h-full w-[380px] bg-white shadow-2xl
         transform transition-transform duration-300
@@ -28,10 +37,16 @@ const AuthSidebar = ({ open, setOpen, view, setView }) => {
 
         <div className="p-5">
           {view === "login" ? (
-            <Login switchToRegister={() => setView("register")} />
-            ) : (
-            <Register switchToLogin={() => setView("login")} />
-            )}
+            <Login 
+              switchToRegister={() => setView("register")} 
+              onSuccess={handleAuthSuccess}
+            />
+          ) : (
+            <Register 
+              switchToLogin={() => setView("login")} 
+              onSuccess={handleAuthSuccess}
+            />
+          )}
         </div>
       </div>
     </>

@@ -130,9 +130,9 @@ const endpoint_api = useMemo(() => {
   }, [productsData]);
 
 
-  if (currentPage !== 1) {
-  setCurrentPage(1);
-}
+//   if (currentPage !== 1) {
+//   setCurrentPage(1);
+// }
   // useEffect(() => {
   //   if (buildEndpoint()) {
   //     refetch();
