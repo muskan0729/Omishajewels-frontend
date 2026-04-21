@@ -12,13 +12,13 @@ const LatestBookCard = ({ book }) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isPurchased, setIsPurchased] = useState(false);
   const [purchaseInfo, setPurchaseInfo] = useState(null);
-  
+
   const { addToCart, isGuest: isCartGuest } = useCart();
   const { addToWishlist, removeFromWishlist, wishlistItems, isGuest: isWishlistGuest } = useWishlist();
-  
+
   const IMG_URL = import.meta.env.VITE_IMG_URL;
   const API_BASE_URL = import.meta.env.VITE_API_URL;
-  
+
   const userId = localStorage.getItem("user_id");
   const token = localStorage.getItem("token");
   const isLoggedIn = !!userId && !!token;
@@ -26,21 +26,24 @@ const LatestBookCard = ({ book }) => {
   const imageName = book.image?.split("/").pop();
 
   // Check if product is in wishlist
-  const inWishlist = useMemo(() => 
-    wishlistItems.some(item => item.id === book.id),
-    [wishlistItems, book.id]
+  //  const inWishlist = useMemo(() => 
+  //      wishlistItems.some(item => item.id === book.id),
+  //     [wishlistItems, book.id]
+  //   );
+  const inWishlist = wishlistItems?.some(
+    item => String(item.id) === String(book.id)
   );
 
   // Check if book is purchased
   useEffect(() => {
     const checkPurchaseStatus = async () => {
       if (!isLoggedIn || !book?.id) return;
-      
+
       try {
         const response = await axios.get(`${API_BASE_URL}ebook/${book.id}/check-access`, {
           headers: { 'Authorization': `Bearer ${token}` },
         });
-        
+
         if (response.data?.success && response.data?.data?.has_access) {
           setIsPurchased(true);
           setPurchaseInfo(response.data.data);
@@ -57,7 +60,7 @@ const LatestBookCard = ({ book }) => {
   const handleAddToCart = useCallback(async (e) => {
     e?.preventDefault();
     e?.stopPropagation();
-    
+
     try {
       const product = {
         id: book.id,
@@ -69,7 +72,7 @@ const LatestBookCard = ({ book }) => {
         category: book.category,
         discount: book.discount
       };
-      
+
       const success = await addToCart(product);
       toast[success ? "success" : "error"](
         success ? `Added to cart${isCartGuest ? ' (Saved locally)' : ''}` : "Failed to add to cart"
@@ -83,7 +86,7 @@ const LatestBookCard = ({ book }) => {
   const handleWishlistToggle = useCallback(async (e) => {
     e?.preventDefault();
     e?.stopPropagation();
-    
+
     try {
       if (inWishlist) {
         const success = await removeFromWishlist(book.id);
@@ -138,18 +141,18 @@ const LatestBookCard = ({ book }) => {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      
+
       const cleanTitle = book.title.replace(/[^\w\s]/gi, '').replace(/\s+/g, ' ');
       link.setAttribute('download', `${cleanTitle}.pdf`);
-      
+
       document.body.appendChild(link);
       link.click();
-      
+
       setTimeout(() => {
         link.parentNode?.removeChild(link);
         window.URL.revokeObjectURL(url);
       }, 100);
-      
+
       toast.success("Download started");
     } catch (err) {
       const errorMessages = {
@@ -193,7 +196,7 @@ const LatestBookCard = ({ book }) => {
           {/* ICONS RIGHT */}
           {!isPurchased && (
             <div className="absolute top-4 right-3 flex flex-col gap-3 opacity-0 translate-x-6 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 z-20">
-              <button 
+              <button
                 className="w-9 h-9 bg-white shadow-md rounded-full flex items-center justify-center hover:bg-[#B8964E] hover:text-white transition"
                 onClick={() => setShowQuickModal(true)}
                 aria-label="Quick view"
@@ -201,17 +204,16 @@ const LatestBookCard = ({ book }) => {
                 <b>+</b>
               </button>
 
-              <button 
-                className="w-9 h-9 bg-white shadow-md rounded-full flex items-center justify-center hover:bg-[#B8964E] hover:text-white transition"
+              <button
+                className={`w-9 h-9 shadow-md rounded-full flex items-center justify-center
+    ${inWishlist
+                    ? "bg-[#B8964E] text-red-500"
+                    : "bg-white text-gray-400"
+                  }`}
                 onClick={handleWishlistToggle}
                 aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
               >
-                <FaHeart 
-                  size={14} 
-                  className={`transition-all duration-300 ${
-                    inWishlist ? 'text-red-500' : 'text-gray-400 group-hover:text-white'
-                  }`}
-                />
+                <FaHeart size={14} />
               </button>
             </div>
           )}
